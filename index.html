@@ -11,11 +11,19 @@
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:#08200f;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#fff;}
-select option{background:#091a0f;color:#fff;}
+html,body{background:#061A0D;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#fff;}
+select option{background:#061A0D;color:#fff;}
 textarea,input,select{font-family:inherit;}
 ::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:#1e6b3e;border-radius:4px;}
+::-webkit-scrollbar-thumb{background:#16A34A;border-radius:4px;}
+@keyframes goldGlow{0%,100%{box-shadow:0 0 15px rgba(247,201,72,0.25);}50%{box-shadow:0 0 40px rgba(247,201,72,0.55),0 0 60px rgba(247,201,72,0.2);}}
+@keyframes floatBall{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-10px) rotate(5deg);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes rankOne{0%,100%{box-shadow:0 0 20px rgba(247,201,72,0.3);}50%{box-shadow:0 0 40px rgba(247,201,72,0.6);}}
+button{transition:transform 0.12s ease,opacity 0.12s ease !important;}
+button:active{transform:scale(0.96) !important;opacity:0.9 !important;}
+input:focus{border-color:rgba(247,201,72,0.7) !important;box-shadow:0 0 0 3px rgba(247,201,72,0.1) !important;}
+textarea:focus{border-color:rgba(247,201,72,0.7) !important;box-shadow:0 0 0 3px rgba(247,201,72,0.1) !important;}
 </style>
 </head>
 <body>
@@ -89,22 +97,22 @@ function getAIPct(country){const d=AI_DATA.find(a=>a.country===country);if(d)ret
 function isDeadlinePassed(deadline){if(!deadline)return false;return new Date()>new Date(deadline);}
 function fmtDeadline(deadline){if(!deadline)return null;return new Date(deadline).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});}
 
-const G={bg:"#08200f",card:"#112d1c",dark:"#091a0f",gold:"#f0c040",green:"#1e6b3e",muted:"#7a9e8a"};
-const btnG={background:G.gold,color:"#111",fontWeight:700,borderRadius:14,padding:"15px 20px",fontSize:15,border:"none",cursor:"pointer",width:"100%"};
-const btnO={background:"transparent",color:G.gold,fontWeight:700,borderRadius:14,padding:"13px 20px",fontSize:14,border:`2px solid ${G.gold}`,cursor:"pointer",width:"100%"};
-const btnGr={background:"transparent",color:"#666",fontWeight:600,borderRadius:14,padding:"11px 20px",fontSize:13,border:"2px solid #333",cursor:"pointer",width:"100%"};
-const btnRed={background:"transparent",color:"#f77",fontWeight:600,borderRadius:10,padding:"6px 12px",fontSize:12,border:"1px solid #f7733a",cursor:"pointer"};
-const crd={background:G.card,borderRadius:16,padding:18,marginBottom:12};
-const inp={background:G.dark,color:"#fff",border:`1.5px solid ${G.green}`,borderRadius:10,padding:"12px 14px",fontSize:14,width:"100%",boxSizing:"border-box",outline:"none"};
-const lbl={color:G.muted,fontSize:12,fontWeight:600,marginBottom:6,display:"block",letterSpacing:0.3};
+const G={bg:"#061A0D",card:"#0D2518",dark:"#04100A",gold:"#F7C948",green:"#16A34A",muted:"#A7C7B0",border:"#1A4A28"};
+const btnG={background:"linear-gradient(135deg,#F7C948 0%,#E8B830 60%,#F7C948 100%)",color:"#0A1400",fontWeight:800,borderRadius:16,padding:"16px 20px",fontSize:15,border:"none",cursor:"pointer",width:"100%",boxShadow:"0 4px 24px rgba(247,201,72,0.35)",letterSpacing:0.3};
+const btnO={background:"rgba(247,201,72,0.05)",color:G.gold,fontWeight:700,borderRadius:16,padding:"14px 20px",fontSize:14,border:"1.5px solid rgba(247,201,72,0.4)",cursor:"pointer",width:"100%"};
+const btnGr={background:"rgba(255,255,255,0.03)",color:"#7A9E8A",fontWeight:600,borderRadius:16,padding:"12px 20px",fontSize:13,border:"1px solid #1A4A28",cursor:"pointer",width:"100%"};
+const btnRed={background:"rgba(255,80,80,0.07)",color:"#FF7777",fontWeight:600,borderRadius:10,padding:"6px 14px",fontSize:12,border:"1px solid rgba(255,100,100,0.3)",cursor:"pointer"};
+const crd={background:"linear-gradient(145deg,#0D2518 0%,#091A10 100%)",borderRadius:18,padding:20,marginBottom:12,border:"1px solid #1A4A28",boxShadow:"0 4px 20px rgba(0,0,0,0.25)"};
+const inp={background:"#040E07",color:"#fff",border:"1.5px solid #1A4A28",borderRadius:12,padding:"13px 16px",fontSize:14,width:"100%",boxSizing:"border-box",outline:"none",transition:"border-color 0.2s,box-shadow 0.2s"};
+const lbl={color:"#8ABFA0",fontSize:11,fontWeight:700,marginBottom:8,display:"block",letterSpacing:1,textTransform:"uppercase"};
 
-const Back=({onClick})=><button onClick={onClick} style={{background:"none",border:"none",color:G.muted,cursor:"pointer",padding:"0 0 14px",fontSize:13,display:"flex",alignItems:"center",gap:4}}>← 戻る</button>;
-const Err=({msg})=>msg?<div style={{color:"#f77",fontSize:13,padding:"8px 12px",background:"#2d0a0a",borderRadius:8,marginBottom:12}}>{msg}</div>:null;
+const Back=({onClick})=><button onClick={onClick} style={{background:"rgba(255,255,255,0.04)",border:"1px solid #1A4A28",color:G.muted,cursor:"pointer",padding:"6px 14px 6px 10px",borderRadius:20,fontSize:12,display:"flex",alignItems:"center",gap:5,marginBottom:14,fontWeight:600,width:"fit-content"}}>‹ 戻る</button>;
+const Err=({msg})=>msg?<div style={{color:"#FF8080",fontSize:13,padding:"10px 14px",background:"rgba(255,60,60,0.08)",borderRadius:12,marginBottom:12,border:"1px solid rgba(255,80,80,0.2)",display:"flex",alignItems:"center",gap:6}}><span>⚠️</span><span>{msg}</span></div>:null;
 function FInput({label:lb,value,onChange,placeholder,type="text"}){return<div style={{marginBottom:16}}><label style={lbl}>{lb}</label><input style={inp} type={type} placeholder={placeholder} value={value} onChange={e=>onChange(e.target.value)}/></div>;}
-function Chips({opts,value,onChange,cols=2}){return<div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:6}}>{opts.map(o=><button key={o} onClick={()=>onChange(o)} style={{background:value===o?G.gold:G.dark,color:value===o?"#111":"#ccc",border:`1.5px solid ${value===o?G.gold:G.green}`,borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",fontWeight:value===o?700:400,lineHeight:1.3,minHeight:40}}>{o}</button>)}</div>;}
-function Badge({label:lb,val}){return<div style={{background:G.dark,borderRadius:8,padding:"8px 10px"}}><div style={{color:G.muted,fontSize:10,fontWeight:600,marginBottom:2}}>{lb}</div><div style={{color:"#fff",fontSize:12,fontWeight:600}}>{val||"—"}</div></div>;}
+function Chips({opts,value,onChange,cols=2}){return<div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:6}}>{opts.map(o=><button key={o} onClick={()=>onChange(o)} style={{background:value===o?"linear-gradient(135deg,#F7C948,#E8B830)":"rgba(4,14,7,0.8)",color:value===o?"#0A1400":"#9AB5A0",border:`1.5px solid ${value===o?"#F7C948":"#1A4A28"}`,borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",fontWeight:value===o?700:400,lineHeight:1.3,minHeight:40}}>{o}</button>)}</div>;}
+function Badge({label:lb,val}){return<div style={{background:"rgba(4,14,7,0.7)",borderRadius:10,padding:"9px 12px",border:"1px solid #1A4A28"}}><div style={{color:"#7A9E8A",fontSize:9,fontWeight:700,marginBottom:3,letterSpacing:0.8,textTransform:"uppercase"}}>{lb}</div><div style={{color:"#fff",fontSize:12,fontWeight:700}}>{val||"—"}</div></div>;}
 function FlagImg({code,country,size=26}){const c=code||(WC_GROUPS.flatMap(g=>g.teams).find(t=>t.n===country)?.f)||null;if(!c)return<span style={{fontSize:size*0.7}}>🏳️</span>;return<img src={`https://flagcdn.com/w40/${c}.png`} alt={country} style={{width:size,height:size*0.67,objectFit:"cover",borderRadius:3,verticalAlign:"middle"}} onError={e=>e.target.style.display="none"}/>;}
-function FIFARank({country,small}){const r=FIFA_RANK[country];if(!r)return null;return<span style={{background:"#1a3a28",color:G.gold,fontSize:small?9:10,fontWeight:700,padding:"1px 5px",borderRadius:10,marginLeft:4}}>FIFA {r}位</span>;}
+function FIFARank({country,small}){const r=FIFA_RANK[country];if(!r)return null;return<span style={{background:"rgba(247,201,72,0.1)",color:G.gold,fontSize:small?9:10,fontWeight:700,padding:"2px 6px",borderRadius:8,marginLeft:4,border:"1px solid rgba(247,201,72,0.2)"}}>FIFA {r}位</span>;}
 
 // シンプルバーチャート
 function BarChart({data,title}){
@@ -118,7 +126,7 @@ function BarChart({data,title}){
             <span style={{color:"#ccc",fontSize:12}}>{d.label}</span>
             <span style={{color:G.gold,fontSize:12,fontWeight:700}}>{d.count}人</span>
           </div>
-          <div style={{background:"#0a1f0f",borderRadius:6,height:8,overflow:"hidden"}}>
+          <div style={{background:"rgba(4,14,7,0.8)",borderRadius:6,height:9,overflow:"hidden",border:"1px solid #1A4A28"}}>
             <div style={{background:i===0?G.gold:i<3?"#4caf50":G.green,width:`${(d.count/max)*100}%`,height:"100%",borderRadius:6,transition:"width 0.5s"}}/>
           </div>
         </div>
@@ -169,7 +177,7 @@ function App(){
   );
 }
 
-function PgLoad(){return<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh"}}><div style={{textAlign:"center",color:G.gold}}><div style={{fontSize:60,marginBottom:14}}>⚽</div><div style={{fontSize:15,letterSpacing:2}}>読み込み中...</div></div></div>;}
+function PgLoad(){return<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"radial-gradient(ellipse at 50% 30%,#0E3B22 0%,#061A0D 65%)"}}><div style={{textAlign:"center"}}><div style={{fontSize:68,marginBottom:16,display:"inline-block",animation:"floatBall 2.2s ease-in-out infinite",filter:"drop-shadow(0 0 24px rgba(247,201,72,0.5))"}}>⚽</div><div style={{color:G.gold,fontSize:13,letterSpacing:3,fontWeight:700,textShadow:"0 0 20px rgba(247,201,72,0.6)"}}>読み込み中...</div></div></div>;}
 
 /* ── Home ── */
 function PgHome({nav,goT}){
@@ -209,11 +217,17 @@ function PgHome({nav,goT}){
 
   return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(160deg,#0c2d18 0%,#1a4730 50%,#0a2016 100%)",padding:"50px 22px 40px",textAlign:"center"}}>
-        <div style={{fontSize:56,marginBottom:10}}>⚽</div>
-        <div style={{color:G.gold,fontSize:24,fontWeight:900,letterSpacing:2,marginBottom:4}}>W杯予想メーカー</div>
-        <div style={{color:"#fff",fontSize:13,marginTop:12,lineHeight:1.9}}>友達同士のW杯予想を、URLひとつで管理。</div>
-        <div style={{color:G.muted,fontSize:12,marginTop:6,lineHeight:1.9}}>優勝国・得点王・日本代表の成績を予想して、<br/>みんなでランキングを楽しもう。</div>
+      <div style={{background:"linear-gradient(180deg,#092412 0%,#061A0D 100%)",padding:"56px 22px 44px",textAlign:"center",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-60,left:"50%",transform:"translateX(-50%)",width:500,height:400,background:"radial-gradient(ellipse at 50% 20%,rgba(22,163,74,0.2) 0%,transparent 60%)",pointerEvents:"none"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(247,201,72,0.2),transparent)",pointerEvents:"none"}}/>
+        <div style={{position:"relative",zIndex:1}}>
+        <div style={{fontSize:68,marginBottom:14,display:"inline-block",filter:"drop-shadow(0 0 28px rgba(247,201,72,0.5))"}}>⚽</div>
+        <div style={{marginBottom:4}}>
+          <div style={{color:G.gold,fontSize:28,fontWeight:900,letterSpacing:2,textShadow:"0 0 32px rgba(247,201,72,0.45)",lineHeight:1.15}}>W杯予想メーカー</div>
+          <div style={{color:"rgba(247,201,72,0.45)",fontSize:10,fontWeight:700,letterSpacing:4,marginTop:3}}>WORLD CUP PREDICTION</div>
+        </div>
+        <div style={{marginTop:18,marginBottom:4}}>
+          <div style={{color:"#fff",fontSize:14,fontWeight:600,lineHeight:1.7}}>W杯の予想、LINEだけで管理するの限界じゃない？</div>
+          <div style={{color:G.muted,fontSize:12,marginTop:7,lineHeight:1.9}}>友達同士の優勝国・得点王・日本代表成績をまとめて管理。<br/>結果に応じて自動でランキング化。</div>
+        </div>
         <div style={{marginTop:22,display:"flex",flexDirection:"column",gap:10}}>
           <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
@@ -235,9 +249,15 @@ function PgHome({nav,goT}){
           </div>
           {joinErr&&<div style={{marginTop:8}}><Err msg={joinErr}/></div>}
         </div>
-        {[["📋","登録なしで使える","名前だけで参加OK。メールアドレス不要！"],["📱","LINEで友達を招待","URLをコピーしてLINEで共有するだけ"],["🤖","AI優勝予想つき","世界中の予想データをAIが総合分析"],["📅","試合日程・結果","グループ別の試合結果をリアルタイム表示"]].map(([ic,title,desc])=>(
-          <div key={title} style={{...crd,display:"flex",gap:14,alignItems:"flex-start"}}><div style={{fontSize:22,flexShrink:0}}>{ic}</div><div><div style={{color:"#fff",fontWeight:700,fontSize:13}}>{title}</div><div style={{color:G.muted,fontSize:12,marginTop:4,lineHeight:1.6}}>{desc}</div></div></div>
-        ))}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+          {[["📋","登録なしで使える","名前だけで参加OK"],["📱","LINE共有","URLをコピーして送るだけ"],["🤖","AI優勝予想","世界の予想データ分析"],["📅","試合日程","リアルタイム結果表示"]].map(([ic,t,d])=>(
+            <div key={t} style={{background:"linear-gradient(145deg,#0D2318,#091A10)",borderRadius:16,padding:"16px 12px",textAlign:"center",border:"1px solid #1A4A28",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>
+              <div style={{fontSize:28,marginBottom:8}}>{ic}</div>
+              <div style={{color:"#fff",fontWeight:700,fontSize:12,marginBottom:4}}>{t}</div>
+              <div style={{color:G.muted,fontSize:10,lineHeight:1.5}}>{d}</div>
+            </div>
+          ))}
+        </div>
         <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
       </div>
     </div>
@@ -295,19 +315,28 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
   return(
     <div style={{paddingBottom:40}}>
       <div style={{padding:"14px 18px 0"}}><Back onClick={()=>{window.location.hash="";nav("home");}}/></div>
-      <div style={{background:"linear-gradient(180deg,#0e3020 0%,#08180e 100%)",padding:"16px 20px 26px",textAlign:"center"}}>
+      <div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"16px 20px 26px",textAlign:"center",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-40,left:"50%",transform:"translateX(-50%)",width:300,height:200,background:"radial-gradient(ellipse,rgba(22,163,74,0.12) 0%,transparent 65%)",pointerEvents:"none"}}/>
         <div style={{fontSize:40,marginBottom:6}}>⚽</div>
         <div style={{color:G.gold,fontSize:19,fontWeight:900}}>{t.name}</div>
         <div style={{color:G.muted,fontSize:12,marginTop:4}}>作成者: {t.creatorName}{isPaid&&<span style={{color:G.gold}}>　★ {STRIPE[t.plan]?.label}プラン</span>}</div>
         {t.deadline&&<div style={{marginTop:6,display:"inline-block",background:deadlinePassed?"#2d1010":"#1a3a28",borderRadius:8,padding:"4px 12px"}}>
           <span style={{color:deadlinePassed?"#f77":"#4caf50",fontSize:12,fontWeight:700}}>{deadlinePassed?"⛔ 予想締め切り済み":"⏰ 締め切り: "+fmtDeadline(t.deadline)}</span>
         </div>}
-        <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:12}}>
-          <div style={{textAlign:"center"}}><div style={{color:G.gold,fontWeight:900,fontSize:28}}>{t.participants.length}</div><div style={{color:G.muted,fontSize:11}}>参加者</div></div>
-          <div style={{color:"#2a5a3a",fontSize:20,paddingTop:4}}>/</div>
-          <div style={{textAlign:"center"}}><div style={{color:"#ccc",fontWeight:700,fontSize:20,paddingTop:3}}>{t.maxParticipants}</div><div style={{color:G.muted,fontSize:11}}>上限</div></div>
+        <div style={{display:"flex",justifyContent:"center",gap:12,marginTop:14}}>
+          <div style={{background:"rgba(247,201,72,0.08)",border:"1px solid rgba(247,201,72,0.25)",borderRadius:14,padding:"10px 20px",textAlign:"center",minWidth:80}}>
+            <div style={{color:G.gold,fontWeight:900,fontSize:36,lineHeight:1,textShadow:"0 0 20px rgba(247,201,72,0.4)"}}>{t.participants.length}</div>
+            <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1,marginTop:3}}>PLAYERS</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",color:"#2a5a3a",fontSize:24}}>/</div>
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid #1A4A28",borderRadius:14,padding:"10px 20px",textAlign:"center",minWidth:80}}>
+            <div style={{color:"#aaa",fontWeight:700,fontSize:28,lineHeight:1}}>{t.maxParticipants}</div>
+            <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1,marginTop:3}}>MAX</div>
+          </div>
         </div>
-        <div style={{color:G.muted,fontSize:11,marginTop:8}}>🔄 リアルタイム自動更新中</div>
+        <div style={{marginTop:10,display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.08)",borderRadius:20,padding:"4px 12px"}}>
+          <span style={{width:6,height:6,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"pulseDot 1.5s ease-in-out infinite"}}/>
+          <span style={{color:"#22C55E",fontSize:10,fontWeight:700}}>リアルタイム更新中</span>
+        </div>
       </div>
       <div style={{padding:"12px 18px 0"}}>
         <div style={{...crd,border:`1.5px solid ${G.gold}44`}}>
@@ -316,14 +345,14 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
             <input readOnly style={{...inp,flex:1,fontSize:11,color:"#888"}} value={url}/>
             <button onClick={copy} style={{background:G.gold,color:"#111",border:"none",borderRadius:10,padding:"0 14px",fontWeight:700,cursor:"pointer",flexShrink:0,fontSize:12}}>{copied?"✓ OK":"コピー"}</button>
           </div>
-          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer" style={{display:"block",background:"#06c755",color:"#fff",borderRadius:12,padding:12,textAlign:"center",fontWeight:700,textDecoration:"none",fontSize:14}}>📱 LINEで共有する</a>
-          <div style={{color:G.muted,fontSize:11,textAlign:"center",marginTop:8}}>大会ID: <strong style={{color:"#bbb",letterSpacing:2}}>{t.id}</strong></div>
+          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer" style={{display:"block",background:"linear-gradient(135deg,#06C755,#049A43)",color:"#fff",borderRadius:14,padding:14,textAlign:"center",fontWeight:800,textDecoration:"none",fontSize:15,boxShadow:"0 4px 20px rgba(6,199,85,0.35)",letterSpacing:0.3}}>📱 LINEで友達に送る</a>
+          <div style={{marginTop:10,textAlign:"center"}}><div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.04)",border:"1px solid #1A4A28",borderRadius:12,padding:"6px 16px"}}><span style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1}}>大会ID</span><strong style={{color:G.gold,letterSpacing:3,fontSize:13}}>{t.id}</strong></div></div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {deadlinePassed
-            ?<div style={{background:"#2d1010",color:"#f88",borderRadius:12,padding:14,textAlign:"center",fontSize:13}}>⛔ 予想の締め切りが終了しました</div>
+            ?<div style={{background:"rgba(255,60,60,0.1)",color:"#f88",borderRadius:12,padding:14,textAlign:"center",fontSize:13}}>⛔ 予想の締め切りが終了しました</div>
             :full
-              ?<div style={{background:"#2d1010",color:"#f88",borderRadius:12,padding:14,textAlign:"center",fontSize:13}}>参加上限に達しました</div>
+              ?<div style={{background:"rgba(255,60,60,0.1)",color:"#f88",borderRadius:12,padding:14,textAlign:"center",fontSize:13}}>参加上限に達しました</div>
               :<button style={btnG} onClick={()=>nav("join")}>✋ 参加する</button>}
           <button style={btnO} onClick={()=>nav("predictions")}>👥 みんなの予想を見る</button>
           <button style={btnO} onClick={()=>nav("ranking")}>🏆 ランキングを見る</button>
@@ -354,7 +383,7 @@ function PgJoin({tourn:t,nav,update,setMyId}){
   };
   if(deadlinePassed)return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{background:"#2d1010",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
+      <div style={{background:"rgba(255,60,60,0.1)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
         <div style={{fontSize:40,marginBottom:12}}>⛔</div>
         <div style={{color:"#f88",fontWeight:700,fontSize:16,marginBottom:8}}>予想の締め切りが終了しました</div>
         <div style={{color:G.muted,fontSize:13}}>締め切り: {fmtDeadline(t.deadline)}</div>
@@ -365,7 +394,7 @@ function PgJoin({tourn:t,nav,update,setMyId}){
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
       <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>参加する</div>
       <div style={{color:G.muted,fontSize:13,marginBottom:20}}>{t.name}</div>
-      {t.deadline&&<div style={{background:"#1a3a28",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:"#4caf50",fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
+      {t.deadline&&<div style={{background:"rgba(247,201,72,0.08)",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:"#4caf50",fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
       <div style={crd}>
         <FInput label="ニックネーム ＊" placeholder="例: サッカー太郎" value={nick} onChange={setNick}/>
         <div><label style={lbl}>アイコンを選ぶ</label><div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginTop:6}}>{ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{fontSize:26,background:icon===ic?`${G.gold}22`:"transparent",border:`2px solid ${icon===ic?G.gold:"transparent"}`,borderRadius:12,padding:"8px 0",cursor:"pointer"}}>{ic}</button>)}</div></div>
@@ -382,7 +411,7 @@ function PgPredict({tourn:t,nav,update,myId}){
   const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
   if(isDeadlinePassed(t.deadline))return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{background:"#2d1010",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
+      <div style={{background:"rgba(255,60,60,0.1)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
         <div style={{fontSize:40,marginBottom:12}}>⛔</div>
         <div style={{color:"#f88",fontWeight:700,fontSize:16}}>予想の締め切りが終了しました</div>
       </div>
@@ -399,7 +428,7 @@ function PgPredict({tourn:t,nav,update,myId}){
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
       <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>予想を入力する</div>
       <div style={{color:G.muted,fontSize:13,marginBottom:16}}>あなたの予想を教えてください！</div>
-      {t.deadline&&<div style={{background:"#1a3a28",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:"#4caf50",fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
+      {t.deadline&&<div style={{background:"rgba(247,201,72,0.08)",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:"#4caf50",fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
       <div style={crd}>
         <div style={{marginBottom:18}}><label style={lbl}>🥇 優勝国 ＊</label><Chips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
         <div style={{marginBottom:18}}><label style={lbl}>🥈 準優勝国 ＊</label><Chips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
@@ -423,12 +452,62 @@ function PgPredictions({tourn:t,setTourn,nav,goCountry}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
         <div><div style={{color:G.gold,fontSize:21,fontWeight:900}}>みんなの予想</div><div style={{color:G.muted,fontSize:12,marginTop:2}}>{t.participants.length}人参加中 · 🔄 自動更新中</div></div>
       </div>
-      {winRank.length>0&&<div style={{...crd,border:`1px solid ${G.gold}44`}}><div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>🥇 優勝国予想の集計</div>{winRank.map(([c,n])=><div key={c} onClick={()=>goCountry(c)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:8}}><FlagImg country={c} size={22}/><span style={{color:"#ccc",fontSize:14}}>{c}</span></div><div><span style={{color:G.gold,fontWeight:700,fontSize:15}}>{n}</span><span style={{color:G.muted,fontSize:12}}>人</span></div></div>)}</div>}
+      {winRank.length>0&&<div style={{...crd,border:`1px solid ${G.gold}44`}}>
+        <div style={{color:G.gold,fontWeight:700,fontSize:12,marginBottom:14,letterSpacing:1}}>🥇 WINNER PREDICTION</div>
+        {winRank.map(([c,n],i)=>{
+          const pct=Math.round((n/(t.participants.filter(p=>p.predictions?.winner).length||1))*100);
+          return(
+            <div key={c} onClick={()=>goCountry(c)} style={{cursor:"pointer",marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}><FlagImg country={c} size={20}/><span style={{color:i===0?"#fff":"#ccc",fontSize:13,fontWeight:i===0?700:400}}>{c}</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{color:G.gold,fontWeight:800,fontSize:14}}>{n}<span style={{color:G.muted,fontSize:11,fontWeight:400}}>人</span></span>
+                  <span style={{color:G.muted,fontSize:11}}>{pct}%</span>
+                </div>
+              </div>
+              <div style={{background:"rgba(0,0,0,0.4)",borderRadius:6,height:7,overflow:"hidden"}}>
+                <div style={{background:i===0?"linear-gradient(90deg,#F7C948,#22C55E)":i===1?"linear-gradient(90deg,#9CA3AF,#6B7280)":"#1E5C34",height:"100%",width:`${pct}%`,borderRadius:6,transition:"width 0.5s ease"}}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>}
       {t.participants.length===0?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>まだ参加者がいません</div>
-        :t.participants.map(p=><div key={p.id} style={crd}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}><div style={{fontSize:30}}>{p.icon}</div><div><div style={{color:"#fff",fontWeight:700,fontSize:15}}>{p.nickname}</div>{t.results&&<div style={{color:G.gold,fontSize:12,fontWeight:700}}>{p.points}pt</div>}</div></div>
-          {p.predictions?<><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><div onClick={()=>goCountry(p.predictions.winner)} style={{cursor:"pointer"}}><Badge label="優勝" val={p.predictions.winner}/></div><Badge label="準優勝" val={p.predictions.runnerUp}/><Badge label="得点王" val={p.predictions.topScorer||"未入力"}/><Badge label="日本代表" val={p.predictions.japanResult}/><Badge label="応援国" val={p.predictions.favoriteCountry}/></div>{p.predictions.comment&&<div style={{marginTop:8,background:G.dark,borderRadius:8,padding:"10px 12px"}}><div style={{color:G.muted,fontSize:10,marginBottom:2}}>コメント</div><div style={{color:"#ddd",fontSize:12}}>"{p.predictions.comment}"</div></div>}</>:<div style={{color:"#555",fontSize:13}}>予想未入力</div>}
-        </div>)}
+        :t.participants.map(p=>(
+          <div key={p.id} style={{...crd,overflow:"visible"}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+              <div style={{fontSize:34,lineHeight:1,filter:"drop-shadow(0 2px 6px rgba(0,0,0,0.4))"}}>{p.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{color:"#fff",fontWeight:800,fontSize:15}}>{p.nickname}</div>
+                {t.results&&<div style={{color:G.gold,fontSize:13,fontWeight:800}}>{p.points}<span style={{fontSize:10,fontWeight:600,marginLeft:2}}>pt</span></div>}
+              </div>
+              {p.predictions?.winner&&(
+                <div onClick={()=>goCountry(p.predictions.winner)} style={{textAlign:"center",background:"rgba(247,201,72,0.08)",borderRadius:12,padding:"6px 10px",border:"1px solid rgba(247,201,72,0.2)",cursor:"pointer",minWidth:52}}>
+                  <FlagImg country={p.predictions.winner} size={22}/>
+                  <div style={{color:G.gold,fontSize:8,marginTop:3,fontWeight:700,letterSpacing:0.5}}>優勝予想</div>
+                </div>
+              )}
+            </div>
+            {p.predictions?(
+              <>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>
+                  <Badge label="準優勝" val={p.predictions.runnerUp}/>
+                  <Badge label="得点王" val={p.predictions.topScorer||"未入力"}/>
+                  <Badge label="日本代表" val={p.predictions.japanResult}/>
+                  <Badge label="応援国" val={p.predictions.favoriteCountry}/>
+                </div>
+                {p.predictions.comment&&(
+                  <div style={{marginTop:10,background:"rgba(247,201,72,0.04)",borderRadius:12,padding:"10px 14px",border:"1px solid rgba(247,201,72,0.12)",position:"relative"}}>
+                    <div style={{position:"absolute",top:-8,left:16,background:"rgba(247,201,72,0.15)",borderRadius:20,padding:"1px 8px"}}>
+                      <span style={{color:G.gold,fontSize:9,fontWeight:700}}>💬 コメント</span>
+                    </div>
+                    <div style={{color:"#ddd",fontSize:12,lineHeight:1.6,fontStyle:"italic",marginTop:2}}>"{p.predictions.comment}"</div>
+                  </div>
+                )}
+              </>
+            ):<div style={{color:"#445",fontSize:13,textAlign:"center",padding:"8px 0"}}>予想未入力</div>}
+          </div>
+        ))}
       <div style={{marginTop:8}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
     </div>
   );
@@ -442,18 +521,41 @@ function PgRanking({tourn:t,setTourn,nav}){
   const MEDALS=["🥇","🥈","🥉"];
   return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(180deg,#1a3a08 0%,#0a200d 100%)",padding:"36px 20px 22px",textAlign:"center"}}>
+      <div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-60,left:"50%",transform:"translateX(-50%)",width:400,height:300,background:"radial-gradient(ellipse,rgba(247,201,72,0.1) 0%,transparent 60%)",pointerEvents:"none"}}/>
         <div style={{color:G.gold,fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:4}}>RANKING</div>
         <div style={{color:G.gold,fontSize:26,fontWeight:900}}>🏆 ランキング</div>
         <div style={{color:G.muted,fontSize:12,marginTop:4}}>{t.name}</div>
         <div style={{color:G.muted,fontSize:11,marginTop:6}}>🔄 リアルタイム自動更新中</div>
       </div>
       <div style={{padding:"14px 18px 0"}}>
-        {!hasRes&&<div style={{background:"#0e2a1a",border:"1px solid #2a5a3a",borderRadius:10,padding:"10px 14px",marginBottom:12}}><div style={{color:G.muted,fontSize:12}}>※ 管理者が結果を入力するとポイントが反映されます。</div></div>}
+        {!hasRes&&<div style={{background:"rgba(22,163,74,0.07)",border:"1px solid #2a5a3a",borderRadius:10,padding:"10px 14px",marginBottom:12}}><div style={{color:G.muted,fontSize:12}}>※ 管理者が結果を入力するとポイントが反映されます。</div></div>}
         {hasRes&&<div style={{...crd,border:`1px solid ${G.gold}66`,marginBottom:14}}><div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>📊 確定結果</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><Badge label="優勝" val={t.results.winner}/><Badge label="準優勝" val={t.results.runnerUp}/>{t.results.topScorer&&<Badge label="得点王" val={t.results.topScorer}/>}<Badge label="日本代表" val={t.results.japanResult}/></div></div>}
         {ranked.length===0?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>まだ参加者がいません</div>
-          :ranked.map((p,i)=>{const rank=i+1;return<div key={p.id} style={{...crd,border:rank===1?`2px solid ${G.gold}88`:"2px solid transparent",background:rank===1?"#1a3e26":G.card}}><div style={{display:"flex",alignItems:"center",gap:12}}><div style={{minWidth:40,textAlign:"center"}}>{rank<=3?<div style={{fontSize:26}}>{MEDALS[rank-1]}</div>:<div style={{color:"#777",fontWeight:900,fontSize:16}}>{rank}位</div>}</div><div style={{fontSize:28}}>{p.icon}</div><div style={{flex:1}}><div style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.nickname}</div><div style={{color:G.muted,fontSize:11,marginTop:3}}>{rankMsg(rank,ranked.length)}</div></div><div style={{textAlign:"right"}}><div style={{color:G.gold,fontWeight:900,fontSize:22}}>{p.pts}</div><div style={{color:G.muted,fontSize:11}}>pt</div></div></div></div>;})}
-        <div style={{background:G.card,borderRadius:12,padding:"12px 16px",marginTop:8}}><div style={{color:G.muted,fontSize:11,fontWeight:600,marginBottom:6,letterSpacing:1}}>POINT RULES</div>{[["優勝国的中","20pt"],["準優勝国的中","15pt"],["得点王的中","15pt"],["日本代表成績的中","10pt"],["応援国が優勝","5pt"]].map(([r,pt])=><div key={r} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"#8ba",fontSize:12}}>{r}</span><span style={{color:G.gold,fontSize:12,fontWeight:700}}>{pt}</span></div>)}</div>
+          :ranked.map((p,i)=>{
+  const rank=i+1;
+  const isLast=rank===ranked.length&&ranked.length>1;
+  const medalBg=rank===1?"linear-gradient(145deg,#2A1E00,#1A1200)":rank===2?"linear-gradient(145deg,#1C1C28,#111118)":rank===3?"linear-gradient(145deg,#2A1400,#1A0D00)":"linear-gradient(145deg,#0D2518,#091A10)";
+  const medalBorder=rank===1?`2px solid ${G.gold}`:rank===2?"2px solid #9898B8":rank===3?"2px solid #9B6B3A":"1px solid #1A4A28";
+  const medalShadow=rank===1?"0 0 30px rgba(247,201,72,0.25)":rank===2?"0 4px 20px rgba(0,0,0,0.4)":rank===3?"0 4px 20px rgba(0,0,0,0.4)":"none";
+  const rankAnim=rank===1?{animation:"rankOne 2.5s ease-in-out infinite"}:{};
+  return<div key={p.id} style={{...crd,background:medalBg,border:medalBorder,boxShadow:medalShadow,...rankAnim,marginBottom:10}}>
+    <div style={{display:"flex",alignItems:"center",gap:12}}>
+      <div style={{minWidth:42,textAlign:"center"}}>
+        {rank===1?<div style={{fontSize:28}}>🥇</div>:rank===2?<div style={{fontSize:28}}>🥈</div>:rank===3?<div style={{fontSize:28}}>🥉</div>:<div style={{color:"#556",fontWeight:900,fontSize:16,background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"4px 8px"}}>{rank}</div>}
+      </div>
+      <div style={{fontSize:30}}>{p.icon}</div>
+      <div style={{flex:1}}>
+        <div style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.nickname}</div>
+        <div style={{color:G.muted,fontSize:11,marginTop:3,fontStyle:"italic"}}>{rankMsg(rank,ranked.length)}</div>
+      </div>
+      <div style={{textAlign:"right"}}>
+        <div style={{color:rank<=3?G.gold:"#ccc",fontWeight:900,fontSize:24,textShadow:rank===1?"0 0 12px rgba(247,201,72,0.5)":"none"}}>{p.pts}</div>
+        <div style={{color:G.muted,fontSize:10,fontWeight:600,letterSpacing:1}}>PT</div>
+      </div>
+    </div>
+  </div>;
+})}
+        <div style={{background:"linear-gradient(145deg,#0A2018,#061A0D)",borderRadius:14,padding:"14px 18px",marginTop:8,border:"1px solid #1A4A28"}}><div style={{color:G.gold,fontSize:10,fontWeight:700,marginBottom:10,letterSpacing:2}}>📋 POINT RULES</div>{[["優勝国的中","20pt"],["準優勝国的中","15pt"],["得点王的中","15pt"],["日本代表成績的中","10pt"],["応援国が優勝","5pt"]].map(([r,pt])=><div key={r} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"#8ba",fontSize:12}}>{r}</span><span style={{color:G.gold,fontSize:12,fontWeight:700}}>{pt}</span></div>)}</div>
         <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
       </div>
     </div>
@@ -475,7 +577,7 @@ function PgStats({tourn:t,nav}){
 
   return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(180deg,#0e3020,#08180e)",padding:"36px 20px 22px",textAlign:"center"}}>
+      <div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center"}}>
         <Back onClick={()=>nav("tournament")}/>
         <div style={{color:G.gold,fontSize:22,fontWeight:900}}>📊 詳細統計</div>
         <div style={{color:G.muted,fontSize:12,marginTop:4}}>{t.name} · {preds.length}人が予想済み</div>
@@ -489,7 +591,7 @@ function PgStats({tourn:t,nav}){
             {scorerData.length>0&&<div style={crd}><BarChart title="⚽ 得点王予想" data={scorerData}/></div>}
             <div style={crd}><BarChart title="🇯🇵 日本代表成績予想" data={count("japanResult")}/></div>
             <div style={crd}><BarChart title="❤️ 応援国" data={count("favoriteCountry")}/></div>
-            <div style={{...crd,background:"#1a3a28"}}>
+            <div style={{...crd,background:"rgba(247,201,72,0.08)"}}>
               <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>💬 みんなのコメント</div>
               {preds.filter(p=>p.comment).map((p,i)=>{
                 const participant=t.participants.find(pt=>pt.predictions===p)||t.participants[i];
@@ -550,7 +652,7 @@ function PgAdmin({tourn:t,nav,update,adminOk,setAdminOk}){
             <div><label style={lbl}>🇯🇵 日本代表の成績 ＊</label><Chips opts={JAPAN_RES} value={res.japanResult} onChange={setR("japanResult")}/></div>
           </div>
           <Err msg={err}/>
-          {saved?<div style={{background:"#1a4730",border:`1px solid ${G.gold}`,borderRadius:14,padding:16,textAlign:"center",color:"#fff",fontWeight:700}}>✅ 保存完了！</div>
+          {saved?<div style={{background:"rgba(22,163,74,0.12)",border:`1px solid ${G.gold}`,borderRadius:14,padding:16,textAlign:"center",color:"#fff",fontWeight:700}}>✅ 保存完了！</div>
             :<button style={btnG} onClick={save} disabled={loading}>{loading?"保存中...":"💾 結果を保存してランキング更新"}</button>}
         </>
       )}
@@ -577,7 +679,7 @@ function PgAdmin({tourn:t,nav,update,adminOk,setAdminOk}){
                       <div style={{color:G.muted,fontSize:11}}>{p.predictions?"予想済み":"未入力"} · {p.points}pt</div>
                     </div>
                     <div style={{display:"flex",gap:6}}>
-                      <button onClick={()=>startEdit(p)} style={{background:"#1a3a28",color:G.gold,border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600}}>編集</button>
+                      <button onClick={()=>startEdit(p)} style={{background:"rgba(247,201,72,0.08)",color:G.gold,border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600}}>編集</button>
                       <button onClick={()=>deleteP(p.id)} style={btnRed}>削除</button>
                     </div>
                   </div>
@@ -612,22 +714,22 @@ function PgUpgrade({nav,tourn:t,update}){
 }
 
 /* ── AI ── */
-function PgAI({nav,goCountry}){return(<div style={{paddingBottom:40}}><div style={{background:"linear-gradient(160deg,#0c2d18,#1a4730)",padding:"36px 20px 30px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:6}}>AI ANALYSIS</div><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🤖 AI優勝予想</div><div style={{color:G.muted,fontSize:12,marginTop:8,lineHeight:1.7}}>世界中の予想データをAIが総合分析</div><div style={{color:"#445",fontSize:11,marginTop:6}}>2026年5月24日 更新</div></div><div style={{padding:"14px 18px 0"}}>{AI_DATA.map((p,i)=>(<div key={p.country} onClick={()=>goCountry(p.country)} style={{...crd,border:i===0?`1.5px solid ${G.gold}66`:"1.5px solid transparent",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:12}}><div style={{minWidth:36,textAlign:"center"}}>{i<3?<div style={{fontSize:24}}>{"🥇🥈🥉"[i]}</div>:<div style={{color:"#666",fontWeight:900,fontSize:15}}>{i+1}</div>}</div><FlagImg country={p.country} size={34}/><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}><span style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.country}</span><FIFARank country={p.country} small/><span style={{color:p.trend==="↑"?"#4caf50":p.trend==="↓"?"#f44":"#888",fontSize:13,fontWeight:700}}>{p.trend}</span></div><div style={{background:"#0a1f0f",borderRadius:6,height:7,overflow:"hidden",marginBottom:4}}><div style={{background:i===0?G.gold:i<3?"#4caf50":G.green,width:`${Math.min(p.pct*4.5,100)}%`,height:"100%",borderRadius:6}}/></div><div style={{color:G.muted,fontSize:11,lineHeight:1.4}}>{p.reason}</div></div><div style={{textAlign:"right",minWidth:42}}><div style={{color:i===0?G.gold:"#fff",fontWeight:900,fontSize:18}}>{p.pct}%</div></div></div></div>))}<div style={{background:G.dark,borderRadius:10,padding:"12px 14px"}}><div style={{color:G.muted,fontSize:11,lineHeight:1.8}}>※ 世界中の予想データ・各国成績・専門家分析をAIが総合的に算出した予想値です。<br/>※ 各国をタップすると詳細が見られます。</div></div></div></div>);}
+function PgAI({nav,goCountry}){return(<div style={{paddingBottom:40}}><div style={{background:"linear-gradient(160deg,#092412 0%,#0A2E14 100%)",padding:"36px 20px 30px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:6}}>AI ANALYSIS</div><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🤖 AI優勝予想</div><div style={{color:G.muted,fontSize:12,marginTop:8,lineHeight:1.7}}>世界中の予想データをAIが総合分析</div><div style={{color:"#445",fontSize:11,marginTop:6}}>2026年5月24日 更新</div></div><div style={{padding:"14px 18px 0"}}>{AI_DATA.map((p,i)=>(<div key={p.country} onClick={()=>goCountry(p.country)} style={{...crd,border:i===0?`1.5px solid ${G.gold}66`:"1.5px solid transparent",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:12}}><div style={{minWidth:36,textAlign:"center"}}>{i<3?<div style={{fontSize:24}}>{"🥇🥈🥉"[i]}</div>:<div style={{color:"#666",fontWeight:900,fontSize:15}}>{i+1}</div>}</div><FlagImg country={p.country} size={34}/><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}><span style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.country}</span><FIFARank country={p.country} small/><span style={{color:p.trend==="↑"?"#4caf50":p.trend==="↓"?"#f44":"#888",fontSize:13,fontWeight:700}}>{p.trend}</span></div><div style={{background:"#0a1f0f",borderRadius:6,height:7,overflow:"hidden",marginBottom:4}}><div style={{background:i===0?G.gold:i<3?"#4caf50":G.green,width:`${Math.min(p.pct*4.5,100)}%`,height:"100%",borderRadius:6}}/></div><div style={{color:G.muted,fontSize:11,lineHeight:1.4}}>{p.reason}</div></div><div style={{textAlign:"right",minWidth:42}}><div style={{color:i===0?G.gold:"#fff",fontWeight:900,fontSize:18}}>{p.pct}%</div></div></div></div>))}<div style={{background:G.dark,borderRadius:10,padding:"12px 14px"}}><div style={{color:G.muted,fontSize:11,lineHeight:1.8}}>※ 世界中の予想データ・各国成績・専門家分析をAIが総合的に算出した予想値です。<br/>※ 各国をタップすると詳細が見られます。</div></div></div></div>);}
 
 /* ── Groups ── */
 function PgGroups({nav,goCountry}){
   const [standings,setStandings]=useState({});const [selGroup,setSelGroup]=useState(null);
   useEffect(()=>{fetchStandings().then(data=>{const map={};data.forEach(group=>{const gName=group.abbreviation||group.name;if(gName&&group.standings?.entries){map[gName]=group.standings.entries.map(e=>({name:ESPN_TO_JP[e.team?.displayName]||e.team?.displayName,w:e.stats?.find(s=>s.name==="wins")?.value||0,d:e.stats?.find(s=>s.name==="ties")?.value||0,l:e.stats?.find(s=>s.name==="losses")?.value||0,gf:e.stats?.find(s=>s.name==="pointsFor")?.value||0,ga:e.stats?.find(s=>s.name==="pointsAgainst")?.value||0,pts:e.stats?.find(s=>s.name==="points")?.value||0}));}});setStandings(map);});},[]);
   return(
-    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0e3020,#08180e)",padding:"36px 20px 22px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🗂️ グループ表</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026 · 全12グループ</div><div style={{color:"#334",fontSize:11,marginTop:4}}>FIFAランク: 2026年4月1日最新</div></div>
+    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🗂️ グループ表</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026 · 全12グループ</div><div style={{color:"#334",fontSize:11,marginTop:4}}>FIFAランク: 2026年4月1日最新</div></div>
     <div style={{padding:"12px 18px 0"}}>
       <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:4,marginBottom:14}}>{WC_GROUPS.map(g=>(<button key={g.name} onClick={()=>setSelGroup(selGroup===g.name?null:g.name)} style={{background:selGroup===g.name?G.gold:G.card,color:selGroup===g.name?"#111":"#ccc",border:"none",borderRadius:8,padding:"8px 4px",fontSize:13,cursor:"pointer",fontWeight:700}}>{g.name}</button>))}</div>
       {(selGroup?WC_GROUPS.filter(g=>g.name===selGroup):WC_GROUPS).map(group=>{
         const live=standings[`Group ${group.name}`]||standings[group.name]||null;
         return(<div key={group.name} style={{...crd,marginBottom:14}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{color:G.gold,fontWeight:900,fontSize:15}}>グループ {group.name}</div>{live&&<div style={{background:"#1a3a28",color:"#4caf50",fontSize:10,padding:"2px 8px",borderRadius:10,fontWeight:700}}>🔴 LIVE</div>}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{color:G.gold,fontWeight:900,fontSize:15}}>グループ {group.name}</div>{live&&<div style={{background:"rgba(247,201,72,0.08)",color:"#4caf50",fontSize:10,padding:"2px 8px",borderRadius:10,fontWeight:700}}>🔴 LIVE</div>}</div>
           {live?(<div style={{marginBottom:10}}><div style={{display:"grid",gridTemplateColumns:"1fr 28px 28px 28px 28px 28px",gap:4,marginBottom:4}}><div style={{color:G.muted,fontSize:10}}>チーム</div>{["勝","分","負","得失","Pt"].map(h=><div key={h} style={{color:G.muted,fontSize:10,textAlign:"center"}}>{h}</div>)}</div>{live.map((team,i)=>(<div key={i} onClick={()=>goCountry(team.name)} style={{display:"grid",gridTemplateColumns:"1fr 28px 28px 28px 28px 28px",gap:4,marginBottom:4,cursor:"pointer",background:i<2?"#1a3a2844":"transparent",borderRadius:6,padding:"3px 0"}}><div style={{display:"flex",alignItems:"center",gap:6}}><FlagImg country={team.name} size={18}/><span style={{color:"#fff",fontSize:12}}>{team.name}</span></div>{[team.w,team.d,team.l,`${team.gf}-${team.ga}`].map((v,j)=><div key={j} style={{color:"#ccc",fontSize:12,textAlign:"center"}}>{v}</div>)}<div style={{color:G.gold,fontSize:12,textAlign:"center",fontWeight:700}}>{team.pts}</div></div>))}<div style={{color:"#334",fontSize:10,marginTop:4}}>↑ 上位2チームが決勝T進出</div></div>)
-          :(<div style={{display:"flex",flexDirection:"column",gap:6}}>{group.teams.map((team,i)=>{const pct=getAIPct(team.n);const rank=FIFA_RANK[team.n];return(<div key={i} onClick={()=>goCountry(team.n)} style={{display:"flex",alignItems:"center",gap:10,background:G.dark,borderRadius:10,padding:"10px 12px",cursor:"pointer"}}><FlagImg code={team.f} country={team.n} size={28}/><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{color:"#fff",fontWeight:600,fontSize:13}}>{team.n}</span>{rank&&<span style={{background:"#1a3a28",color:G.gold,fontSize:9,fontWeight:700,padding:"1px 5px",borderRadius:10}}>FIFA {rank}位</span>}</div>{pct>0&&<div style={{marginTop:4}}><div style={{background:"#0a1f0f",borderRadius:4,height:5,overflow:"hidden"}}><div style={{background:pct>=10?G.gold:pct>=5?"#4caf50":G.green,width:`${Math.min(pct*5,100)}%`,height:"100%"}}/></div></div>}</div>{pct>0&&<div style={{color:pct>=10?G.gold:"#8ba",fontWeight:700,fontSize:13}}>{pct}%</div>}</div>);})}</div>)}
+          :(<div style={{display:"flex",flexDirection:"column",gap:6}}>{group.teams.map((team,i)=>{const pct=getAIPct(team.n);const rank=FIFA_RANK[team.n];return(<div key={i} onClick={()=>goCountry(team.n)} style={{display:"flex",alignItems:"center",gap:10,background:G.dark,borderRadius:10,padding:"10px 12px",cursor:"pointer"}}><FlagImg code={team.f} country={team.n} size={28}/><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{color:"#fff",fontWeight:600,fontSize:13}}>{team.n}</span>{rank&&<span style={{background:"rgba(247,201,72,0.08)",color:G.gold,fontSize:9,fontWeight:700,padding:"1px 5px",borderRadius:10}}>FIFA {rank}位</span>}</div>{pct>0&&<div style={{marginTop:4}}><div style={{background:"#0a1f0f",borderRadius:4,height:5,overflow:"hidden"}}><div style={{background:pct>=10?G.gold:pct>=5?"#4caf50":G.green,width:`${Math.min(pct*5,100)}%`,height:"100%"}}/></div></div>}</div>{pct>0&&<div style={{color:pct>=10?G.gold:"#8ba",fontWeight:700,fontSize:13}}>{pct}%</div>}</div>);})}</div>)}
         </div>);
       })}
       <div style={{background:G.dark,borderRadius:10,padding:"12px 14px"}}><div style={{color:G.muted,fontSize:11,lineHeight:1.8}}>※ 優勝確率は世界予想市場データをAIが分析した値です。<br/>※ 開幕（6月11日）後はリアルタイム順位表に切り替わります。</div></div>
@@ -642,7 +744,7 @@ function PgSchedule({nav,goCountry}){
   const filtered=matches.filter(m=>{const s=m.status?.type?.state;if(filter==="live")return s==="in";if(filter==="done")return s==="post";if(filter==="upcoming")return s==="pre";return true;});
   const grouped={};filtered.forEach(m=>{const date=new Date(m.date).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"});if(!grouped[date])grouped[date]=[];grouped[date].push(m);});
   return(
-    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0e3020,#08180e)",padding:"36px 20px 22px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>📅 試合日程・結果</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026</div></div>
+    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>📅 試合日程・結果</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026</div></div>
     <div style={{padding:"14px 18px 0"}}>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:14}}>{[["all","すべて"],["live","試合中"],["upcoming","予定"],["done","結果"]].map(([v,lb])=>(<button key={v} onClick={()=>setFilter(v)} style={{background:filter===v?G.gold:G.card,color:filter===v?"#111":"#ccc",border:"none",borderRadius:10,padding:"8px 4px",fontSize:12,cursor:"pointer",fontWeight:filter===v?700:400}}>{lb}</button>))}</div>
       {loading?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>⚽ 試合データ取得中...</div>
@@ -661,7 +763,7 @@ function PgCountry({nav,country,goCountry}){
   useEffect(()=>{if(!country)return;setLoading(true);fetchMatchRange().then(data=>{const name=Object.entries(ESPN_TO_JP).find(([,jp])=>jp===country)?.[0];const filtered=name?data.filter(m=>m.competitions?.[0]?.competitors?.some(c=>c.team?.displayName===name)):[];setMatches(filtered);setLoading(false);});},[country]);
   if(!country)return null;
   return(
-    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0e3020,#08180e)",padding:"36px 20px 26px",textAlign:"center"}}><Back onClick={()=>nav("ai")}/><div style={{marginBottom:10}}><FlagImg code={teamData?.f} country={country} size={56}/></div><div style={{color:G.gold,fontSize:22,fontWeight:900}}>{country}</div><div style={{display:"flex",justifyContent:"center",gap:12,marginTop:10,flexWrap:"wrap"}}>{rank&&<div style={{background:"#1a3a28",borderRadius:10,padding:"6px 14px",textAlign:"center"}}><div style={{color:G.gold,fontWeight:900,fontSize:18}}>FIFA {rank}位</div><div style={{color:G.muted,fontSize:10}}>2026年4月時点</div></div>}{ai&&<div style={{background:"#1a3a28",borderRadius:10,padding:"6px 14px",textAlign:"center"}}><div style={{color:G.gold,fontWeight:900,fontSize:18}}>{ai.pct}%</div><div style={{color:G.muted,fontSize:10}}>優勝予想確率 {ai.trend}</div></div>}{group&&<div style={{background:"#1a3a28",borderRadius:10,padding:"6px 14px",textAlign:"center"}}><div style={{color:"#fff",fontWeight:900,fontSize:18}}>グループ {group.name}</div><div style={{color:G.muted,fontSize:10}}>所属グループ</div></div>}</div>{ai&&<div style={{color:"#8ba",fontSize:12,marginTop:12,lineHeight:1.6,padding:"0 20px"}}>{ai.reason}</div>}</div>
+    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 26px",textAlign:"center"}}><Back onClick={()=>nav("ai")}/><div style={{marginBottom:10}}><FlagImg code={teamData?.f} country={country} size={56}/></div><div style={{color:G.gold,fontSize:22,fontWeight:900}}>{country}</div><div style={{display:"flex",justifyContent:"center",gap:12,marginTop:10,flexWrap:"wrap"}}>{rank&&<div style={{background:"rgba(247,201,72,0.08)",borderRadius:10,padding:"6px 14px",textAlign:"center"}}><div style={{color:G.gold,fontWeight:900,fontSize:18}}>FIFA {rank}位</div><div style={{color:G.muted,fontSize:10}}>2026年4月時点</div></div>}{ai&&<div style={{background:"rgba(247,201,72,0.08)",borderRadius:10,padding:"6px 14px",textAlign:"center"}}><div style={{color:G.gold,fontWeight:900,fontSize:18}}>{ai.pct}%</div><div style={{color:G.muted,fontSize:10}}>優勝予想確率 {ai.trend}</div></div>}{group&&<div style={{background:"rgba(247,201,72,0.08)",borderRadius:10,padding:"6px 14px",textAlign:"center"}}><div style={{color:"#fff",fontWeight:900,fontSize:18}}>グループ {group.name}</div><div style={{color:G.muted,fontSize:10}}>所属グループ</div></div>}</div>{ai&&<div style={{color:"#8ba",fontSize:12,marginTop:12,lineHeight:1.6,padding:"0 20px"}}>{ai.reason}</div>}</div>
     <div style={{padding:"14px 18px 0"}}>
       {group&&<div style={{...crd,marginBottom:14}}><div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>🗂️ グループ {group.name} の対戦相手</div>{group.teams.filter(t=>t.n!==country).map((t,i)=>(<div key={i} onClick={()=>goCountry(t.n)} style={{display:"flex",alignItems:"center",gap:10,background:G.dark,borderRadius:8,padding:"8px 12px",marginBottom:6,cursor:"pointer"}}><FlagImg code={t.f} country={t.n} size={24}/><span style={{color:"#fff",fontSize:13,flex:1}}>{t.n}</span>{FIFA_RANK[t.n]&&<span style={{color:G.gold,fontSize:11}}>FIFA {FIFA_RANK[t.n]}位</span>}{getAIPct(t.n)>0&&<span style={{color:"#8ba",fontSize:11}}>{getAIPct(t.n)}%</span>}</div>))}</div>}
       <div style={{color:G.gold,fontWeight:700,fontSize:14,marginBottom:12}}>📅 試合情報</div>
@@ -1021,7 +1123,7 @@ function PgBest11({nav}){
   // TOP
   if(b11page==="top")return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(160deg,#0c2d18,#1a4730)",padding:"50px 22px 40px",textAlign:"center"}}>
+      <div style={{background:"linear-gradient(160deg,#092412 0%,#0A2E14 100%)",padding:"50px 22px 40px",textAlign:"center"}}>
         <div style={{fontSize:56,marginBottom:10}}>⚽</div>
         <div style={{color:G.gold,fontSize:24,fontWeight:900,letterSpacing:1,marginBottom:4}}>ベスト11メーカー</div>
         <div style={{color:"#fff",fontSize:13,marginTop:12,lineHeight:1.9}}>あなたの最強スタメンを作ろう。</div>
@@ -1081,7 +1183,7 @@ function PgBest11({nav}){
   if(b11page==="pitch")return(
     <div style={{paddingBottom:40}}>
       <div style={{padding:"14px 18px 0"}}><Back onClick={()=>setB11page("formation")}/></div>
-      <div style={{background:"linear-gradient(180deg,#0e3020,#08180e)",padding:"10px 20px 14px"}}>
+      <div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"10px 20px 14px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{color:G.gold,fontSize:17,fontWeight:900}}>{teamName}</div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1114,7 +1216,7 @@ function PgBest11({nav}){
     <div style={{paddingBottom:40}}>
       <div style={{padding:"14px 18px 0"}}><Back onClick={()=>setB11page("pitch")}/></div>
       <div style={{color:G.gold,fontSize:18,fontWeight:900,textAlign:"center",marginBottom:14}}>📱 ストーリープレビュー</div>
-      <div ref={previewRef} style={{margin:"0 auto",width:"min(340px,90vw)",background:"linear-gradient(180deg,#08200f 0%,#0e3020 40%,#08200f 100%)",borderRadius:20,overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.6)",border:`1px solid ${G.gold}44`}}>
+      <div ref={previewRef} style={{margin:"0 auto",width:"min(340px,90vw)",background:"linear-gradient(180deg,#061A0D 0%,#0A2E14 40%,#061A0D 100%)",borderRadius:22,overflow:"hidden",boxShadow:"0 12px 48px rgba(0,0,0,0.7),0 0 0 1px rgba(247,201,72,0.15)",border:`1.5px solid rgba(247,201,72,0.25)`}}>
         <div style={{padding:"22px 20px 14px",textAlign:"center"}}>
           <div style={{color:G.gold,fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:6}}>MY BEST XI</div>
           <div style={{color:"#fff",fontSize:20,fontWeight:900,marginBottom:6}}>{teamName}</div>
@@ -1144,7 +1246,7 @@ function PgBest11({nav}){
       </div>
       <div style={{padding:"16px 18px 0",display:"flex",flexDirection:"column",gap:10}}>
         <button style={btnG} onClick={saveImage} disabled={saving}>{saving?"保存中...":"💾 画像として保存する"}</button>
-        <div style={{background:"#1a3a28",borderRadius:12,padding:"12px 16px"}}>
+        <div style={{background:"rgba(247,201,72,0.08)",borderRadius:12,padding:"12px 16px"}}>
           <div style={{color:G.muted,fontSize:12,lineHeight:1.8}}>📸 <strong style={{color:"#fff"}}>スクリーンショットで保存する場合</strong><br/>上のカードを長押し（iOS）またはスクリーンショットで保存して、そのままInstagramストーリーに投稿できます。</div>
         </div>
         <button style={btnO} onClick={()=>setB11page("pitch")}>✏️ 編集に戻る</button>
