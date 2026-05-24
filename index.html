@@ -239,6 +239,7 @@ function PgHome({nav,goT}){
           <button style={{...btnO,marginTop:4}} onClick={()=>nav("best11")}>⚽ ベスト11を作る</button>
         </div>
       </div>
+      </div>
       <div style={{padding:"18px 18px 0"}}>
         {myCreated.length>0&&<div style={{...crd,border:`1px solid ${G.gold}44`}}><div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>👑 自分が作った大会</div>{myCreated.map(id=><TCard key={id} id={id} isCreated={true}/>)}</div>}
         {myJoined.filter(id=>!myCreated.includes(id)).length>0&&<div style={{...crd,border:"1px solid #2a5a3a"}}><div style={{color:"#4caf50",fontWeight:700,fontSize:13,marginBottom:10}}>✋ 参加中の大会</div>{myJoined.filter(id=>!myCreated.includes(id)).map(id=><TCard key={id} id={id} isCreated={false}/>)}</div>}
@@ -454,24 +455,16 @@ function PgPredictions({tourn:t,setTourn,nav,goCountry}){
         <div><div style={{color:G.gold,fontSize:21,fontWeight:900}}>みんなの予想</div><div style={{color:G.muted,fontSize:12,marginTop:2}}>{t.participants.length}人参加中 · 🔄 自動更新中</div></div>
       </div>
       {winRank.length>0&&<div style={{...crd,border:`1px solid ${G.gold}44`}}>
-        <div style={{color:G.gold,fontWeight:700,fontSize:12,marginBottom:14,letterSpacing:1}}>🥇 WINNER PREDICTION</div>
-        {winRank.map(([c,n],i)=>{
-          const pct=Math.round((n/(t.participants.filter(p=>p.predictions?.winner).length||1))*100);
-          return(
-            <div key={c} onClick={()=>goCountry(c)} style={{cursor:"pointer",marginBottom:10}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}><FlagImg country={c} size={20}/><span style={{color:i===0?"#fff":"#ccc",fontSize:13,fontWeight:i===0?700:400}}>{c}</span></div>
-                <div style={{display:"flex",alignItems:"center",gap:6}}>
-                  <span style={{color:G.gold,fontWeight:800,fontSize:14}}>{n}<span style={{color:G.muted,fontSize:11,fontWeight:400}}>人</span></span>
-                  <span style={{color:G.muted,fontSize:11}}>{pct}%</span>
-                </div>
-              </div>
-              <div style={{background:"rgba(0,0,0,0.4)",borderRadius:6,height:7,overflow:"hidden"}}>
-                <div style={{background:i===0?"linear-gradient(90deg,#F7C948,#22C55E)":i===1?"linear-gradient(90deg,#9CA3AF,#6B7280)":"#1E5C34",height:"100%",width:`${pct}%`,borderRadius:6,transition:"width 0.5s ease"}}/>
-              </div>
-            </div>
-          );
-        })}
+        <div style={{color:G.gold,fontWeight:700,fontSize:12,marginBottom:12,letterSpacing:1}}>🥇 WINNER PREDICTION</div>
+        {winRank.map(([c,n],i)=><div key={c} onClick={()=>goCountry(c)} style={{cursor:"pointer",marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}><FlagImg country={c} size={20}/><span style={{color:i===0?"#fff":"#ccc",fontSize:13}}>{c}</span></div>
+            <span style={{color:G.gold,fontWeight:700,fontSize:13}}>{n}人</span>
+          </div>
+          <div style={{background:"rgba(0,0,0,0.4)",borderRadius:6,height:7,overflow:"hidden"}}>
+            <div style={{background:i===0?"linear-gradient(90deg,#F7C948,#22C55E)":i<3?"#9CA3AF":"#1E5C34",height:"100%",borderRadius:6,width:(n*100/(t.participants.length||1))+"%"}}/>
+          </div>
+        </div>)}
       </div>}
       {t.participants.length===0?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>まだ参加者がいません</div>
         :t.participants.map(p=>(
