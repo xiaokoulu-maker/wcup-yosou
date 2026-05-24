@@ -93,6 +93,10 @@ const STRIPE={
 const ESPN_TO_JP={"Japan":"日本","Brazil":"ブラジル","Argentina":"アルゼンチン","France":"フランス","England":"イングランド","Spain":"スペイン","Germany":"ドイツ","Portugal":"ポルトガル","Netherlands":"オランダ","Italy":"イタリア","Croatia":"クロアチア","Belgium":"ベルギー","United States":"アメリカ","Mexico":"メキシコ","Canada":"カナダ","Korea Republic":"韓国","Australia":"オーストラリア","Morocco":"モロッコ","Uruguay":"ウルグアイ","Colombia":"コロンビア","Senegal":"セネガル","Norway":"ノルウェー","Sweden":"スウェーデン","Ecuador":"エクアドル","Switzerland":"スイス","Denmark":"デンマーク","Ghana":"ガーナ","Panama":"パナマ","Paraguay":"パラグアイ","Austria":"オーストリア","Algeria":"アルジェリア","Jordan":"ヨルダン","Tunisia":"チュニジア","Egypt":"エジプト","Iran":"イラン","Saudi Arabia":"サウジアラビア","Scotland":"スコットランド","Turkey":"トルコ","Ivory Coast":"コートジボワール","Cote D'Ivoire":"コートジボワール","New Zealand":"ニュージーランド","Serbia":"セルビア","Qatar":"カタール","South Africa":"南アフリカ","Czechia":"チェコ","Bosnia and Herzegovina":"ボスニア","Haiti":"ハイチ","Curacao":"キュラソー","Congo DR":"コンゴ","Uzbekistan":"ウズベキスタン","Iraq":"イラク","Cape Verde":"カボベルデ","Cabo Verde":"カボベルデ"};
 
 const genId=()=>Math.random().toString(36).slice(2,10).toUpperCase();
+function saveMyCreated(id){try{const list=JSON.parse(localStorage.getItem("wcup_created")||"[]");if(!list.includes(id)){list.unshift(id);localStorage.setItem("wcup_created",JSON.stringify(list.slice(0,10)));}}catch{}}
+function saveMyJoined(id){try{const list=JSON.parse(localStorage.getItem("wcup_joined")||"[]");if(!list.includes(id)){list.unshift(id);localStorage.setItem("wcup_joined",JSON.stringify(list.slice(0,10)));}}catch{}}
+function getMyCreated(){try{return JSON.parse(localStorage.getItem("wcup_created")||"[]");}catch{return[];}}
+function getMyJoined(){try{return JSON.parse(localStorage.getItem("wcup_joined")||"[]");}catch{return[];}}
 function calcPts(pred,res){if(!pred||!res?.winner)return 0;let p=0;if(pred.winner===res.winner)p+=20;if(pred.runnerUp===res.runnerUp)p+=15;if(pred.topScorer&&res.topScorer&&pred.topScorer.trim()===res.topScorer.trim())p+=15;if(pred.japanResult===res.japanResult)p+=10;if(pred.favoriteCountry===res.winner)p+=5;return p;}
 function rankMsg(rank,total){if(rank===1)return"現在首位。今だけはサッカー通を名乗っていいです。";if(rank===total&&total>1)return"予想というより祈りです。現実も少し見ましょう。";return"まだ巻き返せます。たぶん。";}
 function getAIPct(country){const d=AI_DATA.find(a=>a.country===country);if(d)return d.pct;const r=FIFA_RANK[country];if(r&&r<=10)return Math.max(1,8-r);if(r&&r<=20)return 1;return 0;}
@@ -159,7 +163,38 @@ function PgLoad(){return<div style={{display:"flex",alignItems:"center",justifyC
 function PgHome({nav,goT}){
   const [joinId,setJoinId]=useState("");
   const [joinErr,setJoinErr]=useState("");
+  const [myCreated,setMyCreated]=useState([]);
+  const [myJoined,setMyJoined]=useState([]);
+  const [loadedT,setLoadedT]=useState({});
+
+  useEffect(()=>{
+    const created=getMyCreated();
+    const joined=getMyJoined();
+    setMyCreated(created);
+    setMyJoined(joined);
+    // 大会データを一括ロード
+    const allIds=[...new Set([...created,...joined])];
+    allIds.forEach(id=>loadT(id).then(t=>{if(t)setLoadedT(prev=>({...prev,[id]:t}));}));
+  },[]);
+
   const joinByID=async()=>{const id=joinId.trim().toUpperCase();if(!id)return;const t=await loadT(id);if(t)goT(t);else setJoinErr("大会が見つかりませんでした。");};
+
+  const MyTournamentCard=({id,isCreated})=>{
+    const t=loadedT[id];
+    if(!t)return<div style={{background:G.dark,borderRadius:10,padding:"12px 14px",marginBottom:8,opacity:0.5}}><div style={{color:G.muted,fontSize:12}}>読み込み中... ({id})</div></div>;
+    return(
+      <div onClick={()=>goT(t)} style={{background:G.dark,borderRadius:10,padding:"12px 14px",marginBottom:8,cursor:"pointer",border:`1px solid ${isCreated?G.gold+"44":"#2a5a3a"}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div style={{flex:1}}>
+            <div style={{color:"#fff",fontWeight:700,fontSize:13,marginBottom:3}}>{t.name}</div>
+            <div style={{color:G.muted,fontSize:11}}>{isCreated?"👑 主催":"✋ 参加中"} · {t.participants.length}/{t.maxParticipants}人</div>
+          </div>
+          <div style={{color:G.gold,fontSize:12,fontWeight:700,marginLeft:8}}>開く →</div>
+        </div>
+      </div>
+    );
+  };
+
   return(
     <div style={{paddingBottom:40}}>
       <div style={{background:"linear-gradient(160deg,#0c2d18 0%,#1a4730 50%,#0a2016 100%)",padding:"50px 22px 40px",textAlign:"center"}}>
@@ -177,6 +212,20 @@ function PgHome({nav,goT}){
         </div>
       </div>
       <div style={{padding:"18px 18px 0"}}>
+        {/* 自分の主催大会 */}
+        {myCreated.length>0&&(
+          <div style={{...crd,border:`1px solid ${G.gold}44`}}>
+            <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>👑 自分が作った大会</div>
+            {myCreated.map(id=><MyTournamentCard key={id} id={id} isCreated={true}/>)}
+          </div>
+        )}
+        {/* 参加中の大会 */}
+        {myJoined.filter(id=>!myCreated.includes(id)).length>0&&(
+          <div style={{...crd,border:"1px solid #2a5a3a"}}>
+            <div style={{color:"#4caf50",fontWeight:700,fontSize:13,marginBottom:10}}>✋ 参加中の大会</div>
+            {myJoined.filter(id=>!myCreated.includes(id)).map(id=><MyTournamentCard key={id} id={id} isCreated={false}/>)}
+          </div>
+        )}
         <div style={crd}>
           <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>🔗 大会IDで参加する</div>
           <div style={{display:"flex",gap:8}}>
@@ -205,7 +254,7 @@ function PgCreate({nav,goT}){
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
     setLoading(true);
     const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",createdAt:new Date().toISOString()};
-    await goT(t);setLoading(false);
+    saveMyCreated(t.id);await goT(t);setLoading(false);
   };
   return(
     <div style={{padding:"20px 18px 40px"}}>
@@ -279,7 +328,7 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
 /* ── Join ── */
 function PgJoin({tourn:t,nav,update,setMyId}){
   const [nick,setNick]=useState("");const [icon,setIcon]=useState("⚽");const [err,setErr]=useState("");const [loading,setLoading]=useState(false);
-  const join=async()=>{if(!nick.trim()){setErr("ニックネームを入力してください");return;}const fresh=await loadT(t.id);const cur=fresh||t;if(cur.participants.length>=cur.maxParticipants){setErr("参加上限に達しています");return;}setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0};const updated={...cur,participants:[...cur.participants,p]};await update(updated);setMyId(p.id);nav("predict");setLoading(false);};
+  const join=async()=>{if(!nick.trim()){setErr("ニックネームを入力してください");return;}const fresh=await loadT(t.id);const cur=fresh||t;if(cur.participants.length>=cur.maxParticipants){setErr("参加上限に達しています");return;}setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0};const updated={...cur,participants:[...cur.participants,p]};saveMyJoined(cur.id);await update(updated);setMyId(p.id);nav("predict");setLoading(false);};
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
       <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>参加する</div>
