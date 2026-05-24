@@ -741,18 +741,94 @@ function PlayerAvatar({player,size=42,preview=false}){
   );
 }
 
-function PitchFree({placed,onPitchTap,onPlayerTap,movingUid,preview=false}){
+function PitchFree({placed,onPitchTap,onPlayerTap,movingUid,preview=false,onPlayerDrag}){
+  const pitchRef=React.useRef(null);
+  const dragRef=React.useRef(null); // {uid, isDragging, timer, startX, startY}
+  const rafRef=React.useRef(null);
   const pitchH=preview?300:360;
-  const handleClick=React.useCallback((e)=>{
-    if(preview||!onPitchTap)return;
-    const rect=e.currentTarget.getBoundingClientRect();
-    const x=Math.min(Math.max(((e.clientX-rect.left)/rect.width)*100,5),95);
-    const y=Math.min(Math.max(((e.clientY-rect.top)/rect.height)*100,5),95);
+
+  const getXY=React.useCallback((clientX,clientY)=>{
+    if(!pitchRef.current)return{x:50,y:50};
+    const r=pitchRef.current.getBoundingClientRect();
+    return{x:Math.min(Math.max(((clientX-r.left)/r.width)*100,3),97),y:Math.min(Math.max(((clientY-r.top)/r.height)*100,3),97)};
+  },[]);
+
+  // ノンパッシブtouchmoveをuseEffectで登録（preventDefault可能）
+  React.useEffect(()=>{
+    const el=pitchRef.current;
+    if(!el||preview)return;
+    const handleMove=(e)=>{
+      if(!dragRef.current)return;
+      const touch=e.touches[0];
+      const dx=Math.abs(touch.clientX-(dragRef.current.startX||0));
+      const dy=Math.abs(touch.clientY-(dragRef.current.startY||0));
+      if(!dragRef.current.isDragging){
+        if(dx>10||dy>10){clearTimeout(dragRef.current.timer);dragRef.current=null;}
+        return;
+      }
+      e.preventDefault();
+      if(rafRef.current)cancelAnimationFrame(rafRef.current);
+      const cx=touch.clientX,cy=touch.clientY;
+      rafRef.current=requestAnimationFrame(()=>{
+        if(!dragRef.current||!onPlayerDrag)return;
+        const{x,y}=getXY(cx,cy);
+        onPlayerDrag(dragRef.current.uid,x,y);
+      });
+    };
+    el.addEventListener("touchmove",handleMove,{passive:false});
+    return()=>el.removeEventListener("touchmove",handleMove);
+  },[preview,getXY,onPlayerDrag]);
+
+  const onPlayerTouchStart=React.useCallback((e,slot)=>{
+    if(preview)return;
+    e.stopPropagation();
+    const touch=e.touches[0];
+    const timer=setTimeout(()=>{
+      if(dragRef.current&&dragRef.current.uid===slot.uid){
+        dragRef.current.isDragging=true;
+        try{navigator.vibrate&&navigator.vibrate(40);}catch{}
+      }
+    },320);
+    dragRef.current={uid:slot.uid,timer,isDragging:false,startX:touch.clientX,startY:touch.clientY};
+  },[preview]);
+
+  const onPlayerTouchEnd=React.useCallback((e,slot)=>{
+    if(preview)return;
+    const was=dragRef.current?.isDragging;
+    if(dragRef.current?.timer)clearTimeout(dragRef.current.timer);
+    dragRef.current=null;
+    if(!was)onPlayerTap&&onPlayerTap(slot);
+  },[preview,onPlayerTap]);
+
+  // マウス（PC）用
+  const onPlayerMouseDown=React.useCallback((e,slot)=>{
+    if(preview)return;
+    e.stopPropagation();e.preventDefault();
+    dragRef.current={uid:slot.uid,timer:null,isDragging:true};
+    const onMove=(e)=>{
+      if(!dragRef.current?.isDragging)return;
+      if(rafRef.current)cancelAnimationFrame(rafRef.current);
+      const cx=e.clientX,cy=e.clientY;
+      rafRef.current=requestAnimationFrame(()=>{
+        if(!dragRef.current||!onPlayerDrag)return;
+        const{x,y}=getXY(cx,cy);
+        onPlayerDrag(dragRef.current.uid,x,y);
+      });
+    };
+    const onUp=()=>{dragRef.current=null;document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);};
+    document.addEventListener("mousemove",onMove);
+    document.addEventListener("mouseup",onUp);
+  },[preview,getXY,onPlayerDrag]);
+
+  const handlePitchClick=React.useCallback((e)=>{
+    if(preview||!onPitchTap||dragRef.current)return;
+    const{x,y}=getXY(e.clientX,e.clientY);
     onPitchTap(x,y);
-  },[preview,onPitchTap]);
+  },[preview,onPitchTap,getXY]);
 
   return(
-    <div onClick={handleClick} style={{position:"relative",width:"100%",height:pitchH,background:"linear-gradient(180deg,#1a7a3a 0%,#2d9e52 25%,#1a7a3a 50%,#2d9e52 75%,#1a7a3a 100%)",borderRadius:preview?8:12,overflow:"hidden",flexShrink:0,cursor:movingUid?"crosshair":"default",userSelect:"none"}}>
+    <div ref={pitchRef} onClick={handlePitchClick}
+      style={{position:"relative",width:"100%",height:pitchH,background:"linear-gradient(180deg,#1a7a3a 0%,#2d9e52 25%,#1a7a3a 50%,#2d9e52 75%,#1a7a3a 100%)",borderRadius:preview?8:12,overflow:"hidden",flexShrink:0,cursor:movingUid?"crosshair":"default",userSelect:"none",WebkitUserSelect:"none"}}>
       <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",pointerEvents:"none"}} viewBox="0 0 100 100" preserveAspectRatio="none">
         <rect x="3" y="2" width="94" height="96" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6"/>
         <line x1="3" y1="50" x2="97" y2="50" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5"/>
@@ -767,15 +843,17 @@ function PitchFree({placed,onPitchTap,onPlayerTap,movingUid,preview=false}){
       </svg>
       {placed.map(slot=>{
         const isMoving=movingUid===slot.uid;
-        const nameStr=slot.player?slot.player.short:(slot.posLabel||"＋");
+        const nameStr=slot.player?slot.player.short:(slot.posLabel||"+");
         return(
           <div key={slot.uid}
-            onClick={e=>{e.stopPropagation();onPlayerTap&&onPlayerTap(slot);}}
-            style={{position:"absolute",left:`${slot.x}%`,top:`${slot.y}%`,transform:"translate(-50%,-50%)",textAlign:"center",cursor:"pointer",zIndex:10,outline:isMoving?`3px solid ${G.gold}`:"none",borderRadius:50,padding:2}}>
+            onTouchStart={e=>onPlayerTouchStart(e,slot)}
+            onTouchEnd={e=>onPlayerTouchEnd(e,slot)}
+            onMouseDown={e=>onPlayerMouseDown(e,slot)}
+            onClick={e=>e.stopPropagation()}
+            style={{position:"absolute",left:`${slot.x}%`,top:`${slot.y}%`,transform:"translate(-50%,-50%)",textAlign:"center",cursor:"grab",zIndex:10,outline:isMoving?`3px solid ${G.gold}`:"none",borderRadius:50,padding:2,touchAction:"none",WebkitTouchCallout:"none"}}>
             {slot.player
               ?<PlayerAvatar player={slot.player} size={preview?28:38} preview={preview}/>
-              :<div style={{width:preview?26:36,height:preview?26:36,borderRadius:"50%",background:"rgba(255,255,255,0.15)",border:"2px dashed rgba(255,255,255,0.7)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:preview?13:18,fontWeight:700,margin:"0 auto"}}>{preview?"":"+"}
-              </div>
+              :<div style={{width:preview?26:36,height:preview?26:36,borderRadius:"50%",background:"rgba(255,255,255,0.15)",border:"2px dashed rgba(255,255,255,0.7)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:preview?13:18,fontWeight:700,margin:"0 auto"}}>+</div>
             }
             <div style={{color:"#fff",fontSize:preview?7.5:9,fontWeight:700,textShadow:"0 1px 4px rgba(0,0,0,0.9)",marginTop:2,maxWidth:preview?40:52,lineHeight:1.2,overflow:"hidden",whiteSpace:"nowrap"}}>
               {nameStr}
@@ -783,14 +861,8 @@ function PitchFree({placed,onPitchTap,onPlayerTap,movingUid,preview=false}){
           </div>
         );
       })}
-      {movingUid&&!preview&&(
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"rgba(0,0,0,0.7)",borderRadius:10,padding:"6px 14px",pointerEvents:"none"}}>
-          <div style={{color:G.gold,fontSize:11,fontWeight:700}}>タップして移動先を指定</div>
-        </div>
-      )}
-      {!preview&&placed.length<11&&!movingUid&&(
-        <div style={{position:"absolute",bottom:8,left:0,right:0,textAlign:"center",color:"rgba(255,255,255,0.4)",fontSize:10,pointerEvents:"none"}}>ピッチをタップして選手を追加（最大11人）</div>
-      )}
+      {movingUid&&!preview&&<div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"rgba(0,0,0,0.7)",borderRadius:10,padding:"6px 14px",pointerEvents:"none"}}><div style={{color:G.gold,fontSize:11,fontWeight:700}}>タップして移動先を指定</div></div>}
+      {!preview&&placed.length<11&&!movingUid&&<div style={{position:"absolute",bottom:8,left:0,right:0,textAlign:"center",color:"rgba(255,255,255,0.4)",fontSize:10,pointerEvents:"none"}}>ピッチをタップして追加 / 長押しでドラッグ移動</div>}
     </div>
   );
 }
@@ -875,6 +947,10 @@ function PgBest11({nav}){
     setPlaced(FORMATIONS[f].map((pos,i)=>({uid:"f"+i,player:null,x:pos.x,y:pos.y,posLabel:pos.pos})));
     setMovingUid(null);
   };
+
+  const handlePlayerDrag=React.useCallback((uid,x,y)=>{
+    setPlaced(p=>p.map(s=>s.uid===uid?{...s,x,y}:s));
+  },[]);
 
   const handlePitchTap=(x,y)=>{
     if(movingUid){
@@ -1007,7 +1083,7 @@ function PgBest11({nav}){
         {movingUid&&<div style={{color:G.gold,fontSize:11,textAlign:"center",marginTop:6,fontWeight:700}}>↔️ 移動先のピッチをタップしてください</div>}
       </div>
       <div style={{padding:"10px 14px 0"}}>
-        <PitchFree placed={placed} onPitchTap={handlePitchTap} onPlayerTap={handlePlayerTap} movingUid={movingUid}/>
+        <PitchFree placed={placed} onPitchTap={handlePitchTap} onPlayerTap={handlePlayerTap} movingUid={movingUid} onPlayerDrag={handlePlayerDrag}/>
         <div style={{marginTop:12,display:"flex",gap:8}}>
           <button style={{...btnO,flex:1,padding:"11px 8px",fontSize:13}} onClick={()=>setB11page("formation")}>🔄 布陣変更</button>
           <button style={{...btnGr,flex:1,padding:"11px 8px",fontSize:13}} onClick={()=>{if(window.confirm("全選手を削除しますか？")){setPlaced([]);setMovingUid(null);}}}>🗑️ リセット</button>
