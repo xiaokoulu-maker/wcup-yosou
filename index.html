@@ -11,20 +11,25 @@
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:#061A0D;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#fff;}
-select option{background:#061A0D;color:#fff;}
+html,body{background:linear-gradient(160deg,#061826 0%,#0B3D1E 50%,#061826 100%);background-attachment:fixed;background-size:cover;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#fff;}
+select option{background:#061826;color:#fff;}
 textarea,input,select{font-family:inherit;}
 ::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:#16A34A;border-radius:4px;}
-@keyframes goldGlow{0%,100%{box-shadow:0 0 15px rgba(247,201,72,0.25);}50%{box-shadow:0 0 40px rgba(247,201,72,0.55),0 0 60px rgba(247,201,72,0.2);}}
-@keyframes floatBall{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-10px) rotate(5deg);}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#16A34A,#0EA5E9);border-radius:4px;}
+@keyframes goldGlow{0%,100%{box-shadow:0 0 20px rgba(250,204,21,0.3);}50%{box-shadow:0 0 50px rgba(250,204,21,0.7),0 0 80px rgba(250,204,21,0.25);}}
+@keyframes blueGlow{0%,100%{box-shadow:0 0 20px rgba(14,165,233,0.3);}50%{box-shadow:0 0 40px rgba(14,165,233,0.6);}}
+@keyframes floatBall{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-12px) rotate(5deg);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.6)}}
-@keyframes rankOne{0%,100%{box-shadow:0 0 20px rgba(247,201,72,0.3);}50%{box-shadow:0 0 40px rgba(247,201,72,0.6);}}
-button{transition:transform 0.12s ease,opacity 0.12s ease !important;}
-button:active{transform:scale(0.96) !important;opacity:0.9 !important;}
-input:focus{border-color:rgba(247,201,72,0.7) !important;box-shadow:0 0 0 3px rgba(247,201,72,0.1) !important;}
-textarea:focus{border-color:rgba(247,201,72,0.7) !important;box-shadow:0 0 0 3px rgba(247,201,72,0.1) !important;}
+@keyframes rankOne{0%,100%{box-shadow:0 0 24px rgba(250,204,21,0.35);}50%{box-shadow:0 0 56px rgba(250,204,21,0.75),0 0 80px rgba(250,204,21,0.2);}}
+@keyframes rankTwo{0%,100%{box-shadow:0 0 16px rgba(192,192,220,0.25);}50%{box-shadow:0 0 36px rgba(192,192,220,0.5);}}
+@keyframes rankThree{0%,100%{box-shadow:0 0 14px rgba(176,110,60,0.25);}50%{box-shadow:0 0 30px rgba(176,110,60,0.5);}}
+@keyframes stadiumLight{0%,100%{opacity:0.15;}50%{opacity:0.25;}}
+button{transition:transform 0.12s ease,box-shadow 0.15s ease,opacity 0.12s ease !important;}
+button:active{transform:scale(0.95) !important;opacity:0.88 !important;}
+button:hover{transform:translateY(-1px) !important;}
+input:focus{border-color:rgba(250,204,21,0.7) !important;box-shadow:0 0 0 3px rgba(250,204,21,0.12) !important;}
+textarea:focus{border-color:rgba(250,204,21,0.7) !important;box-shadow:0 0 0 3px rgba(250,204,21,0.12) !important;}
 </style>
 </head>
 <body>
@@ -98,9 +103,9 @@ function getAIPct(country){const d=AI_DATA.find(a=>a.country===country);if(d)ret
 function isDeadlinePassed(deadline){if(!deadline)return false;return new Date()>new Date(deadline);}
 function fmtDeadline(deadline){if(!deadline)return null;return new Date(deadline).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});}
 
-const G={bg:"#061A0D",card:"#0D2518",dark:"#04100A",gold:"#F7C948",green:"#16A34A",muted:"#A7C7B0",border:"#1A4A28"};
+const G={bg:"#061826",card:"#0D2A1C",dark:"#041016",gold:"#FACC15",green:"#16A34A",muted:"#A7C7B0",border:"#1A5030",blue:"#0EA5E9",navy:"#061826"};
 const btnG={background:"linear-gradient(135deg,#F7C948 0%,#E8B830 60%,#F7C948 100%)",color:"#0A1400",fontWeight:800,borderRadius:16,padding:"16px 20px",fontSize:15,border:"none",cursor:"pointer",width:"100%",boxShadow:"0 4px 24px rgba(247,201,72,0.35)",letterSpacing:0.3};
-const btnO={background:"rgba(247,201,72,0.05)",color:G.gold,fontWeight:700,borderRadius:16,padding:"14px 20px",fontSize:14,border:"1.5px solid rgba(247,201,72,0.4)",cursor:"pointer",width:"100%"};
+const btnO={background:"linear-gradient(135deg,rgba(14,165,233,0.15) 0%,rgba(22,163,74,0.15) 100%)",color:"#fff",fontWeight:700,borderRadius:16,padding:"14px 20px",fontSize:14,border:"1.5px solid rgba(14,165,233,0.45)",cursor:"pointer",width:"100%"};
 const btnGr={background:"rgba(255,255,255,0.03)",color:"#7A9E8A",fontWeight:600,borderRadius:16,padding:"12px 20px",fontSize:13,border:"1px solid #1A4A28",cursor:"pointer",width:"100%"};
 const btnRed={background:"rgba(255,80,80,0.07)",color:"#FF7777",fontWeight:600,borderRadius:10,padding:"6px 14px",fontSize:12,border:"1px solid rgba(255,100,100,0.3)",cursor:"pointer"};
 const crd={background:"linear-gradient(145deg,#0D2518 0%,#091A10 100%)",borderRadius:18,padding:20,marginBottom:12,border:"1px solid #1A4A28",boxShadow:"0 4px 20px rgba(0,0,0,0.25)"};
@@ -218,7 +223,7 @@ function PgHome({nav,goT}){
 
   return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(180deg,#092412 0%,#061A0D 100%)",padding:"56px 22px 44px",textAlign:"center",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-60,left:"50%",transform:"translateX(-50%)",width:500,height:400,background:"radial-gradient(ellipse at 50% 20%,rgba(22,163,74,0.2) 0%,transparent 60%)",pointerEvents:"none"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(247,201,72,0.2),transparent)",pointerEvents:"none"}}/>
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 60%,#041016 100%)",padding:"56px 22px 48px",textAlign:"center",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-60,left:"50%",transform:"translateX(-50%)",width:500,height:400,background:"radial-gradient(ellipse at 50% 20%,rgba(22,163,74,0.2) 0%,transparent 60%)",pointerEvents:"none"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(247,201,72,0.2),transparent)",pointerEvents:"none"}}/>
         <div style={{position:"relative",zIndex:1}}>
         <div style={{fontSize:68,marginBottom:14,display:"inline-block",filter:"drop-shadow(0 0 28px rgba(247,201,72,0.5))"}}>⚽</div>
         <div style={{marginBottom:4}}>
@@ -528,10 +533,10 @@ function PgRanking({tourn:t,setTourn,nav}){
           :ranked.map((p,i)=>{
   const rank=i+1;
   const isLast=rank===ranked.length&&ranked.length>1;
-  const medalBg=rank===1?"linear-gradient(145deg,#2A1E00,#1A1200)":rank===2?"linear-gradient(145deg,#1C1C28,#111118)":rank===3?"linear-gradient(145deg,#2A1400,#1A0D00)":"linear-gradient(145deg,#0D2518,#091A10)";
-  const medalBorder=rank===1?`2px solid ${G.gold}`:rank===2?"2px solid #9898B8":rank===3?"2px solid #9B6B3A":"1px solid #1A4A28";
+  const medalBg=rank===1?"linear-gradient(145deg,#2A1A00,#1A1000,#0A0800)":rank===2?"linear-gradient(145deg,#1A2030,#10162A,#080E1A)":rank===3?"linear-gradient(145deg,#2A1208,#1A0C04,#0E0804)":"linear-gradient(145deg,#0D2A1C,#091A10)";
+  const medalBorder=rank===1?`2px solid ${G.gold}`:rank===2?"2px solid #A0A0C8":rank===3?"2px solid #C07840":"1px solid #1A5030";
   const medalShadow=rank===1?"0 0 30px rgba(247,201,72,0.25)":rank===2?"0 4px 20px rgba(0,0,0,0.4)":rank===3?"0 4px 20px rgba(0,0,0,0.4)":"none";
-  const rankAnim=rank===1?{animation:"rankOne 2.5s ease-in-out infinite"}:{};
+  const rankAnim=rank===1?{animation:"rankOne 2.5s ease-in-out infinite"}:rank===2?{animation:"rankTwo 3s ease-in-out infinite"}:rank===3?{animation:"rankThree 3.5s ease-in-out infinite"}:{};
   return<div key={p.id} style={{...crd,background:medalBg,border:medalBorder,boxShadow:medalShadow,...rankAnim,marginBottom:10}}>
     <div style={{display:"flex",alignItems:"center",gap:12}}>
       <div style={{minWidth:42,textAlign:"center"}}>
@@ -571,7 +576,7 @@ function PgStats({tourn:t,nav}){
 
   return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center"}}>
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden"}}>
         <Back onClick={()=>nav("tournament")}/>
         <div style={{color:G.gold,fontSize:22,fontWeight:900}}>📊 詳細統計</div>
         <div style={{color:G.muted,fontSize:12,marginTop:4}}>{t.name} · {preds.length}人が予想済み</div>
@@ -691,21 +696,77 @@ function PgAdmin({tourn:t,nav,update,adminOk,setAdminOk}){
 function PgUpgrade({nav,tourn:t,update}){
   const [unlockCode,setUnlockCode]=useState("");const [unlockErr,setUnlockErr]=useState("");const [unlocked,setUnlocked]=useState(false);
   const tryUnlock=async()=>{const code=unlockCode.trim().toUpperCase();let planKey=null;if(code.includes("STANDARD"))planKey="standard";else if(code.includes("PREMIUM"))planKey="premium";else if(code.includes("GROUP"))planKey="group";if(!planKey||!t){setUnlockErr("コードが正しくありません。");return;}const plan=STRIPE[planKey];const updated={...t,plan:planKey,maxParticipants:plan.people};await update(updated);setUnlocked(true);setTimeout(()=>nav("tournament"),1500);};
+
+  const PLAN_INFO={
+    standard:{tag:"👫 友達グループ向け",tagColor:"#0EA5E9",features:["10人まで参加可能","AI優勝予想リスト","詳細統計グラフ","予想締切設定","リアルタイム更新"],use:"友達5〜10人ならこれ"},
+    premium:{tag:"🏆 ガチ勢・サークル向け",tagColor:"#FACC15",features:["30人まで参加可能","全機能解放","ベスト11画像保存","詳細ランキング","参加者管理"],use:"サークル・会社の予想会に"},
+    group:{tag:"🏟️ 大人数・企業向け",tagColor:"#22C55E",features:["50人まで参加可能","大人数LINEグループ対応","ランキング画像作成","全機能解放","管理者サポート"],use:"大規模イベント・企業大会に"},
+  };
+
   return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav(t?"tournament":"home")}/>
-      <div style={{textAlign:"center",marginBottom:24}}><div style={{fontSize:40,marginBottom:8}}>🏆</div><div style={{color:G.gold,fontSize:22,fontWeight:900,marginBottom:6}}>プランをアップグレード</div><div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>有料プランで参加人数の拡大・<br/>AI優勝予想の閲覧ができます</div></div>
-      {Object.entries(STRIPE).map(([key,plan])=>(
-        <div key={key} style={{...crd,border:key==="premium"?`2px solid ${G.gold}88`:"2px solid transparent",marginBottom:10,position:"relative"}}>
-          {key==="premium"&&<div style={{position:"absolute",top:-10,left:20,background:G.gold,color:"#111",fontSize:10,fontWeight:700,padding:"2px 10px",borderRadius:20}}>人気No.1</div>}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div><div style={{color:"#fff",fontWeight:700,fontSize:16}}>{plan.label}プラン</div><div style={{color:G.muted,fontSize:12,marginTop:2}}>{plan.people}人まで参加可能</div></div><div style={{textAlign:"right"}}><div style={{color:G.gold,fontWeight:900,fontSize:22}}>¥{plan.price.toLocaleString()}</div><div style={{color:G.muted,fontSize:11}}>買い切り</div></div></div>
-          <div style={{fontSize:12,color:"#8ba",marginBottom:12}}>✅ {plan.people}人まで　✅ AI優勝予想　✅ リアルタイム更新</div>
-          <button onClick={()=>window.open(t?`${plan.url}?client_reference_id=${t.id}`:plan.url,"_blank")} style={{...btnG,fontSize:14,padding:"12px"}}>このプランで決済する →</button>
+    <div style={{paddingBottom:40}}>
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"40px 20px 28px",textAlign:"center"}}>
+        <Back onClick={()=>nav(t?"tournament":"home")}/>
+        <div style={{fontSize:48,marginBottom:10,filter:"drop-shadow(0 0 20px rgba(250,204,21,0.5))"}}>🏆</div>
+        <div style={{color:G.gold,fontSize:22,fontWeight:900,marginBottom:6}}>プランをアップグレード</div>
+        <div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>6人以上で遊ぶなら、もっと盛り上がれる</div>
+      </div>
+      <div style={{padding:"16px 18px 0"}}>
+        {/* 無料プランの限界を明示 */}
+        <div style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:14,padding:"12px 16px",marginBottom:16}}>
+          <div style={{color:"#FCA5A5",fontWeight:700,fontSize:12,marginBottom:6}}>⚠️ 無料プランの制限</div>
+          <div style={{color:"#ccc",fontSize:12,lineHeight:1.8}}>5人まで ／ AI予想なし ／ 詳細統計なし ／ ベスト11保存なし</div>
         </div>
-      ))}
-      <div style={{...crd,marginTop:8}}><div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:8}}>💳 支払い完了後のアンロック</div><div style={{color:G.muted,fontSize:12,marginBottom:12,lineHeight:1.7}}>支払い完了後、メールに記載のアンロックコードを入力してください。</div><div style={{display:"flex",gap:8}}><input style={{...inp,flex:1}} placeholder="アンロックコードを入力" value={unlockCode} onChange={e=>setUnlockCode(e.target.value)}/><button onClick={tryUnlock} style={{background:G.gold,color:"#111",border:"none",borderRadius:10,padding:"0 14px",fontWeight:700,cursor:"pointer",flexShrink:0}}>認証</button></div>{unlockErr&&<div style={{marginTop:8}}><Err msg={unlockErr}/></div>}{unlocked&&<div style={{marginTop:8,color:"#4caf50",fontSize:13,fontWeight:700}}>✅ アンロック完了！</div>}</div>
+
+        {Object.entries(STRIPE).map(([key,plan])=>{
+          const info=PLAN_INFO[key];
+          const isPremium=key==="premium";
+          return(
+            <div key={key} style={{...crd,border:isPremium?`2px solid ${G.gold}`:key==="group"?"2px solid #22C55E55":"1px solid #1A5030",marginBottom:14,position:"relative"}}>
+              {isPremium&&<div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:`linear-gradient(135deg,${G.gold},#E8B830)`,color:"#0A1400",fontSize:10,fontWeight:800,padding:"3px 14px",borderRadius:20,whiteSpace:"nowrap",boxShadow:"0 2px 10px rgba(250,204,21,0.4)"}}>🌟 一番人気</div>}
+              <div style={{marginBottom:12}}>
+                <div style={{display:"inline-block",background:`${info.tagColor}22`,border:`1px solid ${info.tagColor}44`,borderRadius:20,padding:"3px 10px",marginBottom:8}}>
+                  <span style={{color:info.tagColor,fontSize:11,fontWeight:700}}>{info.tag}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                  <div>
+                    <div style={{color:"#fff",fontWeight:800,fontSize:17}}>{plan.label}プラン</div>
+                    <div style={{color:G.muted,fontSize:12,marginTop:2}}>{info.use}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{color:G.gold,fontWeight:900,fontSize:24}}>¥{plan.price.toLocaleString()}</div>
+                    <div style={{color:G.muted,fontSize:10}}>買い切り</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{marginBottom:14}}>
+                {info.features.map((f,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+                    <span style={{color:"#22C55E",fontSize:13}}>✓</span>
+                    <span style={{color:"#ddd",fontSize:12}}>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>window.open(t?`${plan.url}?client_reference_id=${t.id}`:plan.url,"_blank")} style={{...btnG,padding:"13px",fontSize:14}}>このプランで決済する →</button>
+            </div>
+          );
+        })}
+
+        <div style={{...crd,marginTop:4}}>
+          <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:8}}>💳 支払い完了後のアンロック</div>
+          <div style={{color:G.muted,fontSize:12,marginBottom:12,lineHeight:1.7}}>支払い完了後、メールに記載のアンロックコードを入力してください。</div>
+          <div style={{display:"flex",gap:8}}>
+            <input style={{...inp,flex:1}} placeholder="アンロックコードを入力" value={unlockCode} onChange={e=>setUnlockCode(e.target.value)}/>
+            <button onClick={tryUnlock} style={{background:G.gold,color:"#111",border:"none",borderRadius:10,padding:"0 14px",fontWeight:700,cursor:"pointer",flexShrink:0}}>認証</button>
+          </div>
+          {unlockErr&&<div style={{marginTop:8}}><Err msg={unlockErr}/></div>}
+          {unlocked&&<div style={{marginTop:8,color:"#22C55E",fontSize:13,fontWeight:700}}>✅ アンロック完了！</div>}
+        </div>
+      </div>
     </div>
   );
 }
+
 
 /* ── AI ── */
 function PgAI({nav,goCountry}){return(<div style={{paddingBottom:40}}><div style={{background:"linear-gradient(160deg,#092412 0%,#0A2E14 100%)",padding:"36px 20px 30px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:6}}>AI ANALYSIS</div><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🤖 AI優勝予想</div><div style={{color:G.muted,fontSize:12,marginTop:8,lineHeight:1.7}}>世界中の予想データをAIが総合分析</div><div style={{color:"#445",fontSize:11,marginTop:6}}>2026年5月24日 更新</div></div><div style={{padding:"14px 18px 0"}}>{AI_DATA.map((p,i)=>(<div key={p.country} onClick={()=>goCountry(p.country)} style={{...crd,border:i===0?`1.5px solid ${G.gold}66`:"1.5px solid transparent",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:12}}><div style={{minWidth:36,textAlign:"center"}}>{i<3?<div style={{fontSize:24}}>{"🥇🥈🥉"[i]}</div>:<div style={{color:"#666",fontWeight:900,fontSize:15}}>{i+1}</div>}</div><FlagImg country={p.country} size={34}/><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}><span style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.country}</span><FIFARank country={p.country} small/><span style={{color:p.trend==="↑"?"#4caf50":p.trend==="↓"?"#f44":"#888",fontSize:13,fontWeight:700}}>{p.trend}</span></div><div style={{background:"#0a1f0f",borderRadius:6,height:7,overflow:"hidden",marginBottom:4}}><div style={{background:i===0?G.gold:i<3?"#4caf50":G.green,width:`${Math.min(p.pct*4.5,100)}%`,height:"100%",borderRadius:6}}/></div><div style={{color:G.muted,fontSize:11,lineHeight:1.4}}>{p.reason}</div></div><div style={{textAlign:"right",minWidth:42}}><div style={{color:i===0?G.gold:"#fff",fontWeight:900,fontSize:18}}>{p.pct}%</div></div></div></div>))}<div style={{background:G.dark,borderRadius:10,padding:"12px 14px"}}><div style={{color:G.muted,fontSize:11,lineHeight:1.8}}>※ 世界中の予想データ・各国成績・専門家分析をAIが総合的に算出した予想値です。<br/>※ 各国をタップすると詳細が見られます。</div></div></div></div>);}
@@ -715,7 +776,7 @@ function PgGroups({nav,goCountry}){
   const [standings,setStandings]=useState({});const [selGroup,setSelGroup]=useState(null);
   useEffect(()=>{fetchStandings().then(data=>{const map={};data.forEach(group=>{const gName=group.abbreviation||group.name;if(gName&&group.standings?.entries){map[gName]=group.standings.entries.map(e=>({name:ESPN_TO_JP[e.team?.displayName]||e.team?.displayName,w:e.stats?.find(s=>s.name==="wins")?.value||0,d:e.stats?.find(s=>s.name==="ties")?.value||0,l:e.stats?.find(s=>s.name==="losses")?.value||0,gf:e.stats?.find(s=>s.name==="pointsFor")?.value||0,ga:e.stats?.find(s=>s.name==="pointsAgainst")?.value||0,pts:e.stats?.find(s=>s.name==="points")?.value||0}));}});setStandings(map);});},[]);
   return(
-    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🗂️ グループ表</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026 · 全12グループ</div><div style={{color:"#334",fontSize:11,marginTop:4}}>FIFAランク: 2026年4月1日最新</div></div>
+    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>🗂️ グループ表</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026 · 全12グループ</div><div style={{color:"#334",fontSize:11,marginTop:4}}>FIFAランク: 2026年4月1日最新</div></div>
     <div style={{padding:"12px 18px 0"}}>
       <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:4,marginBottom:14}}>{WC_GROUPS.map(g=>(<button key={g.name} onClick={()=>setSelGroup(selGroup===g.name?null:g.name)} style={{background:selGroup===g.name?G.gold:G.card,color:selGroup===g.name?"#111":"#ccc",border:"none",borderRadius:8,padding:"8px 4px",fontSize:13,cursor:"pointer",fontWeight:700}}>{g.name}</button>))}</div>
       {(selGroup?WC_GROUPS.filter(g=>g.name===selGroup):WC_GROUPS).map(group=>{
@@ -738,7 +799,7 @@ function PgSchedule({nav,goCountry}){
   const filtered=matches.filter(m=>{const s=m.status?.type?.state;if(filter==="live")return s==="in";if(filter==="done")return s==="post";if(filter==="upcoming")return s==="pre";return true;});
   const grouped={};filtered.forEach(m=>{const date=new Date(m.date).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"});if(!grouped[date])grouped[date]=[];grouped[date].push(m);});
   return(
-    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"36px 20px 22px",textAlign:"center"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>📅 試合日程・結果</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026</div></div>
+    <div style={{paddingBottom:40}}><div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden"}}><Back onClick={()=>nav("home")}/><div style={{color:G.gold,fontSize:22,fontWeight:900}}>📅 試合日程・結果</div><div style={{color:G.muted,fontSize:12,marginTop:4}}>FIFA ワールドカップ 2026</div></div>
     <div style={{padding:"14px 18px 0"}}>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:14}}>{[["all","すべて"],["live","試合中"],["upcoming","予定"],["done","結果"]].map(([v,lb])=>(<button key={v} onClick={()=>setFilter(v)} style={{background:filter===v?G.gold:G.card,color:filter===v?"#111":"#ccc",border:"none",borderRadius:10,padding:"8px 4px",fontSize:12,cursor:"pointer",fontWeight:filter===v?700:400}}>{lb}</button>))}</div>
       {loading?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>⚽ 試合データ取得中...</div>
@@ -933,7 +994,7 @@ function PitchFree({placed,onPitchTap,onPlayerTap,movingUid,preview=false,onPlay
 
   return(
     <div ref={pitchRef} onClick={handlePitchClick}
-      style={{position:"relative",width:"100%",height:pitchH,background:"linear-gradient(180deg,#1a7a3a 0%,#2d9e52 25%,#1a7a3a 50%,#2d9e52 75%,#1a7a3a 100%)",borderRadius:preview?8:12,overflow:"hidden",flexShrink:0,cursor:movingUid?"crosshair":"default",userSelect:"none",WebkitUserSelect:"none"}}>
+      style={{position:"relative",width:"100%",height:pitchH,background:"linear-gradient(180deg,#1E8040 0%,#2DB558 25%,#1E8040 50%,#2DB558 75%,#1E8040 100%)",borderRadius:preview?8:12,overflow:"hidden",flexShrink:0,cursor:movingUid?"crosshair":"default",userSelect:"none",WebkitUserSelect:"none"}}>
       <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",pointerEvents:"none"}} viewBox="0 0 100 100" preserveAspectRatio="none">
         <rect x="3" y="2" width="94" height="96" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6"/>
         <line x1="3" y1="50" x2="97" y2="50" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5"/>
