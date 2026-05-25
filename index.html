@@ -168,6 +168,7 @@ const STRIPE={
   standard:{url:"https://buy.stripe.com/test_3cIfZh1w33qYbx1dF0e7m00",label:"スタンダード",people:10,price:500},
   premium: {url:"https://buy.stripe.com/test_00wfZha2z2mUfNhasOe7m01",label:"プレミアム",people:30,price:980},
   group:   {url:"https://buy.stripe.com/test_3cI00ja2zaTqcB57gCe7m02",label:"グループ",people:50,price:1480},
+  support: {url:"",label:"開発者にコーヒーを奢る",price:100},  // ← Stripeで100円の商品を作成後にURLを入れる
 };
 // 無料プランは3人まで
 const FREE_LIMIT=3;
@@ -309,6 +310,46 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
           {sending?"...":"送信"}
         </button>
       </div>
+    </div>
+  );
+}
+
+
+/* ── 応援課金コンポーネント ── */
+function CoffeeSupport({compact=false}){
+  const open=()=>{
+    const url=STRIPE.support.url;
+    if(!url){alert("応援課金ページは準備中です。もうしばらくお待ちください！");return;}
+    window.open(url,"_blank");
+  };
+  if(compact) return(
+    <div style={{background:"rgba(180,120,40,0.06)",border:"1px solid rgba(180,120,40,0.18)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:12}}>
+      <span style={{fontSize:24,flexShrink:0}}>☕</span>
+      <div style={{flex:1}}>
+        <div style={{color:"#D4A056",fontSize:12,fontWeight:700}}>開発者にコーヒーを奢る</div>
+        <div style={{color:G.muted,fontSize:10,marginTop:1}}>任意の応援課金 · 100円 · 機能解放なし</div>
+      </div>
+      <button onClick={open} style={{background:"rgba(180,120,40,0.2)",color:"#D4A056",border:"1px solid rgba(180,120,40,0.35)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+        ☕ 100円
+      </button>
+    </div>
+  );
+  return(
+    <div style={{background:"rgba(180,120,40,0.05)",border:"1px solid rgba(180,120,40,0.15)",borderRadius:14,padding:"16px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+        <span style={{fontSize:32}}>☕</span>
+        <div>
+          <div style={{color:"#D4A056",fontWeight:700,fontSize:14}}>開発者にコーヒーを奢る</div>
+          <div style={{color:G.muted,fontSize:11,marginTop:2}}>サービスが役に立ったら、100円で応援できます</div>
+        </div>
+      </div>
+      <div style={{color:"#ccc",fontSize:12,lineHeight:1.7,marginBottom:12}}>
+        W杯予想メーカーを応援する100円サポートです。<br/>
+        <span style={{color:G.muted,fontSize:11}}>※ 任意の応援課金です。人数追加・有料機能の解放はありません。</span>
+      </div>
+      <button onClick={open} style={{...btnG,background:"linear-gradient(135deg,#92622A,#B8803A)",fontSize:14,padding:"12px"}}>
+        ☕ 100円で応援する
+      </button>
     </div>
   );
 }
@@ -664,6 +705,7 @@ ${url}`);
         <div style={{marginTop:4}}>
           <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={280}/>
         </div>
+        <CoffeeSupport compact={true}/>
         <AffiliateBlock title="🏟️ みんなで観戦する準備" keys={["pizza","drink","projector","streaming"]} compact={true}/>
       </div>
     </div>
