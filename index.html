@@ -43,6 +43,72 @@ function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxPar
 async function loadT(id){try{const{data,error}=await db.from("tournaments").select("*").eq("id",id).single();if(error||!data)return null;return dbToApp(data);}catch{return null;}}
 async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null},{onConflict:"id"});}catch(e){console.error(e);}}
 function subscribeToTournament(id,onUpdate){const ch=db.channel("t-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"tournaments",filter:`id=eq.${id}`},p=>{if(p.new)onUpdate(dbToApp(p.new));}).subscribe();return()=>db.removeChannel(ch);}
+
+// チャット: メッセージ取得
+async function fetchMessages(tournamentId,limit=50){
+  try{
+    let q=db.from("messages").select("*").order("created_at",{ascending:true}).limit(limit);
+    if(tournamentId) q=q.eq("tournament_id",tournamentId);
+    else q=q.is("tournament_id",null);
+    const{data,error}=await q;
+    return error?[]:(data||[]);
+  }catch{return[];}
+}
+// チャット: メッセージ送信
+async function sendMessage(tournamentId,nickname,icon,body){
+  try{
+    const row={nickname,icon,body};
+    if(tournamentId) row.tournament_id=tournamentId;
+    const{error}=await db.from("messages").insert(row);
+    return !error;
+  }catch{return false;}
+}
+// チャット: リアルタイム購読
+function subscribeToChat(tournamentId,onNew){
+  const chName="chat-"+(tournamentId||"global");
+  const ch=db.channel(chName).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},p=>{
+    if(!p.new)return;
+    const msg=p.new;
+    const isGlobal=!tournamentId&&!msg.tournament_id;
+    const isTournament=tournamentId&&msg.tournament_id===tournamentId;
+    if(isGlobal||isTournament) onNew(msg);
+  }).subscribe();
+  return()=>db.removeChannel(ch);
+}
+
+// チャット: メッセージ取得
+async function fetchMessages(tournamentId,limit=50){
+  try{
+    let q=db.from("messages").select("*").order("created_at",{ascending:true}).limit(limit);
+    if(tournamentId) q=q.eq("tournament_id",tournamentId);
+    else q=q.is("tournament_id",null);
+    const{data,error}=await q;
+    return error?[]:(data||[]);
+  }catch{return[];}
+}
+// チャット: メッセージ送信
+async function sendMessage(tournamentId,nickname,icon,body){
+  try{
+    const row={nickname,icon,body};
+    if(tournamentId) row.tournament_id=tournamentId;
+    const{error}=await db.from("messages").insert(row);
+    return !error;
+  }catch{return false;}
+}
+// チャット: リアルタイム購読
+function subscribeToChat(tournamentId,onNew){
+  const chName="chat-"+(tournamentId||"global");
+  const filter=tournamentId?`tournament_id=eq.${tournamentId}`:"tournament_id=is.null";
+  // NULLフィルタはSupabase realtimeで難しいためpollingで代用
+  const ch=db.channel(chName).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},p=>{
+    if(!p.new)return;
+    const msg=p.new;
+    const isGlobal=!tournamentId&&!msg.tournament_id;
+    const isTournament=tournamentId&&msg.tournament_id===tournamentId;
+    if(isGlobal||isTournament) onNew(msg);
+  }).subscribe();
+  return()=>db.removeChannel(ch);
+}
 async function fetchMatches(dateStr){try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${dateStr}&limit=50`);const d=await r.json();return d.events||[];}catch{return[];}}
 async function fetchMatchRange(){const dates=[];const start=new Date("2026-06-11");for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);dates.push(d.toISOString().slice(0,10).replace(/-/g,""));}const all=await Promise.all(dates.map(d=>fetchMatches(d)));return all.flat();}
 async function fetchStandings(){try{const r=await fetch("https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings");const d=await r.json();return d.children||[];}catch{return[];}}
@@ -127,6 +193,125 @@ const btnRed={background:"rgba(255,80,80,0.07)",color:"#FF7777",fontWeight:600,b
 const crd={background:"linear-gradient(145deg,#0D2518 0%,#091A10 100%)",borderRadius:18,padding:20,marginBottom:12,border:"1px solid #1A4A28",boxShadow:"0 4px 20px rgba(0,0,0,0.25)"};
 const inp={background:"#040E07",color:"#fff",border:"1.5px solid #1A4A28",borderRadius:12,padding:"13px 16px",fontSize:14,width:"100%",boxSizing:"border-box",outline:"none",transition:"border-color 0.2s,box-shadow 0.2s"};
 const lbl={color:"#8ABFA0",fontSize:11,fontWeight:700,marginBottom:8,display:"block",letterSpacing:1,textTransform:"uppercase"};
+
+
+/* ── ChatBox コンポーネント ── */
+function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHeight=320}){
+  const [messages,setMessages]=React.useState([]);
+  const [input,setInput]=React.useState("");
+  const [nick,setNick]=React.useState(currentUser?.nickname||"");
+  const [icon,setIcon]=React.useState(currentUser?.icon||"⚽");
+  const [loading,setLoading]=React.useState(true);
+  const [sending,setSending]=React.useState(false);
+  const [showSetup,setShowSetup]=React.useState(!currentUser&&!localStorage.getItem("chat_nick"));
+  const bottomRef=React.useRef(null);
+
+  // ローカルで保存したニックネームを取得
+  React.useEffect(()=>{
+    if(!currentUser){
+      const saved=localStorage.getItem("chat_nick");
+      const savedIcon=localStorage.getItem("chat_icon");
+      if(saved){setNick(saved);setShowSetup(false);}
+      if(savedIcon) setIcon(savedIcon);
+    }
+  },[]);
+
+  // メッセージ取得
+  React.useEffect(()=>{
+    fetchMessages(tournamentId).then(msgs=>{setMessages(msgs);setLoading(false);});
+    const unsub=subscribeToChat(tournamentId,(msg)=>{
+      setMessages(prev=>[...prev.slice(-99),msg]);
+    });
+    return unsub;
+  },[tournamentId]);
+
+  // 自動スクロール
+  React.useEffect(()=>{
+    if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"});
+  },[messages]);
+
+  const handleSend=async()=>{
+    const body=input.trim();
+    if(!body||!nick.trim()) return;
+    setSending(true);
+    const ok=await sendMessage(tournamentId,nick,icon,body);
+    if(ok) setInput("");
+    setSending(false);
+  };
+
+  const saveNick=()=>{
+    if(!nick.trim()) return;
+    localStorage.setItem("chat_nick",nick);
+    localStorage.setItem("chat_icon",icon);
+    setShowSetup(false);
+  };
+
+  const fmtTime=(ts)=>{
+    const d=new Date(ts);
+    return d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
+  };
+
+  if(showSetup) return(
+    <div style={{background:"linear-gradient(145deg,#0D2A1C,#061826)",borderRadius:16,padding:18,border:"1px solid #1A5030"}}>
+      <div style={{color:G.gold,fontWeight:700,fontSize:14,marginBottom:12}}>💬 {title}に参加する</div>
+      <div style={{marginBottom:12}}>
+        <label style={lbl}>ニックネーム</label>
+        <input style={inp} placeholder="例: サッカー太郎" value={nick} onChange={e=>setNick(e.target.value)}/>
+      </div>
+      <div style={{marginBottom:14}}>
+        <label style={lbl}>アイコン</label>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
+          {ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{fontSize:22,background:icon===ic?`${G.gold}22`:"transparent",border:`2px solid ${icon===ic?G.gold:"transparent"}`,borderRadius:10,padding:"6px 0",cursor:"pointer"}}>{ic}</button>)}
+        </div>
+      </div>
+      <button style={btnG} onClick={saveNick} disabled={!nick.trim()}>参加する →</button>
+    </div>
+  );
+
+  return(
+    <div style={{background:"linear-gradient(145deg,#0D2A1C,#061826)",borderRadius:16,border:"1px solid #1A5030",overflow:"hidden"}}>
+      {/* ヘッダー */}
+      <div style={{padding:"12px 16px",borderBottom:"1px solid #1A5030",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{width:7,height:7,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"pulseDot 1.5s ease-in-out infinite"}}/>
+          <span style={{color:"#fff",fontWeight:700,fontSize:13}}>💬 {title}</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{color:G.muted,fontSize:11}}>{icon} {nick}</span>
+          <button onClick={()=>setShowSetup(true)} style={{background:"none",border:"none",color:G.muted,cursor:"pointer",fontSize:10}}>変更</button>
+        </div>
+      </div>
+      {/* メッセージ一覧 */}
+      <div style={{height:maxHeight,overflowY:"auto",padding:"10px 12px",display:"flex",flexDirection:"column",gap:6}}>
+        {loading&&<div style={{color:G.muted,textAlign:"center",padding:"30px 0",fontSize:12}}>読み込み中...</div>}
+        {!loading&&messages.length===0&&<div style={{color:G.muted,textAlign:"center",padding:"30px 0",fontSize:12}}>まだメッセージがありません。最初に投稿しよう！</div>}
+        {messages.map((m,i)=>{
+          const isMe=m.nickname===nick;
+          return(
+            <div key={m.id||i} style={{display:"flex",flexDirection:isMe?"row-reverse":"row",alignItems:"flex-end",gap:7}}>
+              <div style={{fontSize:isMe?20:22,flexShrink:0}}>{m.icon}</div>
+              <div style={{maxWidth:"75%"}}>
+                {!isMe&&<div style={{color:G.muted,fontSize:9,marginBottom:2}}>{m.nickname}</div>}
+                <div style={{background:isMe?"linear-gradient(135deg,#0EA5E9,#0284C7)":"rgba(255,255,255,0.06)",borderRadius:isMe?"14px 14px 4px 14px":"14px 14px 14px 4px",padding:"8px 12px",border:isMe?"none":"1px solid rgba(255,255,255,0.08)"}}>
+                  <div style={{color:"#fff",fontSize:12,lineHeight:1.5,wordBreak:"break-word"}}>{m.body}</div>
+                </div>
+                <div style={{color:"#334",fontSize:9,marginTop:2,textAlign:isMe?"right":"left"}}>{fmtTime(m.created_at)}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef}/>
+      </div>
+      {/* 入力欄 */}
+      <div style={{padding:"10px 12px",borderTop:"1px solid #1A5030",display:"flex",gap:8}}>
+        <input style={{...inp,flex:1,padding:"10px 14px",fontSize:13}} placeholder="メッセージを入力..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&handleSend()} maxLength={200}/>
+        <button onClick={handleSend} disabled={sending||!input.trim()} style={{background:input.trim()?G.gold:"#1A3A28",color:input.trim()?"#111":"#445",border:"none",borderRadius:10,padding:"0 16px",fontWeight:700,cursor:input.trim()?"pointer":"default",flexShrink:0,fontSize:13,transition:"all 0.15s"}}>
+          {sending?"...":"送信"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 
 /* ── アフィリエイト枠コンポーネント ── */
@@ -239,6 +424,7 @@ function App(){
       {page==="schedule"&&<PgSchedule nav={nav} goCountry={goCountry}/>}
       {page==="groups"&&<PgGroups nav={nav} goCountry={goCountry}/>}
       {page==="country"&&<PgCountry nav={nav} country={selCountry} goCountry={goCountry}/>}
+      {page==="globalchat"&&<PgGlobalChat nav={nav}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
     </div>
   );
@@ -302,6 +488,7 @@ function PgHome({nav,goT}){
             <button style={btnO} onClick={()=>nav("schedule")}>📅 試合日程</button>
           </div>
           <button style={{...btnGr,color:"#8ba",borderColor:"#2a5a3a"}} onClick={()=>nav("groups")}>🗂️ グループ表・FIFAランキング</button>
+          <button style={{...btnGr,color:"#7DD3FC",borderColor:"#0EA5E955"}} onClick={()=>nav("globalchat")}>💬 みんなの全体チャット</button>
           <button style={{...btnO,marginTop:4}} onClick={()=>nav("best11")}>⚽ ベスト11を作る</button>
         </div>
       </div>
@@ -473,6 +660,9 @@ ${url}`);
             );
             return null;
           })()}
+        </div>
+        <div style={{marginTop:4}}>
+          <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={280}/>
         </div>
         <AffiliateBlock title="🏟️ みんなで観戦する準備" keys={["pizza","drink","projector","streaming"]} compact={true}/>
       </div>
@@ -1539,6 +1729,29 @@ function PgBest11({nav}){
   );
 
   return null;
+}
+
+
+/* ── 全体チャット ── */
+function PgGlobalChat({nav}){
+  return(
+    <div style={{paddingBottom:40}}>
+      <div style={{background:"linear-gradient(180deg,#061826 0%,#0B3D1E 100%)",padding:"36px 20px 22px",textAlign:"center"}}>
+        <Back onClick={()=>nav("home")}/>
+        <div style={{color:"#0EA5E9",fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:4}}>GLOBAL CHAT</div>
+        <div style={{color:G.gold,fontSize:22,fontWeight:900}}>💬 みんなの全体チャット</div>
+        <div style={{color:G.muted,fontSize:12,marginTop:6,lineHeight:1.7}}>
+          W杯について、誰とでも話せるチャットです。<br/>予想・応援・感想を投稿しよう。
+        </div>
+      </div>
+      <div style={{padding:"14px 16px 0"}}>
+        <ChatBox tournamentId={null} currentUser={null} title="全体チャット" maxHeight={480}/>
+        <div style={{marginTop:10,background:"rgba(239,68,68,0.06)",borderRadius:10,padding:"8px 14px"}}>
+          <div style={{color:"#FCA5A5",fontSize:11}}>⚠️ 個人情報・誹謗中傷・スパムは禁止です。楽しくご利用ください。</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 
