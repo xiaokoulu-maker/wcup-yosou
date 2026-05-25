@@ -268,6 +268,25 @@ function PgHome({nav,goT}){
             </div>
           ))}
         </div>
+        {/* 料金案内 - 控えめに表示 */}
+        <div style={{background:"linear-gradient(145deg,rgba(11,61,30,0.6),rgba(6,24,38,0.6))",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"1px solid rgba(22,163,74,0.25)"}}>
+          <div style={{textAlign:"center",marginBottom:12}}>
+            <div style={{color:"#fff",fontWeight:700,fontSize:13,lineHeight:1.8}}>3人まで無料でスタート。</div>
+            <div style={{color:G.muted,fontSize:12,lineHeight:1.7}}>友達が増えたら、人数に合わせてアップグレードできます。</div>
+          </div>
+          <div style={{display:"flex",gap:0,borderRadius:10,overflow:"hidden",border:"1px solid #1A5030"}}>
+            {[["無料","3人","0円","#16A34A"],["ミニ","5人","¥200","#0EA5E9"],["S","10人","¥500","#22C55E"],["P","30人","¥980","#FACC15"],["G","50人","¥1,480","#F97316"]].map(([lbl,ppl,price,color],i)=>(
+              <div key={i} onClick={()=>nav("upgrade")} style={{flex:1,padding:"8px 2px",textAlign:"center",borderRight:i<4?"1px solid #1A5030":"none",cursor:"pointer",background:i===0?"rgba(22,163,74,0.12)":"transparent"}}>
+                <div style={{color:color,fontSize:9,fontWeight:800,marginBottom:1}}>{lbl}</div>
+                <div style={{color:"#fff",fontSize:10,fontWeight:700}}>{ppl}</div>
+                <div style={{color:G.muted,fontSize:8}}>{price}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign:"center",marginTop:10}}>
+            <span onClick={()=>nav("upgrade")} style={{color:G.muted,fontSize:11,cursor:"pointer",textDecoration:"underline",textDecorationColor:"rgba(167,199,176,0.4)"}}>詳しいプラン内容を見る →</span>
+          </div>
+        </div>
         <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
       </div>
     </div>
@@ -282,7 +301,7 @@ function PgCreate({nav,goT}){
   const submit=async()=>{
     if(!form.name.trim()||!form.creatorName.trim()||!form.adminPasscode.trim()){setErr("すべての項目を入力してください");return;}
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
-    setLoading(true);
+setLoading(true);
     const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,createdAt:new Date().toISOString()};
     saveMyCreated(t.id);await goT(t);setLoading(false);
   };
@@ -317,7 +336,10 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
   useEffect(()=>{if(!t?.id)return;loadT(t.id).then(f=>{if(f)setTourn(f);});const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
   if(!t)return null;
   const url=`${window.location.origin}${window.location.pathname}#t-${t.id}`;
-  const lineMsg=encodeURIComponent(`W杯予想大会を作った！\n優勝国・得点王・日本代表の成績を予想して参加して！\n参加はこちら👇\n${url}`);
+  const lineMsg=encodeURIComponent(`W杯予想大会を作った！
+優勝国・得点王・日本代表の成績を予想して参加して！
+参加はこちら👇
+${url}`);
   const copy=async()=>{try{await navigator.clipboard.writeText(url);}catch{}setCopied(true);setTimeout(()=>setCopied(false),2000);};
   const full=t.participants.length>=t.maxParticipants;
   const isPaid=t.plan&&t.plan!=="free";
@@ -370,7 +392,28 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
           <button style={btnO} onClick={()=>nav("groups")}>🗂️ グループ表・トーナメント表</button>
           {isPaid&&<button style={btnO} onClick={()=>nav("ai")}>🤖 AI優勝予想を見る</button>}
           <button style={btnGr} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
-          {!isPaid&&<button style={{...btnGr,color:G.gold,borderColor:G.gold+"55"}} onClick={()=>nav("upgrade")}>⬆️ プランをアップグレード（{t.participants.length>=t.maxParticipants?"参加上限に達しました":"人数を増やす・機能を追加"}）</button>}
+          {(()=>{
+            const remaining=t.maxParticipants-t.participants.length;
+            const isPaidPlan=t.plan&&t.plan!=="free";
+            if(full)return(
+              <div style={{background:"rgba(14,165,233,0.07)",border:"1px solid rgba(14,165,233,0.25)",borderRadius:12,padding:"12px 14px"}}>
+                <div style={{color:"#7DD3FC",fontSize:12,marginBottom:8}}>👥 参加上限に達しました。人数を増やすにはアップグレードが必要です。</div>
+                <button style={{...btnG,padding:"11px",fontSize:13}} onClick={()=>nav("upgrade")}>⬆️ 人数を増やす</button>
+              </div>
+            );
+            if(!isPaidPlan&&remaining<=1)return(
+              <div style={{background:"rgba(250,204,21,0.06)",border:"1px solid rgba(250,204,21,0.2)",borderRadius:12,padding:"10px 14px"}}>
+                <div style={{color:"#FDE68A",fontSize:12,marginBottom:6}}>⚡ もうすぐ参加上限です。人数を増やすならアップグレードできます。</div>
+                <button style={{...btnGr,color:G.gold,borderColor:G.gold+"55",padding:"9px"}} onClick={()=>nav("upgrade")}>アップグレードを見る</button>
+              </div>
+            );
+            if(!isPaidPlan)return(
+              <button style={{...btnGr,color:G.muted,borderColor:"#1A5030",fontSize:12}} onClick={()=>nav("upgrade")}>
+                3人まで無料。友達が増えたらアップグレードできます →
+              </button>
+            );
+            return null;
+          })()}
         </div>
       </div>
     </div>
@@ -379,20 +422,20 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
 
 /* ── Join ── */
 function PgJoin({tourn:t,nav,update,setMyId}){
-  const [nick,setNick]=useState("");const [icon,setIcon]=useState("⚽");const [err,setErr]=useState("");const [loading,setLoading]=useState(false);
+  const [nick,setNick]=useState("");const [icon,setIcon]=useState("⚽");const [err,setErr]=useState("");const [showUpgrade,setShowUpgrade]=useState(false);const [loading,setLoading]=useState(false);
   const deadlinePassed=isDeadlinePassed(t.deadline);
   const join=async()=>{
     if(deadlinePassed){setErr("予想の締め切りが終了しています");return;}
     if(!nick.trim()){setErr("ニックネームを入力してください");return;}
-    const fresh=await loadT(t.id);const cur=fresh||t;
+const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("予想の締め切りが終了しています");return;}
-    if(cur.participants.length>=cur.maxParticipants){
-      const next=cur.participants.length+1;
-      if(!cur.plan||cur.plan==="free") setErr(`無料プランは${FREE_LIMIT}人までです。${FREE_LIMIT+1}〜5人で遊ぶにはミニプラン（¥200）へのアップグレードが必要です。`);
-      else if(cur.plan==="mini") setErr("5人を超える大会にはスタンダードプラン（¥500）がおすすめです。10人まで参加できます。");
-      else if(cur.plan==="standard") setErr("10人を超える大会にはプレミアムプラン（¥980）がおすすめです。30人まで参加できます。");
-      else if(cur.plan==="premium") setErr("30人を超える大会にはグループプラン（¥1,480）がおすすめです。50人まで参加できます。");
+if(cur.participants.length>=cur.maxParticipants){
+if(!cur.plan||cur.plan==="free") setErr(`無料プランは${FREE_LIMIT}人まで\n5人まで参加するにはミニプランへのアップグレードが必要です\n¥200`);
+      else if(cur.plan==="mini") setErr("ミニプランは5人まで\n10人まで参加するにはスタンダードプランがおすすめです\n¥500");
+      else if(cur.plan==="standard") setErr("スタンダードプランは10人まで\n30人まで参加するにはプレミアムプランがおすすめです\n¥980");
+      else if(cur.plan==="premium") setErr("プレミアムプランは30人まで\n大人数で遊ぶならグループプランがおすすめです\n¥1,480");
       else setErr("参加上限に達しました。");
+      setShowUpgrade(true);
       return;
     }
     setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0};
@@ -418,7 +461,18 @@ function PgJoin({tourn:t,nav,update,setMyId}){
         <div><label style={lbl}>アイコンを選ぶ</label><div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginTop:6}}>{ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{fontSize:26,background:icon===ic?`${G.gold}22`:"transparent",border:`2px solid ${icon===ic?G.gold:"transparent"}`,borderRadius:12,padding:"8px 0",cursor:"pointer"}}>{ic}</button>)}</div></div>
         <div style={{marginTop:16,background:G.dark,borderRadius:12,padding:16,textAlign:"center"}}><div style={{fontSize:36}}>{icon}</div><div style={{color:"#fff",fontSize:14,fontWeight:700,marginTop:6}}>{nick||"（名前未入力）"}</div></div>
       </div>
-      <Err msg={err}/><button style={btnG} onClick={join} disabled={loading}>{loading?"参加中...":"参加して予想を入力する →"}</button>
+      {err&&showUpgrade?(
+        <div style={{background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.3)",borderRadius:12,padding:"14px 16px",marginBottom:12}}>
+          <div style={{color:"#FCA5A5",fontWeight:700,fontSize:13,marginBottom:6}}>⚠️ 参加できません</div>
+          {err.split("\n").map((line,i)=>(
+            <div key={i} style={{color:i===0?"#fff":i===1?G.muted:G.gold,fontSize:i===2?16:12,fontWeight:i===2?800:i===0?700:400,marginBottom:i===2?8:3}}>{i===2?"→ "+line:line}</div>
+          ))}
+          <button onClick={()=>nav("upgrade")} style={{...btnG,padding:"11px",fontSize:13,marginTop:6}}>⬆️ アップグレードして人数を増やす</button>
+          <button onClick={()=>setShowUpgrade(false)} style={{...btnGr,padding:"8px",fontSize:12,marginTop:6}}>キャンセル</button>
+        </div>
+      ):(
+        <><Err msg={err}/><button style={btnG} onClick={join} disabled={loading}>{loading?"参加中...":"参加して予想を入力する →"}</button></>
+      )}
     </div>
   );
 }
@@ -437,10 +491,10 @@ function PgPredict({tourn:t,nav,update,myId}){
   );
   const save=async()=>{
     if(!pred.winner||!pred.runnerUp||!pred.japanResult||!pred.favoriteCountry){setErr("＊の項目を選択してください");return;}
-    setLoading(true);const fresh=await loadT(t.id);const cur=fresh||t;
+setLoading(true);const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("締め切りが終了しています");setLoading(false);return;}
-    const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,predictions:pred,points:cur.results?calcPts(pred,cur.results):0}:p)};
-    await update(updated);nav("predictions");setLoading(false);
+const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,predictions:pred,points:cur.results?calcPts(pred,cur.results):0}:p)};
+await update(updated);nav("predictions");setLoading(false);
   };
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
@@ -631,17 +685,17 @@ function PgAdmin({tourn:t,nav,update,adminOk,setAdminOk}){
   const setR=k=>v=>setRes(r=>({...r,[k]:v}));
   const checkPass=()=>{if(pass===t.adminPasscode){setAdminOk(true);setPassErr("");}else setPassErr("パスコードが違います");};
   const save=async()=>{if(!res.winner||!res.runnerUp||!res.japanResult){setErr("必須項目を入力してください");return;}setLoading(true);const fresh=await loadT(t.id);const cur=fresh||t;const updated={...cur,results:res,participants:cur.participants.map(p=>({...p,points:p.predictions?calcPts(p.predictions,res):0}))};await update(updated);setSaved(true);setLoading(false);setTimeout(()=>{setSaved(false);nav("ranking");},1800);};
-  const deleteP=async(pid)=>{if(!window.confirm("この参加者を削除しますか？"))return;const fresh=await loadT(t.id);const cur=fresh||t;await update({...cur,participants:cur.participants.filter(p=>p.id!==pid)});};
-  const startEdit=(p)=>{setEditId(p.id);setEditNick(p.nickname);};
-  const saveEdit=async()=>{const fresh=await loadT(t.id);const cur=fresh||t;await update({...cur,participants:cur.participants.map(p=>p.id===editId?{...p,nickname:editNick}:p)});setEditId(null);};
+const deleteP=async(pid)=>{if(!window.confirm("この参加者を削除しますか？"))return;const fresh=await loadT(t.id);const cur=fresh||t;await update({...cur,participants:cur.participants.filter(p=>p.id!==pid)});};
+const startEdit=(p)=>{setEditId(p.id);setEditNick(p.nickname);};
+const saveEdit=async()=>{const fresh=await loadT(t.id);const cur=fresh||t;await update({...cur,participants:cur.participants.map(p=>p.id===editId?{...p,nickname:editNick}:p)});setEditId(null);};
 
-  if(!adminOk)return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>🔐 管理者ページ</div>
-      <div style={{color:G.muted,fontSize:13,marginBottom:20}}>管理用パスコードを入力してください</div>
-      <div style={crd}><FInput label="パスコード" placeholder="パスコードを入力" type="password" value={pass} onChange={setPass}/><Err msg={passErr}/><button style={btnG} onClick={checkPass}>認証する</button></div>
-    </div>
-  );
+if(!adminOk)return(
+<div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
+<div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>🔐 管理者ページ</div>
+<div style={{color:G.muted,fontSize:13,marginBottom:20}}>管理用パスコードを入力してください</div>
+<div style={crd}><FInput label="パスコード" placeholder="パスコードを入力" type="password" value={pass} onChange={setPass}/><Err msg={passErr}/><button style={btnG} onClick={checkPass}>認証する</button></div>
+</div>
+);
 
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
