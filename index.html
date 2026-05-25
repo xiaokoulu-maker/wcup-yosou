@@ -163,6 +163,69 @@ const AI_DATA=[
   {country:"その他",     pct:18.0,trend:"→",reason:"48チーム制で波乱必至。モロッコ・コロンビアなどの台頭に注目"},
 ];
 
+// ════════════════════════════════════
+// W杯2026 決勝トーナメント表データ
+// 後から実際の組み合わせに差し替え可能
+// winner: null=未定, "home"/"away"=勝者
+// ════════════════════════════════════
+const BRACKET_DATA = {
+  // ベスト32（16試合）- グループ1位/2位の組み合わせ
+  r32: [
+    {id:"r32_1", home:"グループA1位",away:"グループB2位",homeScore:null,awayScore:null,date:"7/1",winner:null},
+    {id:"r32_2", home:"グループC1位",away:"グループD2位",homeScore:null,awayScore:null,date:"7/1",winner:null},
+    {id:"r32_3", home:"グループE1位",away:"グループF2位",homeScore:null,awayScore:null,date:"7/2",winner:null},
+    {id:"r32_4", home:"グループG1位",away:"グループH2位",homeScore:null,awayScore:null,date:"7/2",winner:null},
+    {id:"r32_5", home:"グループI1位",away:"グループJ2位",homeScore:null,awayScore:null,date:"7/3",winner:null},
+    {id:"r32_6", home:"グループK1位",away:"グループL2位",homeScore:null,awayScore:null,date:"7/3",winner:null},
+    {id:"r32_7", home:"グループB1位",away:"グループA2位",homeScore:null,awayScore:null,date:"7/4",winner:null},
+    {id:"r32_8", home:"グループD1位",away:"グループC2位",homeScore:null,awayScore:null,date:"7/4",winner:null},
+    {id:"r32_9", home:"グループF1位",away:"グループE2位",homeScore:null,awayScore:null,date:"7/5",winner:null},
+    {id:"r32_10",home:"グループH1位",away:"グループG2位",homeScore:null,awayScore:null,date:"7/5",winner:null},
+    {id:"r32_11",home:"グループJ1位",away:"グループI2位",homeScore:null,awayScore:null,date:"7/6",winner:null},
+    {id:"r32_12",home:"グループL1位",away:"グループK2位",homeScore:null,awayScore:null,date:"7/6",winner:null},
+    {id:"r32_13",home:"3位通過A",   away:"3位通過B",   homeScore:null,awayScore:null,date:"7/7",winner:null},
+    {id:"r32_14",home:"3位通過C",   away:"3位通過D",   homeScore:null,awayScore:null,date:"7/7",winner:null},
+    {id:"r32_15",home:"3位通過E",   away:"3位通過F",   homeScore:null,awayScore:null,date:"7/8",winner:null},
+    {id:"r32_16",home:"3位通過G",   away:"3位通過H",   homeScore:null,awayScore:null,date:"7/8",winner:null},
+  ],
+  // ベスト16（8試合）
+  r16: [
+    {id:"r16_1",home:"R32_1勝者",away:"R32_2勝者",homeScore:null,awayScore:null,date:"7/10",winner:null},
+    {id:"r16_2",home:"R32_3勝者",away:"R32_4勝者",homeScore:null,awayScore:null,date:"7/10",winner:null},
+    {id:"r16_3",home:"R32_5勝者",away:"R32_6勝者",homeScore:null,awayScore:null,date:"7/11",winner:null},
+    {id:"r16_4",home:"R32_7勝者",away:"R32_8勝者",homeScore:null,awayScore:null,date:"7/11",winner:null},
+    {id:"r16_5",home:"R32_9勝者",away:"R32_10勝者",homeScore:null,awayScore:null,date:"7/12",winner:null},
+    {id:"r16_6",home:"R32_11勝者",away:"R32_12勝者",homeScore:null,awayScore:null,date:"7/12",winner:null},
+    {id:"r16_7",home:"R32_13勝者",away:"R32_14勝者",homeScore:null,awayScore:null,date:"7/13",winner:null},
+    {id:"r16_8",home:"R32_15勝者",away:"R32_16勝者",homeScore:null,awayScore:null,date:"7/13",winner:null},
+  ],
+  // 準々決勝（4試合）
+  qf: [
+    {id:"qf_1",home:"R16_1勝者",away:"R16_2勝者",homeScore:null,awayScore:null,date:"7/15",winner:null},
+    {id:"qf_2",home:"R16_3勝者",away:"R16_4勝者",homeScore:null,awayScore:null,date:"7/15",winner:null},
+    {id:"qf_3",home:"R16_5勝者",away:"R16_6勝者",homeScore:null,awayScore:null,date:"7/16",winner:null},
+    {id:"qf_4",home:"R16_7勝者",away:"R16_8勝者",homeScore:null,awayScore:null,date:"7/16",winner:null},
+  ],
+  // 準決勝（2試合）
+  sf: [
+    {id:"sf_1",home:"QF1勝者",away:"QF2勝者",homeScore:null,awayScore:null,date:"7/18",winner:null},
+    {id:"sf_2",home:"QF3勝者",away:"QF4勝者",homeScore:null,awayScore:null,date:"7/19",winner:null},
+  ],
+  // 3位決定戦
+  third: {id:"3rd",home:"SF1敗者",away:"SF2敗者",homeScore:null,awayScore:null,date:"7/21",winner:null},
+  // 決勝
+  final: {id:"final",home:"SF1勝者",away:"SF2勝者",homeScore:null,awayScore:null,date:"7/22",winner:null},
+};
+
+// ESPNのAPIから試合データを取得してBRACKET_DATAを更新する関数（開幕後に使用）
+async function fetchBracketFromESPN(){
+  try{
+    const r=await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=100");
+    const d=await r.json();
+    return d.events||[];
+  }catch{return[];}
+}
+
 const STRIPE={
   mini:    {url:"https://buy.stripe.com/test_eVq7sL8Yv9Pm30v9oKe7m03",label:"ミニ",people:5,price:200},
   standard:{url:"https://buy.stripe.com/test_3cIfZh1w33qYbx1dF0e7m00",label:"スタンダード",people:10,price:500},
@@ -466,6 +529,7 @@ function App(){
       {page==="groups"&&<PgGroups nav={nav} goCountry={goCountry}/>}
       {page==="country"&&<PgCountry nav={nav} country={selCountry} goCountry={goCountry}/>}
       {page==="globalchat"&&<PgGlobalChat nav={nav}/>}
+      {page==="bracket"&&<PgBracket nav={nav} tourn={tourn}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
     </div>
   );
@@ -676,7 +740,8 @@ ${url}`);
           <button style={btnO} onClick={()=>nav("predictions")}>👥 みんなの予想を見る</button>
           <button style={btnO} onClick={()=>nav("ranking")}>🏆 ランキングを見る</button>
           <button style={btnO} onClick={()=>nav("stats")}>📊 詳細統計を見る</button>
-          <button style={btnO} onClick={()=>nav("groups")}>🗂️ グループ表・トーナメント表</button>
+          <button style={btnO} onClick={()=>nav("bracket")}>🏆 トーナメント表・予想マップ</button>
+          <button style={btnO} onClick={()=>nav("groups")}>🗂️ グループ表・FIFAランキング</button>
           {isPaid&&<button style={btnO} onClick={()=>nav("ai")}>🤖 AI優勝予想を見る</button>}
           <button style={btnGr} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
           {(()=>{
@@ -1771,6 +1836,277 @@ function PgBest11({nav}){
   );
 
   return null;
+}
+
+
+/* ── トーナメント表 ── */
+function PgBracket({nav,tourn}){
+  const [tab,setTab]=useState("bracket");
+  const participants=tourn?.participants||[];
+  const myId=null; // tournament pageからmyIdが渡されないのでlocalで処理
+
+  // 予想集計
+  const winCount={};
+  participants.forEach(p=>{
+    if(p.predictions?.winner){
+      const c=p.predictions.winner;
+      if(!winCount[c])winCount[c]=[];
+      winCount[c].push(p.nickname);
+    }
+  });
+  const getWinners=(country)=>winCount[country]||[];
+  const getWinCount=(country)=>getWinners(country).length;
+  const totalPred=participants.filter(p=>p.predictions?.winner).length;
+
+  // チーム表示コンポーネント
+  const TeamBox=({name,isHome=false,highlight=false,score=null})=>{
+    const winners=name?getWinners(name):[];
+    const count=winners.length;
+    const isPopular=count>=2;
+    const hasFlag=WC_GROUPS.flatMap(g=>g.teams).find(t=>t.n===name);
+    const isPlaceholder=!name||name.includes("位")||name.includes("勝者")||name.includes("敗者")||name.includes("通過");
+    return(
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{
+          display:"flex",alignItems:"center",gap:5,
+          background:count>0?"rgba(14,165,233,0.08)":highlight?"rgba(250,204,21,0.06)":"rgba(255,255,255,0.03)",
+          borderRadius:8,padding:"5px 8px",
+          border:count>0?`1px solid rgba(14,165,233,0.3)`:highlight?`1px solid ${G.gold}44`:"1px solid rgba(255,255,255,0.07)",
+          minHeight:34,
+        }}>
+          {!isPlaceholder&&hasFlag&&<FlagImg country={name} size={18}/>}
+          {isPlaceholder&&<span style={{fontSize:14,opacity:0.4}}>🏳️</span>}
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{color:isPlaceholder?"#445":count>0?"#7DD3FC":highlight?G.gold:"#ccc",fontSize:isPlaceholder?9:11,fontWeight:count>0||highlight?700:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+              {name||"TBD"}
+            </div>
+            {count>0&&<div style={{color:"#7DD3FC",fontSize:8,marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+              {winners.slice(0,3).join("・")}{winners.length>3&&"..."}
+            </div>}
+          </div>
+          {count>0&&<div style={{background:"#0EA5E9",color:"#fff",borderRadius:20,padding:"1px 5px",fontSize:8,fontWeight:800,flexShrink:0}}>{count}人</div>}
+          {score!==null&&<div style={{color:G.gold,fontWeight:800,fontSize:13,flexShrink:0,marginLeft:2}}>{score??"-"}</div>}
+        </div>
+      </div>
+    );
+  };
+
+  // 試合カードコンポーネント
+  const MatchCard=({match,size="normal"})=>{
+    if(!match)return<div style={{height:size==="final"?60:48,background:"rgba(255,255,255,0.02)",borderRadius:8,border:"1px dashed #1A5030"}}/>;
+    const isDone=match.homeScore!==null;
+    const homeWon=isDone&&match.winner==="home";
+    const awayWon=isDone&&match.winner==="away";
+    return(
+      <div style={{background:"linear-gradient(145deg,#0D2A1C,#061826)",borderRadius:10,border:`1px solid ${isDone?G.gold+"33":"#1A5030"}`,overflow:"hidden",marginBottom:2}}>
+        <div style={{padding:"5px 8px",borderBottom:"1px solid #1A5030",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{color:"#334",fontSize:8}}>{match.date||"日程TBD"}</span>
+          {isDone&&<span style={{background:G.gold+"22",color:G.gold,fontSize:8,fontWeight:700,padding:"1px 5px",borderRadius:6}}>終了</span>}
+        </div>
+        <div style={{padding:"4px 6px",display:"flex",alignItems:"center",gap:4}}>
+          <TeamBox name={match.home} isHome={true} highlight={homeWon} score={isDone?match.homeScore:null}/>
+          <div style={{color:"#334",fontSize:9,flexShrink:0,padding:"0 2px"}}>vs</div>
+          <TeamBox name={match.away} isHome={false} highlight={awayWon} score={isDone?match.awayScore:null}/>
+        </div>
+      </div>
+    );
+  };
+
+  // ラウンドヘッダー
+  const RoundHeader=({label,count})=>(
+    <div style={{color:G.gold,fontSize:9,fontWeight:800,letterSpacing:1,textAlign:"center",marginBottom:6,padding:"4px 0",borderBottom:`1px solid ${G.gold}33`,whiteSpace:"nowrap"}}>
+      {label}<div style={{color:"#334",fontSize:8,fontWeight:400,marginTop:1}}>{count}試合</div>
+    </div>
+  );
+
+  // ブラケットビュー（横スクロール）
+  const BracketView=()=>(
+    <div style={{overflowX:"auto",paddingBottom:8}}>
+      <div style={{display:"flex",gap:8,minWidth:900,padding:"0 4px"}}>
+        {/* ベスト32 - 左半分 */}
+        <div style={{minWidth:180,flex:"0 0 180px"}}>
+          <RoundHeader label="ベスト32" count={16}/>
+          {BRACKET_DATA.r32.slice(0,8).map(m=><MatchCard key={m.id} match={m}/>)}
+        </div>
+        {/* ベスト16 - 左 */}
+        <div style={{minWidth:172,flex:"0 0 172px",paddingTop:38}}>
+          <RoundHeader label="ベスト16" count={8}/>
+          {BRACKET_DATA.r16.slice(0,4).map(m=><MatchCard key={m.id} match={m}/>)}
+        </div>
+        {/* 準々決勝 - 左 */}
+        <div style={{minWidth:164,flex:"0 0 164px",paddingTop:76}}>
+          <RoundHeader label="準々決勝" count={4}/>
+          {BRACKET_DATA.qf.slice(0,2).map(m=><MatchCard key={m.id} match={m}/>)}
+        </div>
+        {/* 準決勝＋決勝＋3位 - 中央 */}
+        <div style={{minWidth:170,flex:"0 0 170px",paddingTop:152}}>
+          <RoundHeader label="準決勝" count={2}/>
+          {BRACKET_DATA.sf.map(m=><MatchCard key={m.id} match={m}/>)}
+          <div style={{marginTop:8}}>
+            <div style={{color:G.gold,fontSize:9,fontWeight:800,textAlign:"center",marginBottom:6,padding:"4px 0",borderBottom:`1px solid ${G.gold}33`}}>🏆 決勝 7/22</div>
+            <MatchCard match={BRACKET_DATA.final}/>
+          </div>
+          <div style={{marginTop:8}}>
+            <div style={{color:"#888",fontSize:9,fontWeight:700,textAlign:"center",marginBottom:4,padding:"2px 0",borderBottom:"1px solid #1A5030"}}>🥉 3位決定戦 7/21</div>
+            <MatchCard match={BRACKET_DATA.third}/>
+          </div>
+        </div>
+        {/* 準々決勝 - 右 */}
+        <div style={{minWidth:164,flex:"0 0 164px",paddingTop:76}}>
+          <RoundHeader label="準々決勝" count={4}/>
+          {BRACKET_DATA.qf.slice(2,4).map(m=><MatchCard key={m.id} match={m}/>)}
+        </div>
+        {/* ベスト16 - 右 */}
+        <div style={{minWidth:172,flex:"0 0 172px",paddingTop:38}}>
+          <RoundHeader label="ベスト16" count={8}/>
+          {BRACKET_DATA.r16.slice(4,8).map(m=><MatchCard key={m.id} match={m}/>)}
+        </div>
+        {/* ベスト32 - 右半分 */}
+        <div style={{minWidth:180,flex:"0 0 180px"}}>
+          <RoundHeader label="ベスト32" count={16}/>
+          {BRACKET_DATA.r32.slice(8,16).map(m=><MatchCard key={m.id} match={m}/>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  // 予想集計ビュー
+  const PredView=()=>{
+    const sorted=Object.entries(winCount).sort((a,b)=>b[1].length-a[1].length);
+    const maxCount=sorted[0]?.[1]?.length||1;
+    return(
+      <div>
+        {sorted.length===0
+          ?<div style={{color:G.muted,textAlign:"center",padding:"40px 0",fontSize:13}}>まだ予想が入力されていません</div>
+          :sorted.map(([country,names],i)=>(
+            <div key={country} style={{...crd,marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{minWidth:28,textAlign:"center"}}>{i<3?["🥇","🥈","🥉"][i]:<span style={{color:"#666",fontWeight:700}}>{i+1}</span>}</div>
+                <FlagImg country={country} size={32}/>
+                <div style={{flex:1}}>
+                  <div style={{color:"#fff",fontWeight:700,fontSize:14}}>{country}</div>
+                  <div style={{color:G.muted,fontSize:11,marginTop:2}}>{names.join("・")}</div>
+                  <div style={{background:"#0a1f0f",borderRadius:4,height:5,marginTop:5,overflow:"hidden"}}>
+                    <div style={{background:i===0?G.gold:i<3?"#4caf50":G.green,height:"100%",width:`${(names.length/maxCount)*100}%`,borderRadius:4}}/>
+                  </div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{color:G.gold,fontWeight:900,fontSize:20}}>{names.length}</div>
+                  <div style={{color:G.muted,fontSize:10}}>人</div>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    );
+  };
+
+  // 個人予想ビュー
+  const PersonView=({filterFn,empty})=>{
+    const preds=participants.filter(filterFn);
+    if(preds.length===0)return<div style={{color:G.muted,textAlign:"center",padding:"40px 0",fontSize:13}}>{empty}</div>;
+    return(
+      <div>
+        {preds.map(p=>(
+          <div key={p.id} style={crd}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <div style={{fontSize:28}}>{p.icon}</div>
+              <div style={{flex:1}}><div style={{color:"#fff",fontWeight:700}}>{p.nickname}</div></div>
+              {p.points>0&&<div style={{color:G.gold,fontWeight:800}}>{p.points}pt</div>}
+            </div>
+            {p.predictions?(
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>
+                <div style={{background:`${G.gold}11`,borderRadius:8,padding:"8px 10px",border:`1px solid ${G.gold}33`}}>
+                  <div style={{color:G.muted,fontSize:9,fontWeight:700,marginBottom:3}}>🥇 優勝予想</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    {p.predictions.winner&&<FlagImg country={p.predictions.winner} size={18}/>}
+                    <span style={{color:G.gold,fontWeight:700,fontSize:12}}>{p.predictions.winner||"未入力"}</span>
+                  </div>
+                </div>
+                <div style={{background:"rgba(14,165,233,0.07)",borderRadius:8,padding:"8px 10px",border:"1px solid rgba(14,165,233,0.2)"}}>
+                  <div style={{color:G.muted,fontSize:9,fontWeight:700,marginBottom:3}}>🥈 準優勝予想</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    {p.predictions.runnerUp&&<FlagImg country={p.predictions.runnerUp} size={18}/>}
+                    <span style={{color:"#7DD3FC",fontWeight:700,fontSize:12}}>{p.predictions.runnerUp||"未入力"}</span>
+                  </div>
+                </div>
+                <Badge label="🇯🇵 日本代表" val={p.predictions.japanResult}/>
+                <Badge label="❤️ 応援国" val={p.predictions.favoriteCountry}/>
+              </div>
+            ):<div style={{color:"#445",fontSize:12}}>予想未入力</div>}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return(
+    <div style={{paddingBottom:40}}>
+      {/* ヘッダー */}
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 20px",textAlign:"center"}}>
+        <Back onClick={()=>nav("tournament")}/>
+        <div style={{color:G.gold,fontSize:22,fontWeight:900}}>🏆 トーナメント表</div>
+        <div style={{color:G.muted,fontSize:12,marginTop:4,lineHeight:1.7}}>
+          自分と友達がどの国を予想しているか一目で確認。<br/>
+          <span style={{color:"#334",fontSize:10}}>※ 開幕後に実際の組み合わせに更新されます</span>
+        </div>
+        {participants.length>0&&<div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,background:"rgba(250,204,21,0.08)",borderRadius:20,padding:"4px 12px"}}>
+          <span style={{color:G.gold,fontSize:11,fontWeight:700}}>{totalPred}人が優勝予想済み</span>
+        </div>}
+      </div>
+
+      {/* タブ */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:4,padding:"12px 14px 0"}}>
+        {[["bracket","🏆 表"],["pred","📊 集計"],["mine","👤 自分"],["friends","👥 友達"]].map(([v,lb])=>(
+          <button key={v} onClick={()=>setTab(v)} style={{background:tab===v?G.gold:G.card,color:tab===v?"#111":"#ccc",border:"none",borderRadius:10,padding:"9px 4px",fontSize:11,cursor:"pointer",fontWeight:tab===v?800:400}}>{lb}</button>
+        ))}
+      </div>
+
+      <div style={{padding:"12px 14px 0"}}>
+        {/* 凡例 */}
+        {tab==="bracket"&&participants.length>0&&(
+          <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(14,165,233,0.1)",borderRadius:8,padding:"3px 8px"}}>
+              <span style={{width:6,height:6,borderRadius:"50%",background:"#0EA5E9",display:"inline-block"}}/>
+              <span style={{color:"#7DD3FC",fontSize:10}}>予想あり</span>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:4,background:`${G.gold}11`,borderRadius:8,padding:"3px 8px"}}>
+              <span style={{width:6,height:6,borderRadius:"50%",background:G.gold,display:"inline-block"}}/>
+              <span style={{color:G.gold,fontSize:10}}>勝者（確定済み）</span>
+            </div>
+          </div>
+        )}
+
+        {tab==="bracket"&&(
+          <>
+            <BracketView/>
+            <div style={{background:G.dark,borderRadius:10,padding:"10px 14px",marginTop:10}}>
+              <div style={{color:G.muted,fontSize:10,lineHeight:1.8}}>
+                ※ 現在は仮の組み合わせです。開幕後に実際の組み合わせに更新されます。<br/>
+                ※ 青いカードは大会参加者が優勝予想している国です。
+              </div>
+            </div>
+          </>
+        )}
+        {tab==="pred"&&<PredView/>}
+        {tab==="mine"&&(
+          <>
+            <div style={{color:G.muted,fontSize:12,marginBottom:10}}>大会参加者全員の予想一覧です</div>
+            <PersonView filterFn={p=>!!p.predictions} empty="まだ予想がありません"/>
+          </>
+        )}
+        {tab==="friends"&&(
+          <>
+            <div style={{color:G.muted,fontSize:12,marginBottom:10}}>友達の優勝予想と詳細を確認できます</div>
+            <PersonView filterFn={p=>!!p.predictions?.winner} empty="まだ優勝予想が入力されていません"/>
+          </>
+        )}
+
+        <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+      </div>
+    </div>
+  );
 }
 
 
