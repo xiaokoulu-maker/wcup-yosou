@@ -85,10 +85,13 @@ const AI_DATA=[
 ];
 
 const STRIPE={
+  mini:    {url:"",label:"ミニ",people:5,price:200},  // ← Stripeで200円の商品を作成後にURLを入れてください
   standard:{url:"https://buy.stripe.com/test_3cIfZh1w33qYbx1dF0e7m00",label:"スタンダード",people:10,price:500},
-  premium:{url:"https://buy.stripe.com/test_00wfZha2z2mUfNhasOe7m01",label:"プレミアム",people:30,price:980},
-  group:{url:"https://buy.stripe.com/test_3cI00ja2zaTqcB57gCe7m02",label:"グループ",people:50,price:1480},
+  premium: {url:"https://buy.stripe.com/test_00wfZha2z2mUfNhasOe7m01",label:"プレミアム",people:30,price:980},
+  group:   {url:"https://buy.stripe.com/test_3cI00ja2zaTqcB57gCe7m02",label:"グループ",people:50,price:1480},
 };
+// 無料プランは3人まで
+const FREE_LIMIT=3;
 
 const ESPN_TO_JP={"Japan":"日本","Brazil":"ブラジル","Argentina":"アルゼンチン","France":"フランス","England":"イングランド","Spain":"スペイン","Germany":"ドイツ","Portugal":"ポルトガル","Netherlands":"オランダ","Italy":"イタリア","Croatia":"クロアチア","Belgium":"ベルギー","United States":"アメリカ","Mexico":"メキシコ","Canada":"カナダ","Korea Republic":"韓国","Australia":"オーストラリア","Morocco":"モロッコ","Uruguay":"ウルグアイ","Colombia":"コロンビア","Senegal":"セネガル","Norway":"ノルウェー","Sweden":"スウェーデン","Ecuador":"エクアドル","Switzerland":"スイス","Denmark":"デンマーク","Ghana":"ガーナ","Panama":"パナマ","Paraguay":"パラグアイ","Austria":"オーストリア","Algeria":"アルジェリア","Jordan":"ヨルダン","Tunisia":"チュニジア","Egypt":"エジプト","Iran":"イラン","Saudi Arabia":"サウジアラビア","Scotland":"スコットランド","Turkey":"トルコ","Ivory Coast":"コートジボワール","Cote D'Ivoire":"コートジボワール","New Zealand":"ニュージーランド","Serbia":"セルビア","Qatar":"カタール","South Africa":"南アフリカ","Czechia":"チェコ","Bosnia and Herzegovina":"ボスニア","Haiti":"ハイチ","Curacao":"キュラソー","Congo DR":"コンゴ","Uzbekistan":"ウズベキスタン","Iraq":"イラク","Cape Verde":"カボベルデ","Cabo Verde":"カボベルデ"};
 
@@ -293,7 +296,7 @@ function PgCreate({nav,goT}){
         <div style={{marginBottom:16}}>
           <label style={lbl}>参加上限人数（無料：5人まで）</label>
           <select style={inp} value={form.maxParticipants} onChange={e=>setForm(f=>({...f,maxParticipants:Number(e.target.value)}))}>
-            {[3,4,5].map(n=><option key={n} value={n}>{n}人（無料）</option>)}
+            {[1,2,3].map(n=><option key={n} value={n}>{n}人（無料）</option>)}
           </select>
         </div>
         <FInput label="管理用パスコード ＊" placeholder="3文字以上" type="password" value={form.adminPasscode} onChange={setF("adminPasscode")}/>
@@ -367,7 +370,7 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
           <button style={btnO} onClick={()=>nav("groups")}>🗂️ グループ表・トーナメント表</button>
           {isPaid&&<button style={btnO} onClick={()=>nav("ai")}>🤖 AI優勝予想を見る</button>}
           <button style={btnGr} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
-          {!isPaid&&<button style={{...btnGr,color:G.gold,borderColor:G.gold+"55"}} onClick={()=>nav("upgrade")}>⬆️ プランをアップグレード</button>}
+          {!isPaid&&<button style={{...btnGr,color:G.gold,borderColor:G.gold+"55"}} onClick={()=>nav("upgrade")}>⬆️ プランをアップグレード（{t.participants.length>=t.maxParticipants?"参加上限に達しました":"人数を増やす・機能を追加"}）</button>}
         </div>
       </div>
     </div>
@@ -383,7 +386,15 @@ function PgJoin({tourn:t,nav,update,setMyId}){
     if(!nick.trim()){setErr("ニックネームを入力してください");return;}
     const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("予想の締め切りが終了しています");return;}
-    if(cur.participants.length>=cur.maxParticipants){setErr("参加上限に達しています");return;}
+    if(cur.participants.length>=cur.maxParticipants){
+      const next=cur.participants.length+1;
+      if(!cur.plan||cur.plan==="free") setErr(`無料プランは${FREE_LIMIT}人までです。${FREE_LIMIT+1}〜5人で遊ぶにはミニプラン（¥200）へのアップグレードが必要です。`);
+      else if(cur.plan==="mini") setErr("5人を超える大会にはスタンダードプラン（¥500）がおすすめです。10人まで参加できます。");
+      else if(cur.plan==="standard") setErr("10人を超える大会にはプレミアムプラン（¥980）がおすすめです。30人まで参加できます。");
+      else if(cur.plan==="premium") setErr("30人を超える大会にはグループプラン（¥1,480）がおすすめです。50人まで参加できます。");
+      else setErr("参加上限に達しました。");
+      return;
+    }
     setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0};
     const updated={...cur,participants:[...cur.participants,p]};
     saveMyJoined(cur.id);await update(updated);setMyId(p.id);nav("predict");setLoading(false);
@@ -694,67 +705,117 @@ function PgAdmin({tourn:t,nav,update,adminOk,setAdminOk}){
 
 /* ── Upgrade ── */
 function PgUpgrade({nav,tourn:t,update}){
-  const [unlockCode,setUnlockCode]=useState("");const [unlockErr,setUnlockErr]=useState("");const [unlocked,setUnlocked]=useState(false);
-  const tryUnlock=async()=>{const code=unlockCode.trim().toUpperCase();let planKey=null;if(code.includes("STANDARD"))planKey="standard";else if(code.includes("PREMIUM"))planKey="premium";else if(code.includes("GROUP"))planKey="group";if(!planKey||!t){setUnlockErr("コードが正しくありません。");return;}const plan=STRIPE[planKey];const updated={...t,plan:planKey,maxParticipants:plan.people};await update(updated);setUnlocked(true);setTimeout(()=>nav("tournament"),1500);};
+  const [unlockCode,setUnlockCode]=useState("");
+  const [unlockErr,setUnlockErr]=useState("");
+  const [unlocked,setUnlocked]=useState(false);
+  const [selPlan,setSelPlan]=useState(null);
 
-  const PLAN_INFO={
-    standard:{tag:"👫 友達グループ向け",tagColor:"#0EA5E9",features:["10人まで参加可能","AI優勝予想リスト","詳細統計グラフ","予想締切設定","リアルタイム更新"],use:"友達5〜10人ならこれ"},
-    premium:{tag:"🏆 ガチ勢・サークル向け",tagColor:"#FACC15",features:["30人まで参加可能","全機能解放","ベスト11画像保存","詳細ランキング","参加者管理"],use:"サークル・会社の予想会に"},
-    group:{tag:"🏟️ 大人数・企業向け",tagColor:"#22C55E",features:["50人まで参加可能","大人数LINEグループ対応","ランキング画像作成","全機能解放","管理者サポート"],use:"大規模イベント・企業大会に"},
+  const tryUnlock=async()=>{
+    const code=unlockCode.trim().toUpperCase();
+    let planKey=null;
+    if(code.includes("MINI"))planKey="mini";
+    else if(code.includes("STANDARD"))planKey="standard";
+    else if(code.includes("PREMIUM"))planKey="premium";
+    else if(code.includes("GROUP"))planKey="group";
+    if(!planKey||!t){setUnlockErr("コードが正しくありません。");return;}
+    const plan=STRIPE[planKey];
+    const updated={...t,plan:planKey,maxParticipants:plan.people};
+    await update(updated);
+    setUnlocked(true);
+    setTimeout(()=>nav("tournament"),1500);
+  };
+
+  const PLANS=[
+    {key:"free",   label:"無料",         people:FREE_LIMIT, price:0,    tag:"まずは3人でお試し",    color:"#A7C7B0", features:["3人まで参加","基本予想","予想一覧","簡易ランキング","ベスト11作成"], note:null},
+    {key:"mini",   label:"ミニ",         people:5,  price:200,  tag:"4〜5人の少人数ならこれ",  color:"#0EA5E9", features:["5人まで参加","基本予想","予想一覧","ランキング"],                note:"少人数グループ向け"},
+    {key:"standard",label:"スタンダード",people:10, price:500,  tag:"友達5〜10人で遊ぶならこれ",color:"#22C55E", features:["10人まで参加","詳細統計","予想締切設定","参加者管理","広告なし"], note:"友達グループの定番"},
+    {key:"premium", label:"プレミアム",  people:30, price:980,  tag:"サークル・大きめのLINEグループ向け",color:"#FACC15", features:["30人まで参加","AI優勝候補リスト","ランキング画像生成","ベスト11画像保存","詳細ランキング"], note:"🌟 一番人気"},
+    {key:"group",   label:"グループ",    people:50, price:1480, tag:"会社・大人数・イベント向け", color:"#F97316", features:["50人まで参加","全機能解放","QRコード発行","参加者編集・削除","共有用画像テンプレート"], note:"大規模イベント向け"},
+  ];
+
+  const openPayment=(planKey)=>{
+    const plan=STRIPE[planKey];
+    if(!plan.url){alert("このプランのStripe決済ページは準備中です。しばらくお待ちください。");return;}
+    window.open(t?`${plan.url}?client_reference_id=${t.id}`:plan.url,"_blank");
   };
 
   return(
     <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"40px 20px 28px",textAlign:"center"}}>
+      {/* ヘッダー */}
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 24px",textAlign:"center"}}>
         <Back onClick={()=>nav(t?"tournament":"home")}/>
-        <div style={{fontSize:48,marginBottom:10,filter:"drop-shadow(0 0 20px rgba(250,204,21,0.5))"}}>🏆</div>
-        <div style={{color:G.gold,fontSize:22,fontWeight:900,marginBottom:6}}>プランをアップグレード</div>
-        <div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>6人以上で遊ぶなら、もっと盛り上がれる</div>
+        <div style={{fontSize:44,marginBottom:8,filter:"drop-shadow(0 0 20px rgba(250,204,21,0.5))"}}>🏆</div>
+        <div style={{color:G.gold,fontSize:22,fontWeight:900,marginBottom:6}}>プランを選ぶ</div>
+        <div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>人数が増えるほど盛り上がる。<br/>ちょうどいいプランを選ぼう。</div>
       </div>
-      <div style={{padding:"16px 18px 0"}}>
-        {/* 無料プランの限界を明示 */}
-        <div style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:14,padding:"12px 16px",marginBottom:16}}>
-          <div style={{color:"#FCA5A5",fontWeight:700,fontSize:12,marginBottom:6}}>⚠️ 無料プランの制限</div>
-          <div style={{color:"#ccc",fontSize:12,lineHeight:1.8}}>5人まで ／ AI予想なし ／ 詳細統計なし ／ ベスト11保存なし</div>
+
+      <div style={{padding:"14px 16px 0"}}>
+        {/* 人数早見表 */}
+        <div style={{...crd,marginBottom:16}}>
+          <div style={{color:G.gold,fontWeight:700,fontSize:12,letterSpacing:1,marginBottom:10}}>👥 何人で遊ぶ？</div>
+          <div style={{display:"flex",gap:0,borderRadius:12,overflow:"hidden",border:"1px solid #1A5030"}}>
+            {[["〜3人","無料","#0D2A1C"],["〜5人","200円","#0A1E2A"],["〜10人","500円","#0A2010"],["〜30人","980円","#1A1200"],["〜50人","1,480円","#1A1000"]].map(([p,price,bg],i)=>(
+              <div key={i} style={{flex:1,background:bg,padding:"8px 4px",textAlign:"center",borderRight:i<4?"1px solid #1A5030":"none"}}>
+                <div style={{color:"#fff",fontSize:10,fontWeight:700,marginBottom:2}}>{p}</div>
+                <div style={{color:G.gold,fontSize:9,fontWeight:800}}>{price}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {Object.entries(STRIPE).map(([key,plan])=>{
-          const info=PLAN_INFO[key];
-          const isPremium=key==="premium";
+        {/* プランカード */}
+        {PLANS.map((plan,idx)=>{
+          const isCurrentPlan=t?.plan===plan.key||(plan.key==="free"&&(!t?.plan||t.plan==="free"));
+          const isPremium=plan.key==="premium";
+          const isSelectable=plan.key!=="free";
           return(
-            <div key={key} style={{...crd,border:isPremium?`2px solid ${G.gold}`:key==="group"?"2px solid #22C55E55":"1px solid #1A5030",marginBottom:14,position:"relative"}}>
-              {isPremium&&<div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:`linear-gradient(135deg,${G.gold},#E8B830)`,color:"#0A1400",fontSize:10,fontWeight:800,padding:"3px 14px",borderRadius:20,whiteSpace:"nowrap",boxShadow:"0 2px 10px rgba(250,204,21,0.4)"}}>🌟 一番人気</div>}
-              <div style={{marginBottom:12}}>
-                <div style={{display:"inline-block",background:`${info.tagColor}22`,border:`1px solid ${info.tagColor}44`,borderRadius:20,padding:"3px 10px",marginBottom:8}}>
-                  <span style={{color:info.tagColor,fontSize:11,fontWeight:700}}>{info.tag}</span>
+            <div key={plan.key} style={{...crd,border:isPremium?`2px solid ${G.gold}`:`1px solid ${plan.color}33`,marginBottom:10,position:"relative",opacity:isCurrentPlan?0.7:1}}>
+              {plan.note&&<div style={{position:"absolute",top:-11,left:isPremium?"50%":"16px",transform:isPremium?"translateX(-50%)":"none",background:isPremium?`linear-gradient(135deg,${G.gold},#E8B830)`:`${plan.color}22`,border:isPremium?"none":`1px solid ${plan.color}66`,color:isPremium?"#0A1400":plan.color,fontSize:9,fontWeight:800,padding:"2px 12px",borderRadius:20,whiteSpace:"nowrap",boxShadow:isPremium?"0 2px 10px rgba(250,204,21,0.4)":"none"}}>{plan.note}</div>}
+              {isCurrentPlan&&<div style={{position:"absolute",top:-11,right:16,background:"#22C55E22",border:"1px solid #22C55E55",color:"#22C55E",fontSize:9,fontWeight:800,padding:"2px 10px",borderRadius:20}}>現在のプラン</div>}
+
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                    <div style={{background:`${plan.color}22`,borderRadius:8,padding:"2px 10px"}}>
+                      <span style={{color:plan.color,fontSize:13,fontWeight:900}}>{plan.people}人まで</span>
+                    </div>
+                    <span style={{color:"#fff",fontWeight:800,fontSize:14}}>{plan.label}</span>
+                  </div>
+                  <div style={{color:G.muted,fontSize:11}}>{plan.tag}</div>
                 </div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                  <div>
-                    <div style={{color:"#fff",fontWeight:800,fontSize:17}}>{plan.label}プラン</div>
-                    <div style={{color:G.muted,fontSize:12,marginTop:2}}>{info.use}</div>
-                  </div>
-                  <div style={{textAlign:"right"}}>
-                    <div style={{color:G.gold,fontWeight:900,fontSize:24}}>¥{plan.price.toLocaleString()}</div>
-                    <div style={{color:G.muted,fontSize:10}}>買い切り</div>
-                  </div>
+                <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
+                  {plan.price===0
+                    ?<div style={{color:G.muted,fontWeight:700,fontSize:16}}>無料</div>
+                    :<><div style={{color:G.gold,fontWeight:900,fontSize:22,lineHeight:1}}>¥{plan.price.toLocaleString()}</div><div style={{color:G.muted,fontSize:10}}>買い切り</div></>
+                  }
                 </div>
               </div>
-              <div style={{marginBottom:14}}>
-                {info.features.map((f,i)=>(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
-                    <span style={{color:"#22C55E",fontSize:13}}>✓</span>
-                    <span style={{color:"#ddd",fontSize:12}}>{f}</span>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 8px",marginBottom:10}}>
+                {plan.features.map((f,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:5}}>
+                    <span style={{color:plan.color,fontSize:11,flexShrink:0}}>✓</span>
+                    <span style={{color:"#ccc",fontSize:11}}>{f}</span>
                   </div>
                 ))}
               </div>
-              <button onClick={()=>window.open(t?`${plan.url}?client_reference_id=${t.id}`:plan.url,"_blank")} style={{...btnG,padding:"13px",fontSize:14}}>このプランで決済する →</button>
+
+              {isSelectable&&!isCurrentPlan&&(
+                <button onClick={()=>openPayment(plan.key)} style={{...btnG,padding:"11px",fontSize:13}}>
+                  {plan.url?`${plan.label}プランにアップグレード →`:"準備中"}
+                </button>
+              )}
+              {plan.key==="mini"&&!STRIPE.mini.url&&(
+                <div style={{color:G.muted,fontSize:11,textAlign:"center",marginTop:4}}>※ このプランは近日公開予定です</div>
+              )}
             </div>
           );
         })}
 
-        <div style={{...crd,marginTop:4}}>
+        {/* アンロックコード */}
+        <div style={{...crd,marginTop:8}}>
           <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:8}}>💳 支払い完了後のアンロック</div>
-          <div style={{color:G.muted,fontSize:12,marginBottom:12,lineHeight:1.7}}>支払い完了後、メールに記載のアンロックコードを入力してください。</div>
+          <div style={{color:G.muted,fontSize:12,marginBottom:12,lineHeight:1.7}}>決済完了後、メールに記載のアンロックコードを入力してください。</div>
           <div style={{display:"flex",gap:8}}>
             <input style={{...inp,flex:1}} placeholder="アンロックコードを入力" value={unlockCode} onChange={e=>setUnlockCode(e.target.value)}/>
             <button onClick={tryUnlock} style={{background:G.gold,color:"#111",border:"none",borderRadius:10,padding:"0 14px",fontWeight:700,cursor:"pointer",flexShrink:0}}>認証</button>
