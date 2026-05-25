@@ -115,6 +115,51 @@ const crd={background:"linear-gradient(145deg,#0D2518 0%,#091A10 100%)",borderRa
 const inp={background:"#040E07",color:"#fff",border:"1.5px solid #1A4A28",borderRadius:12,padding:"13px 16px",fontSize:14,width:"100%",boxSizing:"border-box",outline:"none",transition:"border-color 0.2s,box-shadow 0.2s"};
 const lbl={color:"#8ABFA0",fontSize:11,fontWeight:700,marginBottom:8,display:"block",letterSpacing:1,textTransform:"uppercase"};
 
+
+/* ── アフィリエイト枠コンポーネント ── */
+const AFFILIATE_ITEMS = {
+  streaming: {icon:"📺", label:"配信サービスで試合を見る",  sub:"W杯全試合を見るならこちら", url:"#aff-streaming"},
+  goods:     {icon:"⚽", label:"サッカー観戦グッズを探す",  sub:"ボール・グッズ・応援アイテム", url:"#aff-goods"},
+  uniform:   {icon:"👕", label:"ユニフォームを探す",        sub:"推しチームのユニを手に入れよう", url:"#aff-uniform"},
+  pizza:     {icon:"🍕", label:"みんなでピザを注文する",    sub:"観戦パーティーにフードデリバリー", url:"#aff-pizza"},
+  drink:     {icon:"🍺", label:"観戦ドリンクを準備",        sub:"ノンアル・クラフトビールなど", url:"#aff-drink"},
+  projector: {icon:"🎥", label:"プロジェクターで大画面観戦",sub:"迫力の大画面で楽しもう", url:"#aff-projector"},
+  bar:       {icon:"🏟️", label:"スポーツバーを予約する",   sub:"友達と外で観戦するなら", url:"#aff-bar"},
+  towel:     {icon:"🏳️", label:"応援タオルを探す",         sub:"スタジアムの雰囲気を家でも", url:"#aff-towel"},
+};
+
+function AffiliateBlock({title, keys, compact=false}){
+  const [collapsed,setCollapsed]=React.useState(compact);
+  const items=keys.map(k=>AFFILIATE_ITEMS[k]).filter(Boolean);
+  return(
+    <div style={{background:"linear-gradient(145deg,rgba(6,24,38,0.8),rgba(11,61,30,0.4))",borderRadius:14,padding:"14px 16px",marginTop:12,border:"1px solid rgba(14,165,233,0.15)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:collapsed?0:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{background:"rgba(14,165,233,0.15)",border:"1px solid rgba(14,165,233,0.3)",borderRadius:6,padding:"1px 7px",fontSize:9,color:"#7DD3FC",fontWeight:700,letterSpacing:0.5}}>PR</span>
+          <span style={{color:"#fff",fontWeight:700,fontSize:13}}>{title}</span>
+        </div>
+        {compact&&<button onClick={()=>setCollapsed(c=>!c)} style={{background:"none",border:"none",color:G.muted,cursor:"pointer",fontSize:11,padding:0}}>{collapsed?"展開 ▾":"閉じる ▴"}</button>}
+      </div>
+      {!collapsed&&<>
+        <div style={{color:G.muted,fontSize:10,marginBottom:8}}>※ アフィリエイトリンクを含みます</div>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {items.map((item,i)=>(
+            <a key={i} href={item.url} target="_blank" rel="noopener noreferrer sponsored"
+              style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"10px 12px",textDecoration:"none",border:"1px solid rgba(255,255,255,0.06)"}}>
+              <span style={{fontSize:20,flexShrink:0}}>{item.icon}</span>
+              <div style={{flex:1,overflow:"hidden"}}>
+                <div style={{color:"#fff",fontSize:12,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.label}</div>
+                <div style={{color:G.muted,fontSize:10,marginTop:1}}>{item.sub}</div>
+              </div>
+              <span style={{color:"#0EA5E9",fontSize:11,flexShrink:0}}>→</span>
+            </a>
+          ))}
+        </div>
+      </>}
+    </div>
+  );
+}
+
 const Back=({onClick})=><button onClick={onClick} style={{background:"rgba(255,255,255,0.04)",border:"1px solid #1A4A28",color:G.muted,cursor:"pointer",padding:"6px 14px 6px 10px",borderRadius:20,fontSize:12,display:"flex",alignItems:"center",gap:5,marginBottom:14,fontWeight:600,width:"fit-content"}}>‹ 戻る</button>;
 const Err=({msg})=>msg?<div style={{color:"#FF8080",fontSize:13,padding:"10px 14px",background:"rgba(255,60,60,0.08)",borderRadius:12,marginBottom:12,border:"1px solid rgba(255,80,80,0.2)",display:"flex",alignItems:"center",gap:6}}><span>⚠️</span><span>{msg}</span></div>:null;
 function FInput({label:lb,value,onChange,placeholder,type="text"}){return<div style={{marginBottom:16}}><label style={lbl}>{lb}</label><input style={inp} type={type} placeholder={placeholder} value={value} onChange={e=>onChange(e.target.value)}/></div>;}
@@ -288,6 +333,7 @@ function PgHome({nav,goT}){
           </div>
         </div>
         <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
+        <AffiliateBlock title="🎉 W杯観戦をもっと楽しむ" keys={["streaming","uniform","goods","pizza"]} compact={true}/>
       </div>
     </div>
   );
@@ -415,6 +461,7 @@ ${url}`);
             return null;
           })()}
         </div>
+        <AffiliateBlock title="🏟️ みんなで観戦する準備" keys={["pizza","drink","projector","streaming"]} compact={true}/>
       </div>
     </div>
   );
@@ -621,6 +668,7 @@ function PgRanking({tourn:t,setTourn,nav}){
 })}
         <div style={{background:"linear-gradient(145deg,#0A2018,#061A0D)",borderRadius:14,padding:"14px 18px",marginTop:8,border:"1px solid #1A4A28"}}><div style={{color:G.gold,fontSize:10,fontWeight:700,marginBottom:10,letterSpacing:2}}>📋 POINT RULES</div>{[["優勝国的中","20pt"],["準優勝国的中","15pt"],["得点王的中","15pt"],["日本代表成績的中","10pt"],["応援国が優勝","5pt"]].map(([r,pt])=><div key={r} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"#8ba",fontSize:12}}>{r}</span><span style={{color:G.gold,fontSize:12,fontWeight:700}}>{pt}</span></div>)}</div>
         <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+        <AffiliateBlock title="⚽ 次の試合までに準備" keys={["streaming","uniform","goods","towel"]} compact={true}/>
       </div>
     </div>
   );
@@ -951,26 +999,77 @@ function PgCountry({nav,country,goCountry}){
 ═══════════════════════════════════════════ */
 
 const PLAYERS = [
-  {id:1, ja:"三笠 光",     short:"三笠",     club:"ブライトン",       nat:"日本",       natCode:"jp"},
-  {id:2, ja:"久保 建英",   short:"久保",     club:"レアル・ソシエダ", nat:"日本",       natCode:"jp"},
-  {id:3, ja:"冨安 健洋",   short:"冨安",     club:"アヤックス",       nat:"日本",       natCode:"jp"},
-  {id:4, ja:"遠藤 航",     short:"遠藤",     club:"リバプール",       nat:"日本",       natCode:"jp"},
-  {id:5, ja:"上田 綺世",   short:"上田",     club:"フェイエノールト", nat:"日本",       natCode:"jp"},
-  {id:6, ja:"メッシ",      short:"メッシ",   club:"インテル・マイアミ",nat:"アルゼンチン",natCode:"ar"},
-  {id:7, ja:"ロナウド",    short:"ロナウド", club:"アル・ナスル",     nat:"ポルトガル", natCode:"pt"},
-  {id:8, ja:"ハフィーニャ",short:"ハフィーニャ",club:"バルセロナ",  nat:"ブラジル",   natCode:"br"},
-  {id:9, ja:"エムバペ",    short:"エムバペ", club:"レアル・マドリード",nat:"フランス",   natCode:"fr"},
-  {id:10,ja:"ヴィニシウス",short:"ヴィニシウス",club:"レアル・マドリード",nat:"ブラジル",natCode:"br"},
-  {id:11,ja:"ハーランド",  short:"ハーランド",club:"マン・シティ",   nat:"ノルウェー", natCode:"no"},
-  {id:12,ja:"ベリンガム",  short:"ベリンガム",club:"レアル・マドリード",nat:"イングランド",natCode:"gb-eng"},
-  {id:13,ja:"ラミン・ヤマル",short:"ヤマル", club:"バルセロナ",      nat:"スペイン",   natCode:"es"},
-  {id:14,ja:"ペドリ",      short:"ペドリ",   club:"バルセロナ",      nat:"スペイン",   natCode:"es"},
-  {id:15,ja:"ロドリ",      short:"ロドリ",   club:"マン・シティ",    nat:"スペイン",   natCode:"es"},
-  {id:16,ja:"デ・ブライネ",short:"デブルイネ",club:"マン・シティ",  nat:"ベルギー",   natCode:"be"},
-  {id:17,ja:"ファン・ダイク",short:"ファンダイク",club:"リバプール",  nat:"オランダ",   natCode:"nl"},
-  {id:18,ja:"アリソン",    short:"アリソン", club:"リバプール",      nat:"ブラジル",   natCode:"br"},
-  {id:19,ja:"マルティネス",short:"マルティネス",club:"アストン・ヴィラ",nat:"アルゼンチン",natCode:"ar"},
-  {id:20,ja:"ノイアー",    short:"ノイアー", club:"バイエルン",      nat:"ドイツ",     natCode:"de"},
+  {id:1,nameJa:"三笠 光",nameEn:"Kaoru Mitoma",short:"三笠",country:"日本",nat:"日本",natCode:"jp",club:"ブライトン",position:"FW"},
+  {id:2,nameJa:"久保 建英",nameEn:"Takefusa Kubo",short:"久保",country:"日本",nat:"日本",natCode:"jp",club:"レアル・ソシエダ",position:"MF"},
+  {id:3,nameJa:"冨安 健洋",nameEn:"Takehiro Tomiyasu",short:"冨安",country:"日本",nat:"日本",natCode:"jp",club:"アヤックス",position:"DF"},
+  {id:4,nameJa:"遠藤 航",nameEn:"Wataru Endo",short:"遠藤",country:"日本",nat:"日本",natCode:"jp",club:"リバプール",position:"MF"},
+  {id:5,nameJa:"上田 綺世",nameEn:"Ayase Ueda",short:"上田",country:"日本",nat:"日本",natCode:"jp",club:"フェイエノールト",position:"FW"},
+  {id:6,nameJa:"リオネル・メッシ",nameEn:"Lionel Messi",short:"メッシ",country:"アルゼンチン",nat:"アルゼンチン",natCode:"ar",club:"インテル・マイアミ",position:"FW"},
+  {id:7,nameJa:"ラウタロ・マルティネス",nameEn:"Lautaro Martinez",short:"ラウタロ",country:"アルゼンチン",nat:"アルゼンチン",natCode:"ar",club:"インテル",position:"FW"},
+  {id:8,nameJa:"フリアン・アルバレス",nameEn:"Julian Alvarez",short:"アルバレス",country:"アルゼンチン",nat:"アルゼンチン",natCode:"ar",club:"アトレティコ・マドリード",position:"FW"},
+  {id:9,nameJa:"エンソ・フェルナンデス",nameEn:"Enzo Fernandez",short:"エンソ",country:"アルゼンチン",nat:"アルゼンチン",natCode:"ar",club:"チェルシー",position:"MF"},
+  {id:10,nameJa:"エミリアーノ・マルティネス",nameEn:"Emiliano Martinez",short:"E.マルティネス",country:"アルゼンチン",nat:"アルゼンチン",natCode:"ar",club:"アストン・ヴィラ",position:"GK"},
+  {id:11,nameJa:"ヴィニシウス・ジュニオール",nameEn:"Vinicius Junior",short:"ヴィニシウス",country:"ブラジル",nat:"ブラジル",natCode:"br",club:"レアル・マドリード",position:"FW"},
+  {id:12,nameJa:"ロドリゴ",nameEn:"Rodrygo",short:"ロドリゴ",country:"ブラジル",nat:"ブラジル",natCode:"br",club:"レアル・マドリード",position:"FW"},
+  {id:13,nameJa:"ハフィーニャ",nameEn:"Raphinha",short:"ハフィーニャ",country:"ブラジル",nat:"ブラジル",natCode:"br",club:"バルセロナ",position:"FW"},
+  {id:14,nameJa:"ブルーノ・ギマランイス",nameEn:"Bruno Guimaraes",short:"ギマランイス",country:"ブラジル",nat:"ブラジル",natCode:"br",club:"ニューカッスル",position:"MF"},
+  {id:15,nameJa:"アリソン",nameEn:"Alisson",short:"アリソン",country:"ブラジル",nat:"ブラジル",natCode:"br",club:"リバプール",position:"GK"},
+  {id:16,nameJa:"マルキーニョス",nameEn:"Marquinhos",short:"マルキーニョス",country:"ブラジル",nat:"ブラジル",natCode:"br",club:"パリ・サンジェルマン",position:"DF"},
+  {id:17,nameJa:"キリアン・エムバペ",nameEn:"Kylian Mbappe",short:"エムバペ",country:"フランス",nat:"フランス",natCode:"fr",club:"レアル・マドリード",position:"FW"},
+  {id:18,nameJa:"アントワーヌ・グリーズマン",nameEn:"Antoine Griezmann",short:"グリーズマン",country:"フランス",nat:"フランス",natCode:"fr",club:"アトレティコ・マドリード",position:"MF"},
+  {id:19,nameJa:"ウスマン・デンベレ",nameEn:"Ousmane Dembele",short:"デンベレ",country:"フランス",nat:"フランス",natCode:"fr",club:"パリ・サンジェルマン",position:"FW"},
+  {id:20,nameJa:"オーレリアン・チュアメニ",nameEn:"Aurelien Tchouameni",short:"チュアメニ",country:"フランス",nat:"フランス",natCode:"fr",club:"レアル・マドリード",position:"MF"},
+  {id:21,nameJa:"マイク・メニャン",nameEn:"Mike Maignan",short:"メニャン",country:"フランス",nat:"フランス",natCode:"fr",club:"ACミラン",position:"GK"},
+  {id:22,nameJa:"ジュード・ベリンガム",nameEn:"Jude Bellingham",short:"ベリンガム",country:"イングランド",nat:"イングランド",natCode:"gb-eng",club:"レアル・マドリード",position:"MF"},
+  {id:23,nameJa:"ハリー・ケイン",nameEn:"Harry Kane",short:"ケイン",country:"イングランド",nat:"イングランド",natCode:"gb-eng",club:"バイエルン",position:"FW"},
+  {id:24,nameJa:"ブカヨ・サカ",nameEn:"Bukayo Saka",short:"サカ",country:"イングランド",nat:"イングランド",natCode:"gb-eng",club:"アーセナル",position:"FW"},
+  {id:25,nameJa:"フィル・フォーデン",nameEn:"Phil Foden",short:"フォーデン",country:"イングランド",nat:"イングランド",natCode:"gb-eng",club:"マン・シティ",position:"MF"},
+  {id:26,nameJa:"デクラン・ライス",nameEn:"Declan Rice",short:"ライス",country:"イングランド",nat:"イングランド",natCode:"gb-eng",club:"アーセナル",position:"MF"},
+  {id:27,nameJa:"ラミン・ヤマル",nameEn:"Lamine Yamal",short:"ヤマル",country:"スペイン",nat:"スペイン",natCode:"es",club:"バルセロナ",position:"FW"},
+  {id:28,nameJa:"ペドリ",nameEn:"Pedri",short:"ペドリ",country:"スペイン",nat:"スペイン",natCode:"es",club:"バルセロナ",position:"MF"},
+  {id:29,nameJa:"ロドリ",nameEn:"Rodri",short:"ロドリ",country:"スペイン",nat:"スペイン",natCode:"es",club:"マン・シティ",position:"MF"},
+  {id:30,nameJa:"ガビ",nameEn:"Gavi",short:"ガビ",country:"スペイン",nat:"スペイン",natCode:"es",club:"バルセロナ",position:"MF"},
+  {id:31,nameJa:"ニコ・ウィリアムズ",nameEn:"Nico Williams",short:"N.ウィリアムズ",country:"スペイン",nat:"スペイン",natCode:"es",club:"アスレティック・ビルバオ",position:"FW"},
+  {id:32,nameJa:"クリスティアーノ・ロナウド",nameEn:"Cristiano Ronaldo",short:"ロナウド",country:"ポルトガル",nat:"ポルトガル",natCode:"pt",club:"アル・ナスル",position:"FW"},
+  {id:33,nameJa:"ブルーノ・フェルナンデス",nameEn:"Bruno Fernandes",short:"B.フェルナンデス",country:"ポルトガル",nat:"ポルトガル",natCode:"pt",club:"マンチェスター・ユナイテッド",position:"MF"},
+  {id:34,nameJa:"ベルナルド・シウバ",nameEn:"Bernardo Silva",short:"シウバ",country:"ポルトガル",nat:"ポルトガル",natCode:"pt",club:"マン・シティ",position:"MF"},
+  {id:35,nameJa:"ラファエル・レオン",nameEn:"Rafael Leao",short:"レオン",country:"ポルトガル",nat:"ポルトガル",natCode:"pt",club:"ACミラン",position:"FW"},
+  {id:36,nameJa:"ジャマル・ムシアラ",nameEn:"Jamal Musiala",short:"ムシアラ",country:"ドイツ",nat:"ドイツ",natCode:"de",club:"バイエルン",position:"MF"},
+  {id:37,nameJa:"フロリアン・ヴィルツ",nameEn:"Florian Wirtz",short:"ヴィルツ",country:"ドイツ",nat:"ドイツ",natCode:"de",club:"レヴァークーゼン",position:"MF"},
+  {id:38,nameJa:"ヨシュア・キミッヒ",nameEn:"Joshua Kimmich",short:"キミッヒ",country:"ドイツ",nat:"ドイツ",natCode:"de",club:"バイエルン",position:"MF"},
+  {id:39,nameJa:"カイ・ハフェルツ",nameEn:"Kai Havertz",short:"ハフェルツ",country:"ドイツ",nat:"ドイツ",natCode:"de",club:"アーセナル",position:"FW"},
+  {id:40,nameJa:"マヌエル・ノイアー",nameEn:"Manuel Neuer",short:"ノイアー",country:"ドイツ",nat:"ドイツ",natCode:"de",club:"バイエルン",position:"GK"},
+  {id:41,nameJa:"フィルジル・ファン・ダイク",nameEn:"Virgil van Dijk",short:"ファン・ダイク",country:"オランダ",nat:"オランダ",natCode:"nl",club:"リバプール",position:"DF"},
+  {id:42,nameJa:"フレンキー・デ・ヨング",nameEn:"Frenkie de Jong",short:"デ・ヨング",country:"オランダ",nat:"オランダ",natCode:"nl",club:"バルセロナ",position:"MF"},
+  {id:43,nameJa:"コーディ・ガクポ",nameEn:"Cody Gakpo",short:"ガクポ",country:"オランダ",nat:"オランダ",natCode:"nl",club:"リバプール",position:"FW"},
+  {id:44,nameJa:"シャビ・シモンズ",nameEn:"Xavi Simons",short:"シモンズ",country:"オランダ",nat:"オランダ",natCode:"nl",club:"パリ・サンジェルマン",position:"MF"},
+  {id:45,nameJa:"ケヴィン・デ・ブライネ",nameEn:"Kevin De Bruyne",short:"デ・ブライネ",country:"ベルギー",nat:"ベルギー",natCode:"be",club:"マン・シティ",position:"MF"},
+  {id:46,nameJa:"ロメル・ルカク",nameEn:"Romelu Lukaku",short:"ルカク",country:"ベルギー",nat:"ベルギー",natCode:"be",club:"ナポリ",position:"FW"},
+  {id:47,nameJa:"ティボー・クルトワ",nameEn:"Thibaut Courtois",short:"クルトワ",country:"ベルギー",nat:"ベルギー",natCode:"be",club:"レアル・マドリード",position:"GK"},
+  {id:48,nameJa:"ルカ・モドリッチ",nameEn:"Luka Modric",short:"モドリッチ",country:"クロアチア",nat:"クロアチア",natCode:"hr",club:"レアル・マドリード",position:"MF"},
+  {id:49,nameJa:"マテオ・コバチッチ",nameEn:"Mateo Kovacic",short:"コバチッチ",country:"クロアチア",nat:"クロアチア",natCode:"hr",club:"マン・シティ",position:"MF"},
+  {id:50,nameJa:"ヨシュコ・グヴァルディオル",nameEn:"Josko Gvardiol",short:"グヴァルディオル",country:"クロアチア",nat:"クロアチア",natCode:"hr",club:"マン・シティ",position:"DF"},
+  {id:51,nameJa:"ダルウィン・ヌニェス",nameEn:"Darwin Nunez",short:"ヌニェス",country:"ウルグアイ",nat:"ウルグアイ",natCode:"uy",club:"リバプール",position:"FW"},
+  {id:52,nameJa:"フェデリコ・バルベルデ",nameEn:"Federico Valverde",short:"バルベルデ",country:"ウルグアイ",nat:"ウルグアイ",natCode:"uy",club:"レアル・マドリード",position:"MF"},
+  {id:53,nameJa:"ルイス・ディアス",nameEn:"Luis Diaz",short:"L.ディアス",country:"コロンビア",nat:"コロンビア",natCode:"co",club:"リバプール",position:"FW"},
+  {id:54,nameJa:"ハメス・ロドリゲス",nameEn:"James Rodriguez",short:"ハメス",country:"コロンビア",nat:"コロンビア",natCode:"co",club:"ラシン",position:"MF"},
+  {id:55,nameJa:"アクラフ・ハキミ",nameEn:"Achraf Hakimi",short:"ハキミ",country:"モロッコ",nat:"モロッコ",natCode:"ma",club:"パリ・サンジェルマン",position:"DF"},
+  {id:56,nameJa:"ハキム・ツィエク",nameEn:"Hakim Ziyech",short:"ツィエク",country:"モロッコ",nat:"モロッコ",natCode:"ma",club:"ガラタサライ",position:"MF"},
+  {id:57,nameJa:"サディオ・マネ",nameEn:"Sadio Mane",short:"マネ",country:"セネガル",nat:"セネガル",natCode:"sn",club:"アル・ナスル",position:"FW"},
+  {id:58,nameJa:"カリドゥ・クリバリ",nameEn:"Kalidou Koulibaly",short:"クリバリ",country:"セネガル",nat:"セネガル",natCode:"sn",club:"アル・ヒラル",position:"DF"},
+  {id:59,nameJa:"クリスチャン・プリシッチ",nameEn:"Christian Pulisic",short:"プリシッチ",country:"アメリカ",nat:"アメリカ",natCode:"us",club:"ACミラン",position:"FW"},
+  {id:60,nameJa:"ウェストン・マッケニー",nameEn:"Weston McKennie",short:"マッケニー",country:"アメリカ",nat:"アメリカ",natCode:"us",club:"ユベントス",position:"MF"},
+  {id:61,nameJa:"サンティアゴ・ヒメネス",nameEn:"Santiago Gimenez",short:"S.ヒメネス",country:"メキシコ",nat:"メキシコ",natCode:"mx",club:"ACミラン",position:"FW"},
+  {id:62,nameJa:"イルビング・ロサノ",nameEn:"Hirving Lozano",short:"ロサノ",country:"メキシコ",nat:"メキシコ",natCode:"mx",club:"PSV",position:"FW"},
+  {id:63,nameJa:"アルフォンソ・デイヴィス",nameEn:"Alphonso Davies",short:"デイヴィス",country:"カナダ",nat:"カナダ",natCode:"ca",club:"バイエルン",position:"DF"},
+  {id:64,nameJa:"ジョナサン・デイヴィッド",nameEn:"Jonathan David",short:"J.デイヴィッド",country:"カナダ",nat:"カナダ",natCode:"ca",club:"リール",position:"FW"},
+  {id:65,nameJa:"ソン・フンミン",nameEn:"Son Heung-min",short:"ソン",country:"韓国",nat:"韓国",natCode:"kr",club:"トッテナム",position:"FW"},
+  {id:66,nameJa:"キム・ミンジェ",nameEn:"Kim Min-jae",short:"キム",country:"韓国",nat:"韓国",natCode:"kr",club:"バイエルン",position:"DF"},
+  {id:67,nameJa:"イ・ガンイン",nameEn:"Lee Kang-in",short:"イ",country:"韓国",nat:"韓国",natCode:"kr",club:"パリ・サンジェルマン",position:"MF"},
+  {id:68,nameJa:"アーリング・ハーランド",nameEn:"Erling Haaland",short:"ハーランド",country:"ノルウェー",nat:"ノルウェー",natCode:"no",club:"マン・シティ",position:"FW"},
+  {id:69,nameJa:"マルティン・ウーデゴール",nameEn:"Martin Odegaard",short:"ウーデゴール",country:"ノルウェー",nat:"ノルウェー",natCode:"no",club:"アーセナル",position:"MF"},
+  {id:70,nameJa:"マシュー・ライアン",nameEn:"Mathew Ryan",short:"ライアン",country:"オーストラリア",nat:"オーストラリア",natCode:"au",club:"コペンハーゲン",position:"GK"},
+  {id:71,nameJa:"ジャクソン・アーバイン",nameEn:"Jackson Irvine",short:"アーバイン",country:"オーストラリア",nat:"オーストラリア",natCode:"au",club:"セントパウリ",position:"MF"},
 ];
 
 // フォーメーションプリセット（位置の初期値として使用）
@@ -998,7 +1097,7 @@ const FORMATIONS = {
   ],
 };
 
-const NAT_BG={"日本":"#003087","アルゼンチン":"#6bbfff","ポルトガル":"#006600","ブラジル":"#009c3b","フランス":"#002395","ノルウェー":"#ef2b2d","イングランド":"#cf091e","スペイン":"#aa151b","ベルギー":"#c00","オランダ":"#e77d00","ドイツ":"#222"};
+const NAT_BG={"日本":"#003087","アルゼンチン":"#6bbfff","ポルトガル":"#006600","ブラジル":"#009c3b","フランス":"#002395","ノルウェー":"#ef2b2d","イングランド":"#cf091e","スペイン":"#aa151b","ベルギー":"#c00","オランダ":"#e77d00","ドイツ":"#222","クロアチア":"#003366","ウルグアイ":"#5cb8e4","コロンビア":"#fcd116","モロッコ":"#c1272d","セネガル":"#00853f","アメリカ":"#bf0a30","メキシコ":"#006847","カナダ":"#ff0000","韓国":"#003478","オーストラリア":"#00008b"};
 
 function PlayerAvatar({player,size=42,preview=false}){
   const bg=NAT_BG[player.nat]||"#444";
@@ -1151,7 +1250,7 @@ function PitchFree({placed,onPitchTap,onPlayerTap,movingUid,preview=false,onPlay
 function PlayerSelectModal({open,onSelect,onClose,title="選手を選ぶ"}){
   const [search,setSearch]=useState("");
   if(!open)return null;
-  const filtered=PLAYERS.filter(p=>p.ja.includes(search)||p.short.includes(search)||p.nat.includes(search)||p.club.includes(search));
+  const filtered=PLAYERS.filter(p=>p.nameJa.includes(search)||p.short.includes(search)||p.nat.includes(search)||p.club.includes(search));
   return(
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:G.card,borderRadius:"20px 20px 0 0",padding:20,width:"100%",maxWidth:480,maxHeight:"82vh",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
@@ -1165,8 +1264,8 @@ function PlayerSelectModal({open,onSelect,onClose,title="選手を選ぶ"}){
             <div key={p.id} onClick={()=>onSelect(p)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 8px",borderBottom:"1px solid #1a3a28",cursor:"pointer",borderRadius:8}}>
               <PlayerAvatar player={p} size={36}/>
               <div style={{flex:1}}>
-                <div style={{color:"#fff",fontWeight:700,fontSize:13}}>{p.ja}</div>
-                <div style={{color:G.muted,fontSize:11}}>{p.club} · {p.nat}</div>
+                <div style={{color:"#fff",fontWeight:700,fontSize:13}}>{p.nameJa}</div>
+                <div style={{color:G.muted,fontSize:11}}>{p.club} · {p.country} <span style={{color:"#666",fontSize:10}}>{p.position}</span></div>
               </div>
               <img src={`https://flagcdn.com/w20/${p.natCode}.png`} alt={p.nat} style={{width:20,height:14,borderRadius:2,objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>
             </div>
@@ -1186,7 +1285,7 @@ function PlayerOptionsModal({open,slot,onChangePlayer,onDelete,onMove,onClose}){
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
           {slot.player&&<PlayerAvatar player={slot.player} size={44}/>}
           <div>
-            <div style={{color:"#fff",fontWeight:700,fontSize:15}}>{slot.player?slot.player.ja:slot.posLabel||"空きポジション"}</div>
+            <div style={{color:"#fff",fontWeight:700,fontSize:15}}>{slot.player?slot.player.nameJa:slot.posLabel||"空きポジション"}</div>
             {slot.player&&<div style={{color:G.muted,fontSize:12}}>{slot.player.club} · {slot.player.nat}</div>}
           </div>
         </div>
@@ -1420,7 +1519,8 @@ function PgBest11({nav}){
           <div style={{color:G.muted,fontSize:12,lineHeight:1.8}}>📸 <strong style={{color:"#fff"}}>スクリーンショットで保存する場合</strong><br/>上のカードを長押し（iOS）またはスクリーンショットで保存して、そのままInstagramストーリーに投稿できます。</div>
         </div>
         <button style={btnO} onClick={()=>setB11page("pitch")}>✏️ 編集に戻る</button>
-        <button style={btnGr} onClick={()=>{if(window.confirm("最初からやり直しますか？")){setB11page("top");setTeamName("");setFormLabel("4-3-3");setPlaced([]);setMovingUid(null);}}}>🔄 最初からやり直す</button>
+        <button style={btnGr} onClick={()=>{if(window.confirm("最初からやり直しますか?")){setB11page("top");setTeamName("");setFormLabel("4-3-3");setPlaced([]);setMovingUid(null);}}}>🔄 最初からやり直す</button>
+        <AffiliateBlock title="👕 推し選手をもっと楽しむ" keys={["uniform","goods","bar","towel"]} compact={true}/>
       </div>
     </div>
   );
