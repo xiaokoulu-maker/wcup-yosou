@@ -695,68 +695,183 @@ function App(){
   );
 }
 
-/* ── 起動アニメーション ── */
+/* ── 起動アニメーション v2 ── */
 const SPLASH_CHARS=[
-  {id:"genius_left",label:"左足の天才",sub:"予想大会、キックオフ。",
-   colors:{uni:"#6BBAFF",uni2:"#fff",accent:"#3A8FD4",skin:"#F5CBA7"},
-   type:"striker"},
-  {id:"speed_dribbler",label:"神速ドリブラー",sub:"友達とランキング勝負。",
-   colors:{uni:"#FFE000",uni2:"#22A861",accent:"#1A7A40",skin:"#8D5524"},
-   type:"winger"},
-  {id:"samurai_playmaker",label:"侍司令塔",sub:"さあ、予想を始めよう。",
-   colors:{uni:"#005BAC",uni2:"#FFFFFF",accent:"#0037A0",skin:"#FDEBD0"},
-   type:"playmaker"},
-  {id:"royal_striker",label:"王者のストライカー",sub:"W杯の主役は、予想した人から。",
-   colors:{uni:"#FFFFFF",uni2:"#FACC15",accent:"#E0B800",skin:"#F0C080"},
-   type:"striker"},
-  {id:"guardian",label:"守護神",sub:"予想大会、キックオフ。",
-   colors:{uni:"#1A1A1A",uni2:"#22C55E",accent:"#16A34A",skin:"#FDEBD0"},
-   type:"gk"},
+  {id:"brazil_dribbler",  colors:{a:"#22C55E",b:"#FFE000",glow:"#22C55E"},pose:"dribble"},
+  {id:"england_striker",  colors:{a:"#CF091E",b:"#FFFFFF",glow:"#CF091E"},pose:"kick"},
+  {id:"japan_playmaker",  colors:{a:"#005BAC",b:"#FFFFFF",glow:"#005BAC"},pose:"pass"},
+  {id:"argentina_left",   colors:{a:"#6BBAFF",b:"#FFFFFF",glow:"#6BBAFF"},pose:"curve"},
+  {id:"france_speed",     colors:{a:"#002395",b:"#ED2939",glow:"#6688FF"},pose:"sprint"},
+  {id:"germany_power",    colors:{a:"#E8E8E8",b:"#DD0000",glow:"#FFDD00"},pose:"kick"},
+  {id:"guardian",         colors:{a:"#16A34A",b:"#111",glow:"#16A34A"},  pose:"save"},
 ];
 
-function CharSVG({char}){
+/* シルエット用SVGパス（人物の輪郭を1本のパスで描く） */
+const SILHOUETTES={
+  /* キック / ドリブル / カーブシュートで共通の「蹴り足を上げた」ポーズ */
+  kick:`
+    M0,-92 C-14,-92 -22,-80 -22,-68 C-22,-56 -14,-48 0,-48 C14,-48 22,-56 22,-68 C22,-80 14,-92 0,-92Z
+    M-6,-48 L6,-48 L8,-34 L-8,-34Z
+    M-44,-28 C-52,-22 -54,-10 -48,2 C-40,16 -24,22 -8,20
+    L-4,-4 C-18,-2 -32,-6 -38,-16 C-42,-22 -40,-28 -36,-30
+    L-20,-36 L-8,-34 L8,-34 L20,-36 L36,-30
+    C40,-28 42,-22 38,-16 C32,-6 18,-2 4,-4 L8,20
+    C24,22 40,16 48,2 C54,-10 52,-22 44,-28Z
+    M-8,20 L-12,52 L-16,88 C-18,104 -22,120 -26,134
+    C-30,146 -36,154 -44,158 L-52,162 L-28,164 L-14,158
+    C-6,152 -2,140 0,126 C2,112 2,96 2,80L2,52 L-2,20Z
+    M4,20 L8,52 L16,70 C24,54 34,42 44,36 C54,30 62,32 66,40
+    C70,50 66,62 56,72 C46,82 34,86 24,84 L20,96 L12,80 L8,64Z`,
+
+  /* パス／フリーキック：両足でしっかり立ち、腕を広げたポーズ */
+  pass:`
+    M0,-92 C-14,-92 -22,-80 -22,-68 C-22,-56 -14,-48 0,-48 C14,-48 22,-56 22,-68 C22,-80 14,-92 0,-92Z
+    M-6,-48 L6,-48 L8,-34 L-8,-34Z
+    M-56,-18 C-64,-8 -62,8 -52,16 C-44,22 -32,20 -22,14 L-8,20 L-8,-4 L-22,-10
+    C-34,-14 -46,-12 -52,-4 Z
+    M56,-18 C64,-8 62,8 52,16 C44,22 32,20 22,14 L8,20 L8,-4 L22,-10
+    C34,-14 46,-12 52,-4 Z
+    M-44,-28 L-36,-30 L-20,-36 L-8,-34 L8,-34 L20,-36 L36,-30 L44,-28
+    C46,-24 46,-14 44,-6 L36,2 L-36,2 L-44,-6 C-46,-14 -46,-24 -44,-28Z
+    M-8,20 L-10,56 L-14,96 C-16,114 -20,130 -24,142
+    L-38,162 L-52,166 L-30,168 L-14,162 C-4,154 2,140 4,124
+    C6,108 6,90 6,72 L8,56 L8,20Z
+    M8,20 L10,56 L14,96 C16,114 20,130 24,142
+    L38,162 L52,166 L30,168 L14,162 C4,154 -2,140 -4,124
+    C-6,108 -6,90 -6,72 L-8,56 L-8,20Z`,
+
+  /* スプリント：前傾み，両腕を振る走りポーズ */
+  sprint:`
+    M12,-92 C-2,-94 -10,-82 -8,-70 C-6,-58 2,-50 14,-50 C26,-50 34,-60 32,-72 C30,-84 22,-92 12,-92Z
+    M8,-50 L10,-36 L16,-34 L18,-48Z
+    M-20,-18 C-28,-8 -26,8 -14,14 C-4,20 8,16 16,10 L16,-4 C6,-2 -4,-6 -8,-14 C-12,-20 -10,-28 -4,-30 L12,-36 L18,-34 L26,-32 L38,-24 C44,-18 46,-8 42,2 C38,10 28,16 18,16 L18,30 C32,32 46,24 52,10 C58,-4 54,-20 44,-30Z
+    M14,-36 L8,-34 L10,-4 L16,-4 L20,-36 L16,-36Z
+    M10,-4 L6,28 L2,62 C0,78 -2,96 -4,110 L-16,130 L-28,140 L-6,142 L6,134 C16,124 20,108 22,90 C24,74 22,56 20,40 L18,16Z
+    M16,-4 L20,28 L28,52 C36,36 48,24 58,22 C66,20 72,26 70,36 C68,46 58,56 46,60 L40,72 L30,58 L38,48 C46,44 52,38 52,32 C52,28 48,26 44,28 C36,32 26,42 20,56 L16,40Z`,
+
+  /* セーブ：横にジャンプし両手を伸ばすGKポーズ */
+  save:`
+    M-60,-10 C-72,-10 -80,0 -80,12 C-80,24 -72,32 -60,32 C-48,32 -40,24 -40,12 C-40,0 -48,-10 -60,-10Z
+    M-50,32 L-52,46 L-46,46 L-44,32Z
+    M-100,56 C-108,68 -104,84 -92,90 C-80,96 -66,90 -58,80
+    L-48,60 C-58,70 -70,76 -80,72 C-88,68 -90,58 -84,52
+    L-72,42 L-52,46 L-32,50 L-16,52 L0,50 L18,44 L34,36
+    C42,30 44,18 38,10 C32,2 20,-2 12,4 L0,12 C8,6 16,6 20,14
+    C24,20 20,30 12,34 L-2,42 L-18,48 L-32,50Z
+    M-48,60 L-50,88 L-46,118 C-44,136 -44,154 -46,168
+    L-62,180 L-80,186 L-58,188 L-40,180 C-28,170 -22,154 -20,136
+    C-18,118 -18,100 -20,82 L-22,60Z
+    M-32,50 L-30,80 L-28,112 C-26,130 -24,148 -28,164
+    L-16,172 L0,176 L6,164 C10,150 10,132 8,114 C6,96 4,78 2,60 L0,50Z`
+};
+
+function SplashScene({char}){
   const c=char.colors;
-  const t=char.type;
-  // 架空キャラクターのシルエット（実在選手と無関係の幾何学的表現）
-  const isGK=t==="gk";
-  const isWinger=t==="winger";
+  const pose=char.pose==="save"?"save":char.pose==="sprint"?"sprint":char.pose==="pass"?"pass":"kick";
+  const path=SILHOUETTES[pose]||SILHOUETTES.kick;
+
+  /* ボール軌道の制御点 */
+  const ballTrails={
+    kick:   {d:"M-20,90 C10,40 60,-10 100,-60",  bx:110,by:-68},
+    dribble:{d:"M-30,100 C-10,60 20,20 40,-20",   bx:45,by:-28},
+    pass:   {d:"M0,80 C30,20 80,-40 130,-80",     bx:138,by:-88},
+    curve:  {d:"M-40,90 C-20,20 40,-30 110,-50",  bx:118,by:-55},
+    sprint: {d:"M-60,70 C-20,20 40,-30 100,-60",  bx:108,by:-68},
+    save:   {d:"M120,0 C60,0 10,10 -50,20",       bx:-58,by:22},
+  };
+  const bt=ballTrails[char.pose]||ballTrails.kick;
+
   return(
-    <svg viewBox="-40 -80 80 160" width="90" height="180" style={{overflow:"visible",animation:`splashChar 1.6s ease forwards`}}>
-      {/* スタジアムライト */}
-      <ellipse cx="0" cy="-90" rx="60" ry="40" fill={c.accent} opacity="0.08" style={{animation:"splashLight 1s ease-in-out infinite"}}/>
-      {/* ゴールネット（GKのみ） */}
-      {isGK&&<>
-        <rect x="-38" y="-75" width="76" height="50" fill="none" stroke={c.uni2} strokeWidth="1.2" opacity="0.4" style={{animation:"splashGoal 0.8s ease-in-out infinite"}}/>
-        {[-20,-4,12,28].map(x=><line key={x} x1={x} y1="-75" x2={x} y2="-25" stroke={c.uni2} strokeWidth="0.5" opacity="0.25"/>)}
-        {[-65,-55,-45,-35].map(y=><line key={y} x1="-38" y1={y} x2="38" y2={y} stroke={c.uni2} strokeWidth="0.5" opacity="0.25"/>)}
-      </>}
-      {/* ボール */}
-      <g style={{animation:`splashBall 1.6s ease forwards`,transformOrigin:"0 70px"}}>
-        <circle cx={isGK?-20:isWinger?25:20} cy="70" r="9" fill="#fff" stroke="#333" strokeWidth="1"/>
-        <path d={`M${isGK?-20:isWinger?25:20},61 l-4,5 4,8 8,0 4,-8 -4,-5z`} fill="#333" opacity="0.35"/>
+    <svg viewBox="-160 -160 320 380" width="260" height="390" style={{overflow:"visible"}}>
+      <defs>
+        {/* プレイヤーグロー */}
+        <filter id={`glow_${char.id}`} x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        {/* 外側グロー（輪郭光） */}
+        <filter id={`glow2_${char.id}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur"/>
+          <feColorMatrix in="blur" type="saturate" values="3" result="colored"/>
+          <feMerge><feMergeNode in="colored"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        {/* ボールグロー */}
+        <filter id={`ballglow_${char.id}`} x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        {/* ユニフォームグラデーション */}
+        <linearGradient id={`uni_${char.id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={c.a} stopOpacity="0.9"/>
+          <stop offset="60%" stopColor={c.b} stopOpacity="0.7"/>
+          <stop offset="100%" stopColor={c.a} stopOpacity="0.5"/>
+        </linearGradient>
+        {/* スポットライト */}
+        <radialGradient id={`spot_${char.id}`} cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stopColor={c.glow} stopOpacity="0.25"/>
+          <stop offset="100%" stopColor={c.glow} stopOpacity="0"/>
+        </radialGradient>
+        {/* トレイルグラデーション */}
+        <linearGradient id={`trail_${char.id}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={c.a} stopOpacity="0"/>
+          <stop offset="100%" stopColor={c.a} stopOpacity="0.9"/>
+        </linearGradient>
+      </defs>
+
+      {/* スポットライト */}
+      <ellipse cx="0" cy="180" rx="140" ry="30" fill={`url(#spot_${char.id})`}
+        style={{animation:"splashLight 2.5s ease-in-out"}}/>
+
+      {/* 選手モーションブラー（残像） */}
+      <g transform={char.pose==="sprint"?"translate(-18,0)":"translate(-8,0)"}
+         style={{filter:`blur(8px)`,opacity:0.18}}>
+        <path d={path} fill={c.a}/>
       </g>
-      {/* 体（シルエット） */}
-      {/* 頭部（丸・無特徴） */}
-      <circle cx="0" cy="-55" r="11" fill={c.skin}/>
-      {/* 首 */}
-      <rect x="-4" y="-44" width="8" height="8" fill={c.skin}/>
-      {/* 胴体・ユニフォーム */}
-      <rect x="-14" y="-36" width="28" height="28" rx="4" fill={c.uni}/>
-      <line x1="0" y1="-36" x2="0" y2="-8" stroke={c.uni2} strokeWidth="1.5" opacity="0.5"/>
-      {/* 番号（架空） */}
-      <text x="0" y="-18" textAnchor="middle" fontSize="8" fill={c.uni2} fontWeight="bold" opacity="0.8">{isGK?"01":isWinger?"77":t==="playmaker"?"08":"09"}</text>
-      {/* 腕 */}
-      <rect x="-24" y="-34" width="10" height="22" rx="4" fill={c.uni} style={isGK?{animation:"splashSave 0.7s ease-in-out infinite"}:{}}/>
-      <rect x="14" y="-34" width="10" height="22" rx="4" fill={c.uni} style={isGK?{animation:"splashSave 0.7s ease-in-out infinite",animationDirection:"reverse"}:{}}/>
-      {/* 短パン */}
-      <rect x="-13" y="-8" width="26" height="16" rx="3" fill={c.accent}/>
-      {/* 脚 */}
-      <g style={{animation:isGK?"":isWinger?`splashKick 0.6s ease-in-out infinite`:`splashKick 0.8s ease-in-out infinite`,transformOrigin:"0px 10px"}}>
-        <rect x="-12" y="8" width="10" height="30" rx="4" fill={c.uni2} opacity="0.9"/>
-        <rect x="-14" y="37" width="14" height="7" rx="3" fill="#333"/>
+      <g transform={char.pose==="sprint"?"translate(-10,0)":"translate(-4,0)"}
+         style={{filter:`blur(4px)`,opacity:0.25}}>
+        <path d={path} fill={c.a}/>
       </g>
-      <rect x="2" y="8" width="10" height="30" rx="4" fill={c.uni2} opacity="0.9"/>
-      <rect x="0" y="37" width="14" height="7" rx="3" fill="#333"/>
+
+      {/* 選手シルエット本体 */}
+      <g style={{animation:`splashChar 2.5s ease forwards`,filter:`url(#glow_${char.id})`}}>
+        {/* 影（足元） */}
+        <ellipse cx="0" cy="175" rx="40" ry="8" fill="rgba(0,0,0,0.4)"/>
+        {/* グロー輪郭 */}
+        <path d={path} fill={c.glow} opacity="0.35"
+          style={{filter:`url(#glow2_${char.id})`,transform:"scale(1.04)"}}/>
+        {/* ユニフォーム本体 */}
+        <path d={path} fill={`url(#uni_${char.id})`}/>
+        {/* ハイライト */}
+        <path d={path} fill="white" opacity="0.08"
+          style={{filter:"blur(2px)"}}/>
+      </g>
+
+      {/* ボール軌道 */}
+      <g style={{animation:`splashBall 2.5s ease forwards`}}>
+        {/* 軌道線 */}
+        <path d={bt.d} fill="none" stroke={`url(#trail_${char.id})`}
+          strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
+        {/* 軌道グロー */}
+        <path d={bt.d} fill="none" stroke={c.a}
+          strokeWidth="6" strokeLinecap="round" opacity="0.15"
+          style={{filter:"blur(4px)"}}/>
+        {/* ボール本体 */}
+        <g transform={`translate(${bt.bx},${bt.by})`}
+           style={{filter:`url(#ballglow_${char.id})`}}>
+          <circle cx="0" cy="0" r="11" fill="white"/>
+          <circle cx="0" cy="0" r="11" fill="none" stroke="#333" strokeWidth="1"/>
+          <path d="M0,-11 L-6,-4 L-4,5 L4,5 L6,-4Z" fill="#222" opacity="0.5"/>
+          <circle cx="0" cy="0" r="13" fill={c.a} opacity="0.25"
+            style={{filter:"blur(5px)"}}/>
+        </g>
+      </g>
+
+      {/* 国カラーのパーティクル */}
+      {[[-80,-60],[-60,-100],[60,-80],[80,-40],[-40,-120],[40,-120],[0,-140]].map(([px,py],i)=>(
+        <circle key={i} cx={px} cy={py} r={i%2===0?3:2}
+          fill={i%3===0?c.a:c.b} opacity={0.4+i*0.06}
+          style={{animation:`splashLight ${1.2+i*0.2}s ease-in-out infinite`,animationDelay:`${i*0.15}s`}}/>
+      ))}
     </svg>
   );
 }
@@ -785,35 +900,79 @@ function SplashScreen({onDone}){
 
   if(!visible)return null;
   const c=char.colors;
+
   return(
-    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:9999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(160deg,#061826 0%,#0B3D1E 50%,#061826 100%)`,opacity:fading?0:1,transition:"opacity 0.35s ease",userSelect:"none"}}>
-      {/* 背景ピッチライン */}
-      <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",opacity:0.06,pointerEvents:"none"}} viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
-        <rect x="20" y="20" width="360" height="660" fill="none" stroke="#22C55E" strokeWidth="2"/>
-        <circle cx="200" cy="350" r="60" fill="none" stroke="#22C55E" strokeWidth="2"/>
-        <line x1="20" y1="350" x2="380" y2="350" stroke="#22C55E" strokeWidth="2"/>
-        <rect x="110" y="20" width="180" height="80" fill="none" stroke="#22C55E" strokeWidth="1.5"/>
-        <rect x="110" y="600" width="180" height="80" fill="none" stroke="#22C55E" strokeWidth="1.5"/>
+    <div style={{
+      position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:9999,
+      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+      background:`radial-gradient(ellipse at 50% 30%, ${c.glow}22 0%, #061826 45%, #030e14 100%)`,
+      opacity:fading?0:1,transition:"opacity 0.35s ease",overflow:"hidden",
+    }}>
+      {/* ピッチライン（背景） */}
+      <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.07,pointerEvents:"none"}}
+        viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="pitch_grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#16A34A" stopOpacity="0.6"/>
+            <stop offset="50%" stopColor="#15803D" stopOpacity="1"/>
+            <stop offset="100%" stopColor="#14532D" stopOpacity="0.6"/>
+          </linearGradient>
+        </defs>
+        {/* 芝生ストライプ */}
+        {[0,1,2,3,4,5,6,7].map(i=>(
+          <rect key={i} x="0" y={i*88} width="400" height="44"
+            fill={i%2===0?"#166534":"#15803D"} opacity="0.4"/>
+        ))}
+        {/* ピッチライン */}
+        <rect x="30" y="30" width="340" height="640" fill="none" stroke="#22C55E" strokeWidth="2.5"/>
+        <circle cx="200" cy="350" r="70" fill="none" stroke="#22C55E" strokeWidth="2.5"/>
+        <circle cx="200" cy="350" r="4" fill="#22C55E"/>
+        <line x1="30" y1="350" x2="370" y2="350" stroke="#22C55E" strokeWidth="2.5"/>
+        <rect x="115" y="30" width="170" height="90" fill="none" stroke="#22C55E" strokeWidth="2"/>
+        <rect x="140" y="30" width="120" height="44" fill="none" stroke="#22C55E" strokeWidth="1.5"/>
+        <rect x="115" y="580" width="170" height="90" fill="none" stroke="#22C55E" strokeWidth="2"/>
+        <rect x="140" y="626" width="120" height="44" fill="none" stroke="#22C55E" strokeWidth="1.5"/>
+        <circle cx="200" cy="90" r="4" fill="#22C55E"/>
+        <circle cx="200" cy="610" r="4" fill="#22C55E"/>
       </svg>
-      {/* スタジアムライト */}
-      <div style={{position:"absolute",top:"-10%",left:"10%",width:200,height:200,borderRadius:"50%",background:c.accent,opacity:0.06,filter:"blur(60px)",animation:"splashLight 1.5s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",top:"-10%",right:"10%",width:200,height:200,borderRadius:"50%",background:"#FACC15",opacity:0.05,filter:"blur(60px)",animation:"splashLight 1.5s ease-in-out infinite",animationDelay:"0.5s"}}/>
-      {/* キャラクター */}
-      <div style={{marginBottom:16,filter:`drop-shadow(0 8px 24px ${c.accent}66)`}}>
-        <CharSVG char={char}/>
+
+      {/* スタジアムライト（上部コーナー） */}
+      {[["10%","5%"],["90%","5%"],["5%","95%"],["95%","95%"]].map(([x,y],i)=>(
+        <div key={i} style={{
+          position:"absolute",left:x,top:y,
+          width:80,height:80,borderRadius:"50%",
+          background:`radial-gradient(circle, ${c.glow}44 0%, transparent 70%)`,
+          transform:"translate(-50%,-50%)",
+          animation:`splashLight ${1.5+i*0.3}s ease-in-out infinite`,
+          animationDelay:`${i*0.2}s`,
+        }}/>
+      ))}
+
+      {/* 国カラーの光帯 */}
+      <div style={{
+        position:"absolute",top:"30%",left:"-20%",width:"140%",height:"2px",
+        background:`linear-gradient(90deg, transparent, ${c.a}44, ${c.b}44, transparent)`,
+        animation:"splashLight 2.5s ease-in-out",
+        transform:"rotate(-8deg)",
+      }}/>
+
+      {/* キャラクターシーン */}
+      <div style={{
+        position:"relative",zIndex:1,
+        filter:`drop-shadow(0 0 30px ${c.glow}88) drop-shadow(0 0 60px ${c.glow}44)`,
+        animation:"splashChar 2.5s ease forwards",
+      }}>
+        <SplashScene char={char}/>
       </div>
-      {/* テキスト */}
-      <div style={{textAlign:"center",animation:"splashText 1.6s ease forwards"}}>
-        <div style={{color:"#668",fontSize:10,fontWeight:600,letterSpacing:2,marginBottom:6}}>今日の登場キャラ</div>
-        <div style={{color:"#fff",fontSize:20,fontWeight:900,marginBottom:6,textShadow:`0 0 20px ${c.accent}88`}}>{char.label}</div>
-        <div style={{color:"#8ba",fontSize:13}}>{char.sub}</div>
-        <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-          <span style={{fontSize:18,animation:"splashBall 1.6s ease forwards"}}>⚽</span>
-          <span style={{color:"#FACC15",fontSize:11,fontWeight:700,letterSpacing:2}}>W杯予想メーカー</span>
-        </div>
-      </div>
-      {/* スキップ */}
-      <button onClick={skip} style={{position:"absolute",bottom:32,right:20,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,color:"#445",fontSize:11,padding:"5px 14px",cursor:"pointer"}}>スキップ ▶</button>
+
+      {/* スキップボタン */}
+      <button onClick={skip} style={{
+        position:"absolute",bottom:28,right:18,
+        background:"rgba(255,255,255,0.05)",
+        border:"1px solid rgba(255,255,255,0.1)",
+        borderRadius:20,color:"rgba(255,255,255,0.3)",
+        fontSize:11,padding:"5px 14px",cursor:"pointer",zIndex:10,
+      }}>Skip ▶</button>
     </div>
   );
 }
