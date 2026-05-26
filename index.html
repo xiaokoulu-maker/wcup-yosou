@@ -28,18 +28,13 @@ textarea,input,select{font-family:inherit;}
 @keyframes rankTwo{0%,100%{box-shadow:0 0 16px rgba(192,192,220,0.25);}50%{box-shadow:0 0 36px rgba(192,192,220,0.5);}}
 @keyframes rankThree{0%,100%{box-shadow:0 0 14px rgba(176,110,60,0.25);}50%{box-shadow:0 0 30px rgba(176,110,60,0.5);}}
 @keyframes stadiumLight{0%,100%{opacity:0.15;}50%{opacity:0.25;}}
-@keyframes splashBall{0%{transform:translateX(-30px) rotate(0deg);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateX(30px) rotate(720deg);opacity:0}}
-@keyframes splashChar{0%{transform:translateY(8px) scaleX(0.9);opacity:0}20%{transform:translateY(0) scaleX(1);opacity:1}80%{transform:translateY(0) scaleX(1);opacity:1}100%{transform:translateY(-6px) scaleX(1);opacity:0}}
-@keyframes splashLight{0%,100%{opacity:0.08}50%{opacity:0.22}}
-@keyframes splashText{0%{opacity:0;transform:translateY(10px)}30%{opacity:1;transform:translateY(0)}80%{opacity:1}
+@keyframes splashLight{0%,100%{opacity:0.07}50%{opacity:0.18}}
+@keyframes trophyIn{0%{transform:scale(0.72) translateY(20px);opacity:0}60%{transform:scale(1.04) translateY(-4px);opacity:1}100%{transform:scale(1) translateY(0);opacity:1}}
+@keyframes trophyGlow{0%,100%{filter:drop-shadow(0 0 18px #FACC1588) drop-shadow(0 0 40px #FACC1544)}50%{filter:drop-shadow(0 0 32px #FACC15CC) drop-shadow(0 0 70px #FACC1566)}}
+@keyframes lightBeam{0%,100%{opacity:0.07}50%{opacity:0.18}}
+@keyframes particleRise{0%{transform:translateY(0);opacity:.7}100%{transform:translateY(-80px);opacity:0}}
 @keyframes splashFadeOut{0%{opacity:1}100%{opacity:0}}
-@keyframes splashGoal{0%{transform:scaleY(0.95)}50%{transform:scaleY(1.04)}100%{transform:scaleY(0.95)}}
-@keyframes splashKick{0%{transform:rotate(0deg)}40%{transform:rotate(-18deg)}60%{transform:rotate(10deg)}100%{transform:rotate(0deg)}}
-@keyframes splashSave{0%,100%{transform:rotate(0deg) translateX(0)}50%{transform:rotate(-22deg) translateX(-8px)}}
-
 button{transition:transform 0.12s ease,box-shadow 0.15s ease,opacity 0.12s ease !important;}
-@keyframes particleFly{0%{transform:translate(0,0);opacity:.8}100%{transform:translate(var(--px),var(--py));opacity:0}}
-@keyframes trailFade{0%{opacity:.7}
 button:active{transform:scale(0.95) !important;opacity:0.88 !important;}
 button:hover{transform:translateY(-1px) !important;}
 input:focus{border-color:rgba(250,204,21,0.7) !important;box-shadow:0 0 0 3px rgba(250,204,21,0.12) !important;}
@@ -146,7 +141,7 @@ const JAPAN_NEXT_OPPONENT= null;  // 次の対戦相手（確定後: "オラン�
 const KNOCKOUT_STARTED   = false; // 決勝T開始後にtrueに変更
 // 日本代表候補選手データ
 const JAPAN_PLAYERS=[
-  {name:"三笠 光",     pos:"FW",club:"ブライトン",      tags:["ドリブル","スピード"],note:"左サイドの突破が武器"},
+  {name:"三笘 薫",     pos:"FW",club:"ブライトン",      tags:["ドリブル","スピード"],note:"左サイドの突破が武器"},
   {name:"久保 建英",   pos:"MF",club:"レアル・ソシエダ",tags:["技術","創造性"],    note:"欧州トップリーグで活躍"},
   {name:"遠藤 航",     pos:"MF",club:"リバプール",      tags:["球際","守備"],      note:"中盤の要・キャプテン"},
   {name:"冨安 健洋",   pos:"DF",club:"アヤックス",      tags:["守備","高さ"],      note:"世界基準のCB・SB兼用"},
@@ -1724,7 +1719,7 @@ function PgCountry({nav,country,goCountry}){
 ═══════════════════════════════════════════ */
 
 const PLAYERS = [
-  {id:1,nameJa:"三笠 光",nameEn:"Kaoru Mitoma",short:"三笠",country:"日本",nat:"日本",natCode:"jp",club:"ブライトン",position:"FW"},
+  {id:1,nameJa:"三笘 薫",nameEn:"Kaoru Mitoma",short:"三笘",country:"日本",nat:"日本",natCode:"jp",club:"ブライトン",position:"FW"},
   {id:2,nameJa:"久保 建英",nameEn:"Takefusa Kubo",short:"久保",country:"日本",nat:"日本",natCode:"jp",club:"レアル・ソシエダ",position:"MF"},
   {id:3,nameJa:"冨安 健洋",nameEn:"Takehiro Tomiyasu",short:"冨安",country:"日本",nat:"日本",natCode:"jp",club:"アヤックス",position:"DF"},
   {id:4,nameJa:"遠藤 航",nameEn:"Wataru Endo",short:"遠藤",country:"日本",nat:"日本",natCode:"jp",club:"リバプール",position:"MF"},
