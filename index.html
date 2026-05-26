@@ -27,6 +27,14 @@ textarea,input,select{font-family:inherit;}
 @keyframes rankTwo{0%,100%{box-shadow:0 0 16px rgba(192,192,220,0.25);}50%{box-shadow:0 0 36px rgba(192,192,220,0.5);}}
 @keyframes rankThree{0%,100%{box-shadow:0 0 14px rgba(176,110,60,0.25);}50%{box-shadow:0 0 30px rgba(176,110,60,0.5);}}
 @keyframes stadiumLight{0%,100%{opacity:0.15;}50%{opacity:0.25;}}
+@keyframes splashBall{0%{transform:translateX(-30px) rotate(0deg);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateX(30px) rotate(720deg);opacity:0}}
+@keyframes splashChar{0%{transform:translateY(8px) scaleX(0.9);opacity:0}20%{transform:translateY(0) scaleX(1);opacity:1}80%{transform:translateY(0) scaleX(1);opacity:1}100%{transform:translateY(-6px) scaleX(1);opacity:0}}
+@keyframes splashLight{0%,100%{opacity:0.08}50%{opacity:0.22}}
+@keyframes splashText{0%{opacity:0;transform:translateY(10px)}30%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
+@keyframes splashGoal{0%{transform:scaleY(0.95)}50%{transform:scaleY(1.04)}100%{transform:scaleY(0.95)}}
+@keyframes splashKick{0%{transform:rotate(0deg)}40%{transform:rotate(-18deg)}60%{transform:rotate(10deg)}100%{transform:rotate(0deg)}}
+@keyframes splashSave{0%,100%{transform:rotate(0deg) translateX(0)}50%{transform:rotate(-22deg) translateX(-8px)}}
+@keyframes splashFadeOut{0%{opacity:1}100%{opacity:0}}
 button{transition:transform 0.12s ease,box-shadow 0.15s ease,opacity 0.12s ease !important;}
 button:active{transform:scale(0.95) !important;opacity:0.88 !important;}
 button:hover{transform:translateY(-1px) !important;}
@@ -629,6 +637,7 @@ function BarChart({data,title}){
 /* ══════════ ROOT ══════════ */
 function App(){
   const [page,setPage]=useState("loading");
+  const [splashDone,setSplashDone]=useState(false);
   const [tourn,setTourn]=useState(null);
   const [myId,setMyId]=useState(null);
   const [adminOk,setAdminOk]=useState(false);
@@ -659,6 +668,7 @@ function App(){
 
   return(
     <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
+      {!splashDone&&<SplashScreen onDone={()=>setSplashDone(true)}/>}
       {page==="loading"&&<PgLoad/>}
       {page==="home"&&<PgHome nav={nav} goT={goT}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
@@ -684,6 +694,137 @@ function App(){
     </div>
   );
 }
+
+/* ── 起動アニメーション ── */
+const SPLASH_CHARS=[
+  {id:"genius_left",label:"左足の天才",sub:"予想大会、キックオフ。",
+   colors:{uni:"#6BBAFF",uni2:"#fff",accent:"#3A8FD4",skin:"#F5CBA7"},
+   type:"striker"},
+  {id:"speed_dribbler",label:"神速ドリブラー",sub:"友達とランキング勝負。",
+   colors:{uni:"#FFE000",uni2:"#22A861",accent:"#1A7A40",skin:"#8D5524"},
+   type:"winger"},
+  {id:"samurai_playmaker",label:"侍司令塔",sub:"さあ、予想を始めよう。",
+   colors:{uni:"#005BAC",uni2:"#FFFFFF",accent:"#0037A0",skin:"#FDEBD0"},
+   type:"playmaker"},
+  {id:"royal_striker",label:"王者のストライカー",sub:"W杯の主役は、予想した人から。",
+   colors:{uni:"#FFFFFF",uni2:"#FACC15",accent:"#E0B800",skin:"#F0C080"},
+   type:"striker"},
+  {id:"guardian",label:"守護神",sub:"予想大会、キックオフ。",
+   colors:{uni:"#1A1A1A",uni2:"#22C55E",accent:"#16A34A",skin:"#FDEBD0"},
+   type:"gk"},
+];
+
+function CharSVG({char}){
+  const c=char.colors;
+  const t=char.type;
+  // 架空キャラクターのシルエット（実在選手と無関係の幾何学的表現）
+  const isGK=t==="gk";
+  const isWinger=t==="winger";
+  return(
+    <svg viewBox="-40 -80 80 160" width="90" height="180" style={{overflow:"visible",animation:`splashChar 1.6s ease forwards`}}>
+      {/* スタジアムライト */}
+      <ellipse cx="0" cy="-90" rx="60" ry="40" fill={c.accent} opacity="0.08" style={{animation:"splashLight 1s ease-in-out infinite"}}/>
+      {/* ゴールネット（GKのみ） */}
+      {isGK&&<>
+        <rect x="-38" y="-75" width="76" height="50" fill="none" stroke={c.uni2} strokeWidth="1.2" opacity="0.4" style={{animation:"splashGoal 0.8s ease-in-out infinite"}}/>
+        {[-20,-4,12,28].map(x=><line key={x} x1={x} y1="-75" x2={x} y2="-25" stroke={c.uni2} strokeWidth="0.5" opacity="0.25"/>)}
+        {[-65,-55,-45,-35].map(y=><line key={y} x1="-38" y1={y} x2="38" y2={y} stroke={c.uni2} strokeWidth="0.5" opacity="0.25"/>)}
+      </>}
+      {/* ボール */}
+      <g style={{animation:`splashBall 1.6s ease forwards`,transformOrigin:"0 70px"}}>
+        <circle cx={isGK?-20:isWinger?25:20} cy="70" r="9" fill="#fff" stroke="#333" strokeWidth="1"/>
+        <path d={`M${isGK?-20:isWinger?25:20},61 l-4,5 4,8 8,0 4,-8 -4,-5z`} fill="#333" opacity="0.35"/>
+      </g>
+      {/* 体（シルエット） */}
+      {/* 頭部（丸・無特徴） */}
+      <circle cx="0" cy="-55" r="11" fill={c.skin}/>
+      {/* 首 */}
+      <rect x="-4" y="-44" width="8" height="8" fill={c.skin}/>
+      {/* 胴体・ユニフォーム */}
+      <rect x="-14" y="-36" width="28" height="28" rx="4" fill={c.uni}/>
+      <line x1="0" y1="-36" x2="0" y2="-8" stroke={c.uni2} strokeWidth="1.5" opacity="0.5"/>
+      {/* 番号（架空） */}
+      <text x="0" y="-18" textAnchor="middle" fontSize="8" fill={c.uni2} fontWeight="bold" opacity="0.8">{isGK?"01":isWinger?"77":t==="playmaker"?"08":"09"}</text>
+      {/* 腕 */}
+      <rect x="-24" y="-34" width="10" height="22" rx="4" fill={c.uni} style={isGK?{animation:"splashSave 0.7s ease-in-out infinite"}:{}}/>
+      <rect x="14" y="-34" width="10" height="22" rx="4" fill={c.uni} style={isGK?{animation:"splashSave 0.7s ease-in-out infinite",animationDirection:"reverse"}:{}}/>
+      {/* 短パン */}
+      <rect x="-13" y="-8" width="26" height="16" rx="3" fill={c.accent}/>
+      {/* 脚 */}
+      <g style={{animation:isGK?"":isWinger?`splashKick 0.6s ease-in-out infinite`:`splashKick 0.8s ease-in-out infinite`,transformOrigin:"0px 10px"}}>
+        <rect x="-12" y="8" width="10" height="30" rx="4" fill={c.uni2} opacity="0.9"/>
+        <rect x="-14" y="37" width="14" height="7" rx="3" fill="#333"/>
+      </g>
+      <rect x="2" y="8" width="10" height="30" rx="4" fill={c.uni2} opacity="0.9"/>
+      <rect x="0" y="37" width="14" height="7" rx="3" fill="#333"/>
+    </svg>
+  );
+}
+
+function SplashScreen({onDone}){
+  const [visible,setVisible]=React.useState(true);
+  const [fading,setFading]=React.useState(false);
+  const [char]=React.useState(()=>{
+    const today=new Date().toDateString();
+    const saved=localStorage.getItem("splash_shown");
+    if(saved===today)return null; // 同日は2回目以降スキップ
+    return SPLASH_CHARS[Math.floor(Math.random()*SPLASH_CHARS.length)];
+  });
+  const charRef=React.useRef(char);
+
+  React.useEffect(()=>{
+    if(!char){onDone();return;}
+    try{trackEvent("view_loading_animation",{character:char.id});}catch{}
+    localStorage.setItem("splash_shown",new Date().toDateString());
+    const t=setTimeout(()=>dismiss(),1600);
+    return()=>clearTimeout(t);
+  },[]);
+
+  const dismiss=()=>{
+    if(!visible)return;
+    setFading(true);
+    setTimeout(()=>{setVisible(false);onDone();},350);
+  };
+  const skip=()=>{
+    try{trackEvent("skip_loading_animation",{character:charRef.current?.id});}catch{}
+    dismiss();
+  };
+
+  if(!char||!visible)return null;
+  const c=char.colors;
+  return(
+    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:9999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(160deg,#061826 0%,#0B3D1E 50%,#061826 100%)`,opacity:fading?0:1,transition:"opacity 0.35s ease",userSelect:"none"}}>
+      {/* 背景ピッチライン */}
+      <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",opacity:0.06,pointerEvents:"none"}} viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice">
+        <rect x="20" y="20" width="360" height="660" fill="none" stroke="#22C55E" strokeWidth="2"/>
+        <circle cx="200" cy="350" r="60" fill="none" stroke="#22C55E" strokeWidth="2"/>
+        <line x1="20" y1="350" x2="380" y2="350" stroke="#22C55E" strokeWidth="2"/>
+        <rect x="110" y="20" width="180" height="80" fill="none" stroke="#22C55E" strokeWidth="1.5"/>
+        <rect x="110" y="600" width="180" height="80" fill="none" stroke="#22C55E" strokeWidth="1.5"/>
+      </svg>
+      {/* スタジアムライト */}
+      <div style={{position:"absolute",top:"-10%",left:"10%",width:200,height:200,borderRadius:"50%",background:c.accent,opacity:0.06,filter:"blur(60px)",animation:"splashLight 1.5s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",top:"-10%",right:"10%",width:200,height:200,borderRadius:"50%",background:"#FACC15",opacity:0.05,filter:"blur(60px)",animation:"splashLight 1.5s ease-in-out infinite",animationDelay:"0.5s"}}/>
+      {/* キャラクター */}
+      <div style={{marginBottom:16,filter:`drop-shadow(0 8px 24px ${c.accent}66)`}}>
+        <CharSVG char={char}/>
+      </div>
+      {/* テキスト */}
+      <div style={{textAlign:"center",animation:"splashText 1.6s ease forwards"}}>
+        <div style={{color:"#668",fontSize:10,fontWeight:600,letterSpacing:2,marginBottom:6}}>今日の登場キャラ</div>
+        <div style={{color:"#fff",fontSize:20,fontWeight:900,marginBottom:6,textShadow:`0 0 20px ${c.accent}88`}}>{char.label}</div>
+        <div style={{color:"#8ba",fontSize:13}}>{char.sub}</div>
+        <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+          <span style={{fontSize:18,animation:"splashBall 1.6s ease forwards"}}>⚽</span>
+          <span style={{color:"#FACC15",fontSize:11,fontWeight:700,letterSpacing:2}}>W杯予想メーカー</span>
+        </div>
+      </div>
+      {/* スキップ */}
+      <button onClick={skip} style={{position:"absolute",bottom:32,right:20,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,color:"#445",fontSize:11,padding:"5px 14px",cursor:"pointer"}}>スキップ ▶</button>
+    </div>
+  );
+}
+
 
 function PgLoad(){return<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"radial-gradient(ellipse at 50% 30%,#0E3B22 0%,#061A0D 65%)"}}><div style={{textAlign:"center"}}><div style={{fontSize:68,marginBottom:16,display:"inline-block",animation:"floatBall 2.2s ease-in-out infinite",filter:"drop-shadow(0 0 24px rgba(247,201,72,0.5))"}}>⚽</div><div style={{color:G.gold,fontSize:13,letterSpacing:3,fontWeight:700,textShadow:"0 0 20px rgba(247,201,72,0.6)"}}>読み込み中...</div></div></div>;}
 
