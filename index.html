@@ -447,6 +447,69 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
 }
 
 
+/* ── 支払い方法バッジ ── */
+function PaymentBadges({showCoffeeNote=false}){
+  const badges=[
+    {label:"💳 クレカ",active:true},
+    {label:"🍎 Apple Pay",active:true},
+    {label:"G Pay",active:true},
+    {label:"PayPay",active:false},
+    {label:"コンビニ",active:false},
+  ];
+  return(
+    <div style={{marginTop:10}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:6}}>
+        {badges.map((b,i)=>(
+          <span key={i} onClick={()=>trackEvent("click_payment_method_info",{badge:b.label})} style={{
+            background:b.active?"rgba(34,197,94,0.1)":"rgba(255,255,255,0.04)",
+            border:`1px solid ${b.active?"rgba(34,197,94,0.3)":"rgba(255,255,255,0.1)"}`,
+            color:b.active?"#4ADE80":"#445",
+            borderRadius:20,padding:"3px 9px",fontSize:9,fontWeight:700,
+            display:"inline-flex",alignItems:"center",gap:3,cursor:"default",
+          }}>
+            {b.label}
+            {!b.active&&<span style={{color:"#334",fontWeight:400,fontSize:8}}>準備中</span>}
+          </span>
+        ))}
+      </div>
+      <div style={{color:"#334",fontSize:9,lineHeight:1.6}}>
+        {showCoffeeNote
+          ?"100円応援課金も、クレジットカード・Apple Pay・Google Payでお支払いできます。PayPayは準備中です。"
+          :"現在はクレジットカード・Apple Pay・Google Payでのお支払いに対応しています。PayPay・コンビニ決済は準備中です。"
+        }<br/>
+        ※ 表示される支払い方法は、ご利用端末・ブラウザ・Stripe側の設定により異なる場合があります。
+      </div>
+    </div>
+  );
+}
+
+/* ── 法的リンクフッター ── */
+function LegalFooter(){
+  const openModal=(name,key)=>{
+    trackEvent(key,{page:"legal"});
+    alert(`${name}\n\n準備中です。近日公開予定です。`);
+  };
+  const links=[
+    {label:"特定商取引法に基づく表記",key:"click_legal",anchor:"#legal"},
+    {label:"プライバシーポリシー",key:"click_privacy",anchor:"#privacy"},
+    {label:"お問い合わせ",key:"click_contact",anchor:"#contact"},
+  ];
+  return(
+    <div style={{borderTop:"1px solid #1A3A28",marginTop:24,paddingTop:16,paddingBottom:8}}>
+      <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:16,marginBottom:10}}>
+        {links.map((l,i)=>(
+          <a key={i} href={l.anchor} onClick={e=>{e.preventDefault();openModal(l.label,l.key);}}
+            style={{color:G.muted,fontSize:11,textDecoration:"none",borderBottom:"1px solid #1A3A28"}}>
+            {l.label}
+          </a>
+        ))}
+      </div>
+      <div style={{color:"#223",fontSize:9,textAlign:"center"}}>© 2026 W杯予想メーカー</div>
+    </div>
+  );
+}
+
+
 /* ── 応援課金コンポーネント ── */
 function CoffeeSupport({compact=false}){
   const open=()=>{
@@ -731,6 +794,7 @@ function PgHome({nav,goT}){
         </div>
         <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
         <AffiliateBlock title="🎉 W杯観戦をもっと楽しむ" keys={["streaming","uniform","goods","pizza"]} compact={true}/>
+        <LegalFooter/>
       </div>
     </div>
   );
