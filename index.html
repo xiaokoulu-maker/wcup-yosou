@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- GA4_TAG_HERE -->
+<!-- Google Analytics を使う場合はここに gtag.js を追加 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>W杯予想メーカー</title>
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -39,6 +41,23 @@ const SUPABASE_URL="https://evodfdwgcogviscdnveb.supabase.co";
 const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2b2RmZHdnY29ndmlzY2RudmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODIwNTUsImV4cCI6MjA5NTE1ODA1NX0.nevoums6mBnp0bK8vmRqCIJI4rcr04nPnwBmQtt-9oU";
 const {createClient}=supabase;
 const db=createClient(SUPABASE_URL,SUPABASE_ANON);
+// ═══════════════════════════════
+// アクセス解析・行動ログ
+// ═══════════════════════════════
+async function trackEvent(eventName, meta={}){
+  try{
+    await db.from("events").insert({
+      event_name: eventName,
+      tournament_id: meta.tournamentId||null,
+      participant_id: meta.participantId||null,
+      page: meta.page||window.location.hash||"/",
+      metadata: meta,
+    });
+  }catch(e){
+    console.warn("[analytics] failed:", eventName, e?.message);
+  }
+}
+
 function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxParticipants:d.max_participants,adminPasscode:d.admin_passcode,participants:d.participants||[],results:d.results||null,plan:d.plan||"free",deadline:d.deadline||null,createdAt:d.created_at};}
 async function loadT(id){try{const{data,error}=await db.from("tournaments").select("*").eq("id",id).single();if(error||!data)return null;return dbToApp(data);}catch{return null;}}
 async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null},{onConflict:"id"});}catch(e){console.error(e);}}
@@ -381,6 +400,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
 /* ── 応援課金コンポーネント ── */
 function CoffeeSupport({compact=false}){
   const open=()=>{
+    trackEvent("click_coffee_support",{page:"coffee"});
     const url=STRIPE.support.url;
     if(!url){alert("応援課金ページは準備中です。もうしばらくお待ちください！");return;}
     window.open(url,"_blank");
@@ -449,7 +469,7 @@ function AffiliateBlock({title, keys, compact=false}){
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {items.map((item,i)=>(
             <a key={i} href={item.url} target="_blank" rel="noopener noreferrer sponsored"
-              style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"10px 12px",textDecoration:"none",border:"1px solid rgba(255,255,255,0.06)"}}>
+              onClick={()=>trackEvent("click_affiliate",{label:item.label,url:item.url,page:"affiliate"})} style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"10px 12px",textDecoration:"none",border:"1px solid rgba(255,255,255,0.06)"}}>
               <span style={{fontSize:20,flexShrink:0}}>{item.icon}</span>
               <div style={{flex:1,overflow:"hidden"}}>
                 <div style={{color:"#fff",fontSize:12,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.label}</div>
@@ -502,12 +522,23 @@ function App(){
   const [selCountry,setSelCountry]=useState(null);
 
   useEffect(()=>{
+    trackEvent("site_open",{page:window.location.pathname,hash:window.location.hash});
     const hash=window.location.hash;
     if(hash.startsWith("#t-")){loadT(hash.slice(3)).then(t=>{setTourn(t);setPage(t?"tournament":"home");});}
     else setPage("home");
   },[]);
 
-  const nav=useCallback((p)=>{window.scrollTo(0,0);setPage(p);},[]);
+  const nav=useCallback((p)=>{
+    window.scrollTo(0,0);
+    setPage(p);
+    // ページ別イベント
+    const pageEvents={
+      "ai":"open_ai_prediction","schedule":"open_schedule",
+      "groups":"open_groups","best11":"open_best11",
+      "bracket":"open_bracket","upgrade":"click_upgrade_page",
+    };
+    if(pageEvents[p]) trackEvent(pageEvents[p],{page:p});
+  },[]);
   const update=useCallback(async(t)=>{setTourn(t);await saveT(t);},[]);
   const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;setPage("tournament");},[]);
   const goCountry=useCallback((c)=>{setSelCountry(c);window.scrollTo(0,0);setPage("country");},[]);
@@ -656,7 +687,7 @@ function PgCreate({nav,goT}){
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
 setLoading(true);
     const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,createdAt:new Date().toISOString()};
-    saveMyCreated(t.id);await goT(t);setLoading(false);
+    saveMyCreated(t.id);trackEvent("create_tournament",{tournamentId:t.id,page:"create"});await goT(t);setLoading(false);
   };
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("home")}/>
@@ -799,7 +830,7 @@ if(!cur.plan||cur.plan==="free") setErr(`無料プランは${FREE_LIMIT}人ま�
     }
     setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0};
     const updated={...cur,participants:[...cur.participants,p]};
-    saveMyJoined(cur.id);await update(updated);setMyId(p.id);nav("predict");setLoading(false);
+    saveMyJoined(cur.id);trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);nav("predict");setLoading(false);
   };
   if(deadlinePassed)return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
@@ -1148,6 +1179,7 @@ function PgUpgrade({nav,tourn:t,update}){
   ];
 
   const openPayment=(planKey)=>{
+    trackEvent("click_upgrade",{plan:planKey,page:"upgrade"});
     const plan=STRIPE[planKey];
     if(!plan.url){alert("このプランのStripe決済ページは準備中です。しばらくお待ちください。");return;}
     window.open(t?`${plan.url}?client_reference_id=${t.id}`:plan.url,"_blank");
