@@ -58,9 +58,9 @@ async function trackEvent(eventName, meta={}){
   }
 }
 
-function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxParticipants:d.max_participants,adminPasscode:d.admin_passcode,participants:d.participants||[],results:d.results||null,plan:d.plan||"free",deadline:d.deadline||null,createdAt:d.created_at};}
+function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxParticipants:d.max_participants,adminPasscode:d.admin_passcode,participants:d.participants||[],results:d.results||null,plan:d.plan||"free",deadline:d.deadline||null,predictionSettings:d.prediction_settings||null,createdAt:d.created_at};}
 async function loadT(id){try{const{data,error}=await db.from("tournaments").select("*").eq("id",id).single();if(error||!data)return null;return dbToApp(data);}catch{return null;}}
-async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null},{onConflict:"id"});}catch(e){console.error(e);}}
+async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null,prediction_settings:t.predictionSettings||null},{onConflict:"id"});}catch(e){console.error(e);}}
 function subscribeToTournament(id,onUpdate){const ch=db.channel("t-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"tournaments",filter:`id=eq.${id}`},p=>{if(p.new)onUpdate(dbToApp(p.new));}).subscribe();return()=>db.removeChannel(ch);}
 
 // チャット: メッセージ取得
@@ -262,7 +262,25 @@ function saveMyCreated(id){try{const l=JSON.parse(localStorage.getItem("wcup_cre
 function saveMyJoined(id){try{const l=JSON.parse(localStorage.getItem("wcup_joined")||"[]");if(!l.includes(id)){l.unshift(id);localStorage.setItem("wcup_joined",JSON.stringify(l.slice(0,10)));}}catch{}}
 function getMyCreated(){try{return JSON.parse(localStorage.getItem("wcup_created")||"[]");}catch{return[];}}
 function getMyJoined(){try{return JSON.parse(localStorage.getItem("wcup_joined")||"[]");}catch{return[];}}
-function calcPts(pred,res){if(!pred||!res?.winner)return 0;let p=0;if(pred.winner===res.winner)p+=20;if(pred.runnerUp===res.runnerUp)p+=15;if(pred.topScorer&&res.topScorer&&pred.topScorer.trim()===res.topScorer.trim())p+=15;if(pred.japanResult===res.japanResult)p+=10;if(pred.favoriteCountry===res.winner)p+=5;return p;}
+const DEFAULT_PRED_SETTINGS={winner:true,runnerUp:true,topScorer:true,japanResult:true,japanMvp:false,assistKing:false,tournamentMvp:false,best4:false,japanFirstMatchScore:false};
+function getSettings(t){return t?.predictionSettings?{...DEFAULT_PRED_SETTINGS,...t.predictionSettings}:DEFAULT_PRED_SETTINGS;}
+function calcPts(pred,res){
+  if(!pred||!res?.winner)return 0;
+  let p=0;
+  if(pred.winner===res.winner)p+=20;
+  if(pred.runnerUp===res.runnerUp)p+=15;
+  if(pred.topScorer&&res.topScorer&&pred.topScorer.trim()===res.topScorer.trim())p+=15;
+  if(pred.assistKing&&res.assistKing&&pred.assistKing.trim()===res.assistKing.trim())p+=10;
+  if(pred.tournamentMvp&&res.tournamentMvp&&pred.tournamentMvp.trim()===res.tournamentMvp.trim())p+=10;
+  if(pred.japanResult===res.japanResult)p+=10;
+  if(pred.japanMvp&&res.japanMvp&&pred.japanMvp.trim()===res.japanMvp.trim())p+=8;
+  if(pred.best4&&res.best4&&Array.isArray(pred.best4)&&Array.isArray(res.best4)){
+    pred.best4.forEach(c=>{if(res.best4.includes(c))p+=5;});
+  }
+  if(pred.japanFirstMatchScore&&res.japanFirstMatchScore&&pred.japanFirstMatchScore.trim()===res.japanFirstMatchScore.trim())p+=10;
+  if(pred.favoriteCountry===res.winner)p+=5;
+  return p;
+}
 function rankMsg(rank,total){if(rank===1)return"現在首位。今だけはサッカー通を名乗っていいです。";if(rank===total&&total>1)return"予想というより祈りです。現実も少し見ましょう。";return"まだ巻き返せます。たぶん。";}
 function getAIPct(country){const d=AI_DATA.find(a=>a.country===country);if(d)return d.pct;const r=FIFA_RANK[country];if(r&&r<=10)return Math.max(1,8-r);if(r&&r<=20)return 1;return 0;}
 function isDeadlinePassed(deadline){if(!deadline)return false;return new Date()>new Date(deadline);}
@@ -679,14 +697,34 @@ function PgHome({nav,goT}){
 
 /* ── Create ── */
 function PgCreate({nav,goT}){
+  const PRESETS={
+    lite:{label:"⚡ ライト大会",color:"#0EA5E9",bg:"rgba(14,165,233,0.08)",desc:"初めての人向け。1分で参加できます。",settings:{winner:true,runnerUp:false,topScorer:false,japanResult:true,japanMvp:false,assistKing:false,tournamentMvp:false,best4:false,japanFirstMatchScore:false}},
+    standard:{label:"⚽ スタンダード大会",color:"#FACC15",bg:"rgba(250,204,21,0.08)",desc:"友達同士で一番盛り上がる基本セット。",settings:{winner:true,runnerUp:true,topScorer:true,japanResult:true,japanMvp:true,assistKing:false,tournamentMvp:false,best4:false,japanFirstMatchScore:false}},
+    gachi:{label:"🔥 ガチ大会",color:"#F97316",bg:"rgba(249,115,22,0.08)",desc:"サッカー好き向け。MVPやアシスト王まで予想。",settings:{winner:true,runnerUp:true,topScorer:true,japanResult:true,japanMvp:true,assistKing:true,tournamentMvp:true,best4:true,japanFirstMatchScore:true}},
+  };
+  const PRED_ITEMS=[
+    {key:"winner",label:"🥇 優勝国"},
+    {key:"runnerUp",label:"🥈 準優勝国"},
+    {key:"topScorer",label:"⚽ 得点王"},
+    {key:"assistKing",label:"🎯 アシスト王"},
+    {key:"tournamentMvp",label:"🏅 大会MVP"},
+    {key:"japanResult",label:"🇯🇵 日本代表の成績"},
+    {key:"japanMvp",label:"🌟 日本代表MVP"},
+    {key:"best4",label:"🏆 ベスト4（4チーム）"},
+    {key:"japanFirstMatchScore",label:"📊 日本代表初戦スコア"},
+  ];
   const [form,setForm]=useState({name:"",creatorName:"",maxParticipants:5,adminPasscode:"",deadline:""});
+  const [predSet,setPredSet]=useState({...DEFAULT_PRED_SETTINGS});
+  const [selectedPreset,setSelectedPreset]=useState("standard");
+  const applyPreset=(key)=>{setSelectedPreset(key);setPredSet({...PRESETS[key].settings});};
+  const toggleItem=(key)=>{setSelectedPreset(null);setPredSet(p=>({...p,[key]:!p[key]}));};
   const [err,setErr]=useState("");const [loading,setLoading]=useState(false);
   const setF=k=>v=>setForm(f=>({...f,[k]:v}));
   const submit=async()=>{
     if(!form.name.trim()||!form.creatorName.trim()||!form.adminPasscode.trim()){setErr("すべての項目を入力してください");return;}
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
 setLoading(true);
-    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,createdAt:new Date().toISOString()};
+    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,predictionSettings:predSet,createdAt:new Date().toISOString()};
     saveMyCreated(t.id);trackEvent("create_tournament",{tournamentId:t.id,page:"create"});await goT(t);setLoading(false);
   };
   return(
@@ -703,6 +741,35 @@ setLoading(true);
           </select>
         </div>
         <FInput label="管理用パスコード ＊" placeholder="3文字以上" type="password" value={form.adminPasscode} onChange={setF("adminPasscode")}/>
+      </div>
+      {/* 予想項目選択 */}
+      <div style={{...crd,border:"1px solid #1A5030"}}>
+        <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12}}>⚽ 予想項目を選ぶ</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+          {Object.entries(PRESETS).map(([key,p])=>(
+            <div key={key} onClick={()=>applyPreset(key)} style={{background:selectedPreset===key?p.bg:"transparent",border:`2px solid ${selectedPreset===key?p.color:"#1A5030"}`,borderRadius:12,padding:"12px 14px",cursor:"pointer"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <span style={{color:selectedPreset===key?p.color:"#ccc",fontWeight:700,fontSize:14}}>{p.label}</span>
+                {selectedPreset===key&&<span style={{color:p.color,fontSize:14}}>✓</span>}
+              </div>
+              <div style={{color:G.muted,fontSize:11}}>{p.desc}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{color:G.muted,fontSize:11,fontWeight:700,marginBottom:8,letterSpacing:0.5}}>個別に調整する</div>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {PRED_ITEMS.map(item=>(
+            <label key={item.key} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"6px 8px",borderRadius:8,background:predSet[item.key]?"rgba(250,204,21,0.05)":"transparent"}}>
+              <input type="checkbox" checked={!!predSet[item.key]} onChange={()=>toggleItem(item.key)} style={{width:16,height:16,accentColor:G.gold,cursor:"pointer"}}/>
+              <span style={{color:predSet[item.key]?"#fff":"#667",fontSize:13}}>{item.label}</span>
+            </label>
+          ))}
+        </div>
+        <div style={{marginTop:10,background:G.dark,borderRadius:8,padding:"8px 12px"}}>
+          <div style={{color:G.muted,fontSize:11}}>選択中: {Object.values(predSet).filter(Boolean).length}項目</div>
+        </div>
+      </div>
+      <div style={crd}>
         <div style={{marginBottom:16}}>
           <label style={lbl}>⏰ 予想締め切り日時（任意）</label>
           <input style={inp} type="datetime-local" value={form.deadline} onChange={e=>setF("deadline")(e.target.value)}/>
@@ -880,7 +947,7 @@ function PgPredict({tourn:t,nav,update,myId}){
     </div>
   );
   const save=async()=>{
-    if(!pred.winner||!pred.runnerUp||!pred.japanResult||!pred.favoriteCountry){setErr("＊の項目を選択してください");return;}
+    const s2=getSettings(t);const missing=(s2.winner&&!pred.winner)||(s2.japanResult&&!pred.japanResult)||!pred.favoriteCountry;if(missing){setErr("必須項目を選択してください");return;}
 setLoading(true);const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("締め切りが終了しています");setLoading(false);return;}
 const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,predictions:pred,points:cur.results?calcPts(pred,cur.results):0}:p)};
@@ -1101,10 +1168,17 @@ if(!adminOk)return(
       {tab==="result"&&(
         <>
           <div style={crd}>
-            <div style={{marginBottom:18}}><label style={lbl}>🥇 優勝国 ＊</label><Chips opts={COUNTRIES} value={res.winner} onChange={setR("winner")}/></div>
-            <div style={{marginBottom:18}}><label style={lbl}>🥈 準優勝国 ＊</label><Chips opts={COUNTRIES} value={res.runnerUp} onChange={setR("runnerUp")}/></div>
-            <div style={{marginBottom:18}}><label style={lbl}>⚽ 得点王</label><input style={inp} placeholder="得点王の名前" value={res.topScorer} onChange={e=>setR("topScorer")(e.target.value)}/></div>
-            <div><label style={lbl}>🇯🇵 日本代表の成績 ＊</label><Chips opts={JAPAN_RES} value={res.japanResult} onChange={setR("japanResult")}/></div>
+            {(()=>{const s=getSettings(t);return(<>
+            {s.winner&&<div style={{marginBottom:18}}><label style={lbl}>🥇 優勝国 ＊</label><Chips opts={COUNTRIES} value={res.winner} onChange={setR("winner")}/></div>}
+            {s.runnerUp&&<div style={{marginBottom:18}}><label style={lbl}>🥈 準優勝国 ＊</label><Chips opts={COUNTRIES} value={res.runnerUp} onChange={setR("runnerUp")}/></div>}
+            {s.topScorer&&<div style={{marginBottom:18}}><label style={lbl}>⚽ 得点王</label><input style={inp} placeholder="得点王の名前" value={res.topScorer||""} onChange={e=>setR("topScorer")(e.target.value)}/></div>}
+            {s.assistKing&&<div style={{marginBottom:18}}><label style={lbl}>🎯 アシスト王</label><input style={inp} placeholder="アシスト王の名前" value={res.assistKing||""} onChange={e=>setR("assistKing")(e.target.value)}/></div>}
+            {s.tournamentMvp&&<div style={{marginBottom:18}}><label style={lbl}>🏅 大会MVP</label><input style={inp} placeholder="大会MVPの名前" value={res.tournamentMvp||""} onChange={e=>setR("tournamentMvp")(e.target.value)}/></div>}
+            {s.japanResult&&<div style={{marginBottom:18}}><label style={lbl}>🇯🇵 日本代表の成績 ＊</label><Chips opts={JAPAN_RES} value={res.japanResult} onChange={setR("japanResult")}/></div>}
+            {s.japanMvp&&<div style={{marginBottom:18}}><label style={lbl}>🌟 日本代表MVP</label><input style={inp} placeholder="日本代表MVPの名前" value={res.japanMvp||""} onChange={e=>setR("japanMvp")(e.target.value)}/></div>}
+            {s.best4&&<div style={{marginBottom:18}}><label style={lbl}>🏆 ベスト4（4チーム）</label><Chips opts={COUNTRIES} value={null} onChange={(c)=>setR("best4")(Array.isArray(res.best4)?res.best4.includes(c)?res.best4.filter(x=>x!==c):[...res.best4.slice(0,3),c]:[c])} cols={3}/>{res.best4?.length>0&&<div style={{color:G.muted,fontSize:11,marginTop:4}}>選択中: {res.best4.join("・")}</div>}</div>}
+            {s.japanFirstMatchScore&&<div style={{marginBottom:18}}><label style={lbl}>📊 日本代表初戦スコア（例: 2-1）</label><input style={inp} placeholder="例: 2-1" value={res.japanFirstMatchScore||""} onChange={e=>setR("japanFirstMatchScore")(e.target.value)}/></div>}
+          </>);})()}
           </div>
           <Err msg={err}/>
           {saved?<div style={{background:"rgba(22,163,74,0.12)",border:`1px solid ${G.gold}`,borderRadius:14,padding:16,textAlign:"center",color:"#fff",fontWeight:700}}>✅ 保存完了！</div>
