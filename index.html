@@ -2298,23 +2298,57 @@ function PgBracket({nav,tourn}){
 
 
 /* ── カウントダウンコンポーネント ── */
-function Countdown({targetDate,label,color="#FACC15"}){
-  const [days,setDays]=React.useState(null);
+function useCountdown(targetDate){
+  const calc=()=>{
+    if(!targetDate)return null;
+    const diff=new Date(targetDate)-new Date();
+    if(diff<=0)return{done:true,d:0,h:0,m:0,s:0};
+    return{done:false,d:Math.floor(diff/86400000),h:Math.floor((diff%86400000)/3600000),m:Math.floor((diff%3600000)/60000),s:Math.floor((diff%60000)/1000)};
+  };
+  const [t,setT]=React.useState(calc);
   React.useEffect(()=>{
-    const calc=()=>{
-      const diff=new Date(targetDate)-new Date();
-      setDays(diff>0?Math.ceil(diff/86400000):0);
-    };
-    calc();
-    const t=setInterval(calc,60000);
-    return()=>clearInterval(t);
+    if(!targetDate){setT(null);return;}
+    const id=setInterval(()=>setT(calc()),1000);
+    return()=>clearInterval(id);
   },[targetDate]);
-  if(days===null)return null;
+  return t;
+}
+
+function Countdown({targetDate,label,color="#FACC15",doneLabel="開幕！",compact=false}){
+  const t=useCountdown(targetDate);
+  if(!targetDate)return(
+    <div style={{textAlign:"center",background:`${color}08`,border:`1px solid ${color}22`,borderRadius:14,padding:"12px 16px"}}>
+      <div style={{color:color,fontSize:11,fontWeight:700,marginBottom:4}}>{label}</div>
+      <div style={{color:"#445",fontSize:11}}>日程が確定次第、カウントダウンを表示します</div>
+    </div>
+  );
+  if(!t)return null;
+  if(t.done)return(
+    <div style={{textAlign:"center",background:`${color}18`,border:`1px solid ${color}55`,borderRadius:16,padding:"16px 20px"}}>
+      <div style={{color:color,fontSize:13,fontWeight:700,marginBottom:2}}>{label}</div>
+      <div style={{color:"#fff",fontWeight:900,fontSize:22,textShadow:`0 0 20px ${color}88`}}>{doneLabel}</div>
+    </div>
+  );
+  if(compact)return(
+    <div style={{textAlign:"center",background:`${color}0D`,border:`1px solid ${color}33`,borderRadius:12,padding:"10px 14px"}}>
+      <div style={{color:color,fontSize:10,fontWeight:700,letterSpacing:1,marginBottom:4}}>{label}</div>
+      <div style={{color:"#fff",fontWeight:800,fontSize:18}}>あと {t.d}日 {String(t.h).padStart(2,"0")}時間</div>
+    </div>
+  );
   return(
-    <div style={{textAlign:"center",background:`${color}11`,border:`1px solid ${color}44`,borderRadius:16,padding:"14px 20px"}}>
-      <div style={{color:color,fontSize:11,fontWeight:700,letterSpacing:2,marginBottom:4}}>{label}</div>
-      <div style={{color:"#fff",fontWeight:900,fontSize:42,lineHeight:1,textShadow:`0 0 30px ${color}66`}}>{days}</div>
-      <div style={{color:color,fontSize:13,fontWeight:700,marginTop:2}}>日</div>
+    <div style={{textAlign:"center",background:`${color}0D`,border:`1px solid ${color}33`,borderRadius:16,padding:"16px 20px"}}>
+      <div style={{color:color,fontSize:11,fontWeight:700,letterSpacing:2,marginBottom:10}}>{label}</div>
+      <div style={{display:"flex",justifyContent:"center",alignItems:"flex-end",gap:6,marginBottom:4}}>
+        {[[t.d,"日"],[t.h,"時間"],[t.m,"分"],[t.s,"秒"]].map(([v,unit],i)=>(
+          <React.Fragment key={i}>
+            {i>0&&<div style={{color:`${color}55`,fontSize:18,fontWeight:900,paddingBottom:8}}>:</div>}
+            <div style={{textAlign:"center"}}>
+              <div style={{color:"#fff",fontWeight:900,fontSize:i===0?40:32,lineHeight:1,textShadow:`0 0 20px ${color}66`,minWidth:i===0?56:40,fontVariantNumeric:"tabular-nums"}}>{i===0?t.d:String(v).padStart(2,"0")}</div>
+              <div style={{color:color,fontSize:9,fontWeight:700,marginTop:3,letterSpacing:0.5}}>{unit}</div>
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
     </div>
   );
 }
@@ -2340,7 +2374,7 @@ function PgWorldMode({nav,tourn,goCountry}){
       <div style={{padding:"14px 16px 0"}}>
         {/* カウントダウン */}
         {!started
-          ?<div style={{marginBottom:14}}><Countdown targetDate={WC_START_DATE} label="🏆 W杯開幕まで" color="#FACC15"/></div>
+          ?<div style={{marginBottom:14}}><Countdown targetDate={WC_START_DATE} label="🏆 W杯開幕まで" color="#FACC15" doneLabel="🏆 W杯開幕！"/></div>
           :<div style={{...crd,textAlign:"center",marginBottom:14}}><div style={{color:"#22C55E",fontSize:14,fontWeight:700}}>🟢 W杯開幕中！</div></div>
         }
         {/* 大会内の優勝予想 */}
@@ -2424,7 +2458,7 @@ function PgJapanMode({nav,tourn}){
       {/* カウントダウン */}
       <div style={{padding:"14px 16px 0"}}>
         {jpDate&&!jpStarted
-          ?<div style={{marginBottom:14}}><Countdown targetDate={JAPAN_FIRST_MATCH} label="🇯🇵 日本代表 初戦まで" color={JB.accent}/></div>
+          ?<div style={{marginBottom:14}}><Countdown targetDate={JAPAN_FIRST_MATCH} label="🇯🇵 日本代表 初戦まで" color={JB.accent} doneLabel="🇯🇵 日本代表 初戦キックオフ！"/></div>
           :jpStarted
             ?<div style={{...crd,textAlign:"center",marginBottom:14,background:`${JB.accent}22`,border:`1px solid ${JB.accent}66`}}><div style={{color:JB.light,fontSize:14,fontWeight:700}}>🔴 日本代表 試合中！</div></div>
             :<div style={{background:`${JB.accent}11`,border:`1px solid ${JB.accent}33`,borderRadius:14,padding:"12px 16px",marginBottom:14,textAlign:"center"}}>
