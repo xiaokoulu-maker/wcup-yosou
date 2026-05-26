@@ -253,7 +253,7 @@ const STRIPE={
   support: {url:"",label:"開発者にコーヒーを奢る",price:100},  // ← Stripeで100円の商品を作成後にURLを入れる
 };
 // 無料プランは3人まで
-const FREE_LIMIT=3;
+const FREE_LIMIT=5;
 
 const ESPN_TO_JP={"Japan":"日本","Brazil":"ブラジル","Argentina":"アルゼンチン","France":"フランス","England":"イングランド","Spain":"スペイン","Germany":"ドイツ","Portugal":"ポルトガル","Netherlands":"オランダ","Italy":"イタリア","Croatia":"クロアチア","Belgium":"ベルギー","United States":"アメリカ","Mexico":"メキシコ","Canada":"カナダ","Korea Republic":"韓国","Australia":"オーストラリア","Morocco":"モロッコ","Uruguay":"ウルグアイ","Colombia":"コロンビア","Senegal":"セネガル","Norway":"ノルウェー","Sweden":"スウェーデン","Ecuador":"エクアドル","Switzerland":"スイス","Denmark":"デンマーク","Ghana":"ガーナ","Panama":"パナマ","Paraguay":"パラグアイ","Austria":"オーストリア","Algeria":"アルジェリア","Jordan":"ヨルダン","Tunisia":"チュニジア","Egypt":"エジプト","Iran":"イラン","Saudi Arabia":"サウジアラビア","Scotland":"スコットランド","Turkey":"トルコ","Ivory Coast":"コートジボワール","Cote D'Ivoire":"コートジボワール","New Zealand":"ニュージーランド","Serbia":"セルビア","Qatar":"カタール","South Africa":"南アフリカ","Czechia":"チェコ","Bosnia and Herzegovina":"ボスニア","Haiti":"ハイチ","Curacao":"キュラソー","Congo DR":"コンゴ","Uzbekistan":"ウズベキスタン","Iraq":"イラク","Cape Verde":"カボベルデ","Cabo Verde":"カボベルデ"};
 
@@ -343,7 +343,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
       </div>
       <div style={{marginBottom:14}}>
         <label style={lbl}>アイコン</label>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
           {ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{fontSize:22,background:icon===ic?`${G.gold}22`:"transparent",border:`2px solid ${icon===ic?G.gold:"transparent"}`,borderRadius:10,padding:"6px 0",cursor:"pointer"}}>{ic}</button>)}
         </div>
       </div>
@@ -654,11 +654,11 @@ function PgHome({nav,goT}){
         {/* 料金案内 - 控えめに表示 */}
         <div style={{background:"linear-gradient(145deg,rgba(11,61,30,0.6),rgba(6,24,38,0.6))",borderRadius:16,padding:"18px 16px",marginBottom:14,border:"1px solid rgba(22,163,74,0.25)"}}>
           <div style={{textAlign:"center",marginBottom:12}}>
-            <div style={{color:"#fff",fontWeight:700,fontSize:13,lineHeight:1.8}}>3人まで無料でスタート。</div>
+            <div style={{color:"#fff",fontWeight:700,fontSize:13,lineHeight:1.8}}>5人まで無料でスタート。</div>
             <div style={{color:G.muted,fontSize:12,lineHeight:1.7}}>友達が増えたら、人数に合わせてアップグレードできます。</div>
           </div>
           <div style={{display:"flex",gap:0,borderRadius:10,overflow:"hidden",border:"1px solid #1A5030"}}>
-            {[["無料","3人","0円","#16A34A"],["ミニ","5人","¥200","#0EA5E9"],["S","10人","¥500","#22C55E"],["P","30人","¥980","#FACC15"],["G","50人","¥1,480","#F97316"]].map(([lbl,ppl,price,color],i)=>(
+            {[["無料","5人","0円","#16A34A"],["スタンダード","10人","¥500","#22C55E"],["プレミアム","30人","¥980","#FACC15"],["グループ","50人","¥1,480","#F97316"]].map(([lbl,ppl,price,color],i)=>(
               <div key={i} onClick={()=>nav("upgrade")} style={{flex:1,padding:"8px 2px",textAlign:"center",borderRight:i<4?"1px solid #1A5030":"none",cursor:"pointer",background:i===0?"rgba(22,163,74,0.12)":"transparent"}}>
                 <div style={{color:color,fontSize:9,fontWeight:800,marginBottom:1}}>{lbl}</div>
                 <div style={{color:"#fff",fontSize:10,fontWeight:700}}>{ppl}</div>
@@ -699,7 +699,7 @@ setLoading(true);
         <div style={{marginBottom:16}}>
           <label style={lbl}>参加上限人数（無料：5人まで）</label>
           <select style={inp} value={form.maxParticipants} onChange={e=>setForm(f=>({...f,maxParticipants:Number(e.target.value)}))}>
-            {[1,2,3].map(n=><option key={n} value={n}>{n}人（無料）</option>)}
+            {[1,2,3,4,5].map(n=><option key={n} value={n}>{n}人（無料）</option>)}
           </select>
         </div>
         <FInput label="管理用パスコード ＊" placeholder="3文字以上" type="password" value={form.adminPasscode} onChange={setF("adminPasscode")}/>
@@ -794,7 +794,7 @@ ${url}`);
             );
             if(!isPaidPlan)return(
               <button style={{...btnGr,color:G.muted,borderColor:"#1A5030",fontSize:12}} onClick={()=>nav("upgrade")}>
-                3人まで無料。友達が増えたらアップグレードできます →
+                5人まで無料。友達が増えたらアップグレードできます →
               </button>
             );
             return null;
@@ -1158,8 +1158,7 @@ function PgUpgrade({nav,tourn:t,update}){
   const tryUnlock=async()=>{
     const code=unlockCode.trim().toUpperCase();
     let planKey=null;
-    if(code.includes("MINI"))planKey="mini";
-    else if(code.includes("STANDARD"))planKey="standard";
+    if(code.includes("STANDARD"))planKey="standard";
     else if(code.includes("PREMIUM"))planKey="premium";
     else if(code.includes("GROUP"))planKey="group";
     if(!planKey||!t){setUnlockErr("コードが正しくありません。");return;}
@@ -1171,9 +1170,8 @@ function PgUpgrade({nav,tourn:t,update}){
   };
 
   const PLANS=[
-    {key:"free",   label:"無料",         people:FREE_LIMIT, price:0,    tag:"まずは3人でお試し",    color:"#A7C7B0", features:["3人まで参加","基本予想","予想一覧","簡易ランキング","ベスト11作成"], note:null},
-    {key:"mini",   label:"ミニ",         people:5,  price:200,  tag:"4〜5人の少人数ならこれ",  color:"#0EA5E9", features:["5人まで参加","基本予想","予想一覧","ランキング"],                note:"少人数グループ向け"},
-    {key:"standard",label:"スタンダード",people:10, price:500,  tag:"友達5〜10人で遊ぶならこれ",color:"#22C55E", features:["10人まで参加","詳細統計","予想締切設定","参加者管理","広告なし"], note:"友達グループの定番"},
+    {key:"free",   label:"無料",         people:FREE_LIMIT, price:0,    tag:"まずは5人でお試し",      color:"#A7C7B0", features:["5人まで参加","基本予想","予想一覧","ランキング","ベスト11作成"], note:null},
+    {key:"standard",label:"スタンダード",people:10, price:500,  tag:"友達6〜10人で遊ぶならこれ",color:"#22C55E", features:["10人まで参加","詳細統計","予想締切設定","参加者管理","広告なし"], note:"友達グループの定番"},
     {key:"premium", label:"プレミアム",  people:30, price:980,  tag:"サークル・大きめのLINEグループ向け",color:"#FACC15", features:["30人まで参加","AI優勝候補リスト","ランキング画像生成","ベスト11画像保存","詳細ランキング"], note:"🌟 一番人気"},
     {key:"group",   label:"グループ",    people:50, price:1480, tag:"会社・大人数・イベント向け", color:"#F97316", features:["50人まで参加","全機能解放","QRコード発行","参加者編集・削除","共有用画像テンプレート"], note:"大規模イベント向け"},
   ];
