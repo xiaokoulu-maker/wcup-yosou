@@ -410,9 +410,11 @@ function CoffeeSupport({compact=false}){
         W杯予想メーカーを応援する100円サポートです。<br/>
         <span style={{color:G.muted,fontSize:11}}>※ 任意の応援課金です。人数追加・有料機能の解放はありません。</span>
       </div>
+      <PaymentBadges showCoffee={true}/>
       <button onClick={open} style={{...btnG,background:"linear-gradient(135deg,#92622A,#B8803A)",fontSize:14,padding:"12px"}}>
         ☕ 100円で応援する
       </button>
+      <PaymentBadges showCoffeeNote={true}/>
     </div>
   );
 }
