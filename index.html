@@ -58,9 +58,9 @@ async function trackEvent(eventName, meta={}){
   }
 }
 
-function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxParticipants:d.max_participants,adminPasscode:d.admin_passcode,participants:d.participants||[],results:d.results||null,plan:d.plan||"free",deadline:d.deadline||null,predictionSettings:d.prediction_settings||null,createdAt:d.created_at};}
+function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxParticipants:d.max_participants,adminPasscode:d.admin_passcode,participants:d.participants||[],results:d.results||null,plan:d.plan||"free",deadline:d.deadline||null,predictionSettings:d.prediction_settings||null,allowLateJoin:d.allow_late_join!==false,createdAt:d.created_at};}
 async function loadT(id){try{const{data,error}=await db.from("tournaments").select("*").eq("id",id).single();if(error||!data)return null;return dbToApp(data);}catch{return null;}}
-async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null,prediction_settings:t.predictionSettings||null},{onConflict:"id"});}catch(e){console.error(e);}}
+async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null,prediction_settings:t.predictionSettings||null,allow_late_join:t.allowLateJoin!==false},{onConflict:"id"});}catch(e){console.error(e);}}
 function subscribeToTournament(id,onUpdate){const ch=db.channel("t-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"tournaments",filter:`id=eq.${id}`},p=>{if(p.new)onUpdate(dbToApp(p.new));}).subscribe();return()=>db.removeChannel(ch);}
 
 // チャット: メッセージ取得
@@ -187,6 +187,9 @@ const AI_DATA=[
 // ══════════════════════════════════════
 const WC_START_DATE      = "2026-06-11T00:00:00";  // W杯開幕日
 const JAPAN_FIRST_MATCH  = "2026-06-15T00:00:00";  // 日本代表初戦（確定後に更新）
+const JAPAN_NEXT_MATCH   = null;  // 日本の次戦（確定後: "2026-06-20T19:00:00" など）
+const JAPAN_NEXT_OPPONENT= null;  // 次の対戦相手（確定後: "オランダ" など）
+const KNOCKOUT_STARTED   = false; // 決勝T開始後にtrueに変更
 // 日本代表候補選手データ
 const JAPAN_PLAYERS=[
   {name:"三笠 光",     pos:"FW",club:"ブライトン",      tags:["ドリブル","スピード"],note:"左サイドの突破が武器"},
@@ -612,6 +615,8 @@ function App(){
       {page==="bracket"&&<PgBracket nav={nav} tourn={tourn}/>}
       {page==="world"&&<PgWorldMode nav={nav} tourn={tourn} goCountry={goCountry}/>}
       {page==="japan"&&<PgJapanMode nav={nav} tourn={tourn}/>}
+      {page==="survival"&&<PgSurvival nav={nav} tourn={tourn} update={update}/>}
+      {page==="singlepred"&&<PgSinglePred nav={nav} tourn={tourn} update={update} myId={myId}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
     </div>
   );
@@ -749,7 +754,7 @@ function PgCreate({nav,goT}){
     {key:"best4",label:"🏆 ベスト4（4チーム）"},
     {key:"japanFirstMatchScore",label:"📊 日本代表初戦スコア"},
   ];
-  const [form,setForm]=useState({name:"",creatorName:"",maxParticipants:5,adminPasscode:"",deadline:""});
+  const [form,setForm]=useState({name:"",creatorName:"",maxParticipants:5,adminPasscode:"",deadline:"",allowLateJoin:true});
   const [predSet,setPredSet]=useState({...DEFAULT_PRED_SETTINGS});
   const [selectedPreset,setSelectedPreset]=useState("standard");
   const applyPreset=(key)=>{setSelectedPreset(key);setPredSet({...PRESETS[key].settings});};
@@ -760,7 +765,7 @@ function PgCreate({nav,goT}){
     if(!form.name.trim()||!form.creatorName.trim()||!form.adminPasscode.trim()){setErr("すべての項目を入力してください");return;}
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
 setLoading(true);
-    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,predictionSettings:predSet,createdAt:new Date().toISOString()};
+    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,predictionSettings:predSet,allowLateJoin:form.allowLateJoin!==false,createdAt:new Date().toISOString()};
     saveMyCreated(t.id);trackEvent("create_tournament",{tournamentId:t.id,page:"create"});await goT(t);setLoading(false);
   };
   return(
@@ -810,6 +815,15 @@ setLoading(true);
           <label style={lbl}>⏰ 予想締め切り日時（任意）</label>
           <input style={inp} type="datetime-local" value={form.deadline} onChange={e=>setF("deadline")(e.target.value)}/>
           <div style={{color:G.muted,fontSize:11,marginTop:4}}>設定すると締め切り後は予想できなくなります</div>
+        </div>
+        <div style={{marginBottom:16}}>
+          <label style={lbl}>途中参加の設定</label>
+          <div style={{display:"flex",gap:8}}>
+            {[{v:true,lb:"✅ 途中参加OK（推奨）"},{v:false,lb:"🚫 途中参加NG"}].map(opt=>(
+              <button key={opt.v} onClick={()=>setForm(f=>({...f,allowLateJoin:opt.v}))} style={{flex:1,background:form.allowLateJoin===opt.v?G.gold:"transparent",color:form.allowLateJoin===opt.v?"#111":"#888",border:`1.5px solid ${form.allowLateJoin===opt.v?G.gold:"#333"}`,borderRadius:10,padding:"9px 8px",fontSize:12,cursor:"pointer",fontWeight:form.allowLateJoin===opt.v?700:400}}>{opt.lb}</button>
+            ))}
+          </div>
+          <div style={{color:G.muted,fontSize:10,marginTop:4}}>途中参加OKにすると、締め切り後も新規参加できます（残り項目でのみ得点）</div>
         </div>
       </div>
       <Err msg={err}/><button style={btnG} onClick={submit} disabled={loading}>{loading?"作成中...":"🚀 大会を作成する"}</button>
@@ -877,6 +891,7 @@ ${url}`);
           <button style={btnO} onClick={()=>nav("ranking")}>🏆 ランキングを見る</button>
           <button style={btnO} onClick={()=>nav("stats")}>📊 詳細統計を見る</button>
           <button style={btnO} onClick={()=>nav("bracket")}>🏆 トーナメント表・予想マップ</button>
+          <button style={{...btnO,borderColor:"#F9731688",color:"#FB923C"}} onClick={()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}}>🔥 予想生存チェック</button>
           <button style={btnO} onClick={()=>nav("groups")}>🗂️ グループ表・FIFAランキング</button>
           {isPaid&&<button style={btnO} onClick={()=>nav("ai")}>🤖 AI優勝予想を見る</button>}
           <button style={btnGr} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
@@ -917,8 +932,9 @@ ${url}`);
 function PgJoin({tourn:t,nav,update,setMyId}){
   const [nick,setNick]=useState("");const [icon,setIcon]=useState("⚽");const [err,setErr]=useState("");const [showUpgrade,setShowUpgrade]=useState(false);const [loading,setLoading]=useState(false);
   const deadlinePassed=isDeadlinePassed(t.deadline);
+  const isLateJoin=deadlinePassed&&t.allowLateJoin;
   const join=async()=>{
-    if(deadlinePassed){setErr("予想の締め切りが終了しています");return;}
+    if(deadlinePassed&&!t.allowLateJoin){setErr("予想の締め切りが終了しています");return;}
     if(!nick.trim()){setErr("ニックネームを入力してください");return;}
 const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("予想の締め切りが終了しています");return;}
@@ -931,7 +947,7 @@ if(!cur.plan||cur.plan==="free") setErr(`無料プランは${FREE_LIMIT}人ま�
       setShowUpgrade(true);
       return;
     }
-    setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0};
+    setLoading(true);const p={id:genId(),nickname:nick.trim(),icon,predictions:null,points:0,joinedLate:isLateJoin||false};
     const updated={...cur,participants:[...cur.participants,p]};
     saveMyJoined(cur.id);trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);nav("predict");setLoading(false);
   };
@@ -1196,7 +1212,7 @@ if(!adminOk)return(
       <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:14}}>🔐 管理者ページ</div>
       {/* タブ */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
-        {[["result","結果入力"],["members","参加者管理"]].map(([v,lb])=>(
+        {[["result","結果入力"],["members","参加者管理"],["eliminated","敗退国管理"]].map(([v,lb])=>(
           <button key={v} onClick={()=>setTab(v)} style={{background:tab===v?G.gold:G.card,color:tab===v?"#111":"#ccc",border:"none",borderRadius:10,padding:"10px",fontSize:13,cursor:"pointer",fontWeight:700}}>{lb}</button>
         ))}
       </div>
@@ -1254,6 +1270,35 @@ if(!adminOk)return(
           }
         </div>
       )}
+      {tab==="eliminated"&&(
+        <EliminatedManager tourn={t} update={update}/>
+      )}
+    </div>
+  );
+}
+
+/* ── 敗退国管理コンポーネント ── */
+function EliminatedManager({tourn,update}){
+  const eliminated=(tourn.results?.eliminatedCountries)||[];
+  const toggleCountry=async(country)=>{
+    const cur=tourn.results||{};
+    const list=cur.eliminatedCountries||[];
+    const next=list.includes(country)?list.filter(c=>c!==country):[...list,country];
+    await update({...tourn,results:{...cur,eliminatedCountries:next}});
+  };
+  return(
+    <div>
+      <div style={{color:G.muted,fontSize:12,marginBottom:12}}>敗退した国をタップしてマークしてください。予想生存チェックに反映されます。</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+        {COUNTRIES.filter(c=>c!=="その他").map(c=>(
+          <button key={c} onClick={()=>toggleCountry(c)} style={{display:"flex",alignItems:"center",gap:6,background:eliminated.includes(c)?"rgba(239,68,68,0.15)":"rgba(255,255,255,0.04)",border:`1px solid ${eliminated.includes(c)?"rgba(239,68,68,0.5)":"#1A5030"}`,borderRadius:10,padding:"6px 10px",cursor:"pointer"}}>
+            <FlagImg country={c} size={16}/>
+            <span style={{color:eliminated.includes(c)?"#FCA5A5":"#ccc",fontSize:12,fontWeight:eliminated.includes(c)?700:400}}>{c}</span>
+            {eliminated.includes(c)&&<span style={{color:"#f77",fontSize:11}}>✕</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{marginTop:10,color:G.muted,fontSize:11}}>敗退: {eliminated.length}国 / 残存: {COUNTRIES.filter(c=>c!=="その他").length-eliminated.length}国</div>
     </div>
   );
 }
@@ -2537,6 +2582,175 @@ function PgJapanMode({nav,tourn}){
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+
+/* ── 予想生存チェック ── */
+function PgSurvival({nav,tourn,update}){
+  if(!tourn)return<div style={{padding:"20px 18px"}}><Back onClick={()=>nav("home")}/><div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>大会が選択されていません</div></div>;
+  const eliminated=(tourn.results?.eliminatedCountries)||[];
+  const hasRes=!!tourn.results?.winner;
+  const url=`${window.location.origin}${window.location.pathname}#t-${tourn.id}`;
+  const lineMsg=encodeURIComponent(`【予想生存チェック】\nW杯予想の生存状況を確認しよう👇\n${url}`);
+  const copy=async()=>{try{await navigator.clipboard.writeText(url);}catch{}};
+
+  const getSurvivalStatus=(country,field="winner")=>{
+    if(!country||country==="その他")return"unknown";
+    if(hasRes&&tourn.results?.[field]===country)return"hit";
+    if(hasRes&&tourn.results?.[field]&&tourn.results[field]!==country)return"miss";
+    if(eliminated.includes(country))return"eliminated";
+    return"alive";
+  };
+
+  const STATUS_STYLE={
+    alive:  {color:"#22C55E",bg:"rgba(34,197,94,0.1)", border:"rgba(34,197,94,0.3)", label:"🟢 生存中"},
+    hit:    {color:"#FACC15",bg:"rgba(250,204,21,0.15)",border:"rgba(250,204,21,0.4)",label:"🎯 的中！"},
+    miss:   {color:"#6B7280",bg:"rgba(107,114,128,0.1)",border:"rgba(107,114,128,0.2)",label:"❌ 外れ"},
+    eliminated:{color:"#EF4444",bg:"rgba(239,68,68,0.08)",border:"rgba(239,68,68,0.2)",label:"⚰️ 敗退"},
+    unknown:{color:"#6B7280",bg:"rgba(107,114,128,0.05)",border:"rgba(107,114,128,0.1)",label:"❓ 未確定"},
+  };
+
+  const ranked=[...tourn.participants].filter(p=>p.predictions?.winner).map(p=>{
+    const st=getSurvivalStatus(p.predictions.winner);
+    return{...p,survivalStatus:st};
+  }).sort((a,b)=>{
+    const order={hit:0,alive:1,eliminated:2,miss:3,unknown:4};
+    return (order[a.survivalStatus]||4)-(order[b.survivalStatus]||4);
+  });
+
+  const aliveCount=ranked.filter(p=>p.survivalStatus==="alive"||p.survivalStatus==="hit").length;
+
+  return(
+    <div style={{paddingBottom:40}}>
+      <div style={{background:"linear-gradient(180deg,#1a1000 0%,#061826 100%)",padding:"36px 20px 22px",textAlign:"center"}}>
+        <Back onClick={()=>nav("tournament")}/>
+        <div style={{fontSize:40,marginBottom:6}}>🔥</div>
+        <div style={{color:"#FB923C",fontSize:22,fontWeight:900}}>予想生存チェック</div>
+        <div style={{color:G.muted,fontSize:12,marginTop:4}}>{tourn.name}</div>
+        <div style={{marginTop:10,display:"inline-flex",alignItems:"center",gap:8,background:"rgba(251,146,60,0.1)",borderRadius:20,padding:"6px 14px",border:"1px solid rgba(251,146,60,0.3)"}}>
+          <span style={{color:"#22C55E",fontWeight:700}}>生存中: {aliveCount}人</span>
+          <span style={{color:"#445"}}>/</span>
+          <span style={{color:"#6B7280"}}>{ranked.length}人</span>
+        </div>
+      </div>
+      <div style={{padding:"12px 16px 0"}}>
+        {/* 共有ボタン */}
+        <div style={{display:"flex",gap:8,marginBottom:14}}>
+          <button onClick={copy} style={{flex:1,...btnGr,padding:"10px",fontSize:12,color:G.muted}}>🔗 URLをコピー</button>
+          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer" onClick={()=>trackEvent("click_share_survival",{tournamentId:tourn.id})} style={{flex:1,display:"block",background:"#06C755",color:"#fff",borderRadius:14,padding:"10px",textAlign:"center",fontWeight:700,textDecoration:"none",fontSize:12}}>📱 LINEで共有</a>
+        </div>
+
+        {/* 敗退国情報 */}
+        {eliminated.length>0&&<div style={{...crd,marginBottom:10,background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)"}}>
+          <div style={{color:"#FCA5A5",fontWeight:700,fontSize:12,marginBottom:8}}>⚰️ 敗退確定国（管理者設定）</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+            {eliminated.map(c=><span key={c} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:"3px 8px"}}><FlagImg country={c} size={14}/><span style={{color:"#FCA5A5",fontSize:11}}>{c}</span></span>)}
+          </div>
+        </div>}
+
+        {/* 参加者ごとの生存状況 */}
+        {ranked.length===0
+          ?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>まだ優勝予想が入力されていません</div>
+          :ranked.map((p,i)=>{
+            const st=STATUS_STYLE[p.survivalStatus];
+            const japanSt=p.predictions?.japanResult?getSurvivalStatus(p.predictions.japanResult,"japanResult"):"unknown";
+            const jpSt=STATUS_STYLE[japanSt];
+            return(
+              <div key={p.id} style={{...crd,background:st.bg,border:`1px solid ${st.border}`,marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{fontSize:28,flexShrink:0}}>{p.icon}</div>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:4}}>
+                      <span style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.nickname}</span>
+                      {p.joinedLate&&<span style={{background:"rgba(14,165,233,0.2)",color:"#7DD3FC",fontSize:9,padding:"1px 6px",borderRadius:10}}>途中参加</span>}
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <FlagImg country={p.predictions.winner} size={18}/>
+                      <span style={{color:"#ccc",fontSize:12}}>{p.predictions.winner} 優勝予想</span>
+                    </div>
+                  </div>
+                  <div style={{textAlign:"center",background:st.bg,borderRadius:10,padding:"6px 10px",border:`1px solid ${st.border}`}}>
+                    <div style={{color:st.color,fontSize:11,fontWeight:700}}>{st.label}</div>
+                  </div>
+                </div>
+                {p.predictions?.japanResult&&(
+                  <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:14}}>🇯🇵</span>
+                    <span style={{color:"#94b8d8",fontSize:11}}>{p.predictions.japanResult}予想</span>
+                    <span style={{color:jpSt.color,fontSize:10,fontWeight:700}}>{jpSt.label}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        }
+        {/* 注意書き */}
+        {eliminated.length===0&&!hasRes&&<div style={{background:G.dark,borderRadius:10,padding:"10px 14px",marginTop:8}}><div style={{color:G.muted,fontSize:11,lineHeight:1.8}}>※ 管理者が「敗退国管理」で国をマークすると生存状況が更新されます。<br/>※ 管理者ページ → 敗退国管理 から設定できます。</div></div>}
+        <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+      </div>
+    </div>
+  );
+}
+
+/* ── 日本戦単発予想 ── */
+function PgSinglePred({nav,tourn,update,myId}){
+  const [pred,setPred]=useState({result:"",score:"",firstGoal:"",japanMvp:""});
+  const [loading,setLoading]=useState(false);
+  const [saved,setSaved]=useState(false);
+  const set=k=>v=>setPred(p=>({...p,[k]:v}));
+
+  const save=async()=>{
+    if(!pred.result){alert("勝敗予想を選択してください");return;}
+    setLoading(true);
+    const fresh=await loadT(tourn.id);const cur=fresh||tourn;
+    const updated={...cur,participants:cur.participants.map(p=>{
+      if(p.id!==myId)return p;
+      return{...p,predictions:{...(p.predictions||{}),singleMatchPredictions:{japanNextMatch:{...pred}}}};
+    })};
+    await update(updated);
+    trackEvent("submit_single_match_prediction",{tournamentId:tourn.id,participantId:myId});
+    setSaved(true);setLoading(false);
+    setTimeout(()=>nav("tournament"),1500);
+  };
+
+  return(
+    <div style={{padding:"20px 18px 40px"}}>
+      <Back onClick={()=>nav("tournament")}/>
+      <div style={{color:"#7DD3FC",fontSize:21,fontWeight:900,marginBottom:4}}>🇯🇵 日本戦単発予想</div>
+      {JAPAN_NEXT_OPPONENT
+        ?<div style={{color:G.muted,fontSize:13,marginBottom:16}}>日本 vs {JAPAN_NEXT_OPPONENT}の予想</div>
+        :<div style={{color:G.muted,fontSize:13,marginBottom:16}}>次の日本戦の予想</div>
+      }
+      {!JAPAN_NEXT_MATCH
+        ?<div style={{background:"rgba(0,91,172,0.1)",border:"1px solid rgba(0,91,172,0.3)",borderRadius:14,padding:20,textAlign:"center"}}>
+          <div style={{fontSize:36,marginBottom:10}}>🇯🇵</div>
+          <div style={{color:"#7DD3FC",fontWeight:700,fontSize:14,marginBottom:8}}>日本代表の試合日程が確定次第、単発予想を表示します</div>
+        </div>
+        :<div style={crd}>
+          <div style={{marginBottom:18}}>
+            <label style={lbl}>⚽ 勝敗予想 ＊</label>
+            <Chips opts={["日本勝利","引き分け","日本敗戦"]} value={pred.result} onChange={set("result")} cols={3}/>
+          </div>
+          <div style={{marginBottom:18}}>
+            <label style={lbl}>📊 スコア予想（例: 2-1）</label>
+            <input style={inp} placeholder="例: 2-1" value={pred.score} onChange={e=>set("score")(e.target.value)}/>
+          </div>
+          <div style={{marginBottom:18}}>
+            <label style={lbl}>🥅 先制点（チーム）</label>
+            <Chips opts={["日本","相手国","なし（0-0）"]} value={pred.firstGoal} onChange={set("firstGoal")} cols={3}/>
+          </div>
+          <div style={{marginBottom:18}}>
+            <label style={lbl}>🌟 日本代表MVP（選手名）</label>
+            <input style={inp} placeholder="例: 久保 建英" value={pred.japanMvp} onChange={e=>set("japanMvp")(e.target.value)}/>
+          </div>
+          {saved
+            ?<div style={{background:"#1a4730",border:`1px solid ${G.gold}`,borderRadius:14,padding:14,textAlign:"center",color:"#fff",fontWeight:700}}>✅ 予想を保存しました！</div>
+            :<button style={btnG} onClick={save} disabled={loading}>{loading?"保存中...":"🇯🇵 予想を保存する"}</button>
+          }
+        </div>
+      }
     </div>
   );
 }
