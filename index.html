@@ -31,15 +31,15 @@ textarea,input,select{font-family:inherit;}
 @keyframes splashBall{0%{transform:translateX(-30px) rotate(0deg);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateX(30px) rotate(720deg);opacity:0}}
 @keyframes splashChar{0%{transform:translateY(8px) scaleX(0.9);opacity:0}20%{transform:translateY(0) scaleX(1);opacity:1}80%{transform:translateY(0) scaleX(1);opacity:1}100%{transform:translateY(-6px) scaleX(1);opacity:0}}
 @keyframes splashLight{0%,100%{opacity:0.08}50%{opacity:0.22}}
-@keyframes splashText{0%{opacity:0;transform:translateY(10px)}30%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
+@keyframes splashText{0%{opacity:0;transform:translateY(10px)}30%{opacity:1;transform:translateY(0)}80%{opacity:1}
+@keyframes splashFadeOut{0%{opacity:1}100%{opacity:0}}
 @keyframes splashGoal{0%{transform:scaleY(0.95)}50%{transform:scaleY(1.04)}100%{transform:scaleY(0.95)}}
 @keyframes splashKick{0%{transform:rotate(0deg)}40%{transform:rotate(-18deg)}60%{transform:rotate(10deg)}100%{transform:rotate(0deg)}}
 @keyframes splashSave{0%,100%{transform:rotate(0deg) translateX(0)}50%{transform:rotate(-22deg) translateX(-8px)}}
-@keyframes splashFadeOut{0%{opacity:1}100%{opacity:0}}
+
 button{transition:transform 0.12s ease,box-shadow 0.15s ease,opacity 0.12s ease !important;}
-@keyframes splashFadeOut{0%{opacity:1}100%{opacity:0}}100%{opacity:0}}
 @keyframes particleFly{0%{transform:translate(0,0);opacity:.8}100%{transform:translate(var(--px),var(--py));opacity:0}}
-@keyframes trailFade{0%{opacity:.7}100%{opacity:0}}
+@keyframes trailFade{0%{opacity:.7}
 button:active{transform:scale(0.95) !important;opacity:0.88 !important;}
 button:hover{transform:translateY(-1px) !important;}
 input:focus{border-color:rgba(250,204,21,0.7) !important;box-shadow:0 0 0 3px rgba(250,204,21,0.12) !important;}
@@ -107,66 +107,8 @@ function subscribeToChat(tournamentId,onNew){
   return()=>db.removeChannel(ch);
 }
 
-// チャット: メッセージ取得
-async function fetchMessages(tournamentId,limit=50){
-  try{
-    let q=db.from("messages").select("*").order("created_at",{ascending:true}).limit(limit);
-    if(tournamentId) q=q.eq("tournament_id",tournamentId);
-    else q=q.is("tournament_id",null);
-    const{data,error}=await q;
-    return error?[]:(data||[]);
-  }catch{return[];}
-}
-// チャット: メッセージ送信
-async function sendMessage(tournamentId,nickname,icon,body){
-  try{
-    const row={nickname,icon,body};
-    if(tournamentId) row.tournament_id=tournamentId;
-    const{error}=await db.from("messages").insert(row);
-    return !error;
-  }catch{return false;}
-}
-// チャット: リアルタイム購読
-function subscribeToChat(tournamentId,onNew){
-  const chName="chat-"+(tournamentId||"global");
-  const filter=tournamentId?`tournament_id=eq.${tournamentId}`:"tournament_id=is.null";
-  // NULLフィルタはSupabase realtimeで難しいためpollingで代用
-  const ch=db.channel(chName).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},p=>{
-    if(!p.new)return;
-    const msg=p.new;
-    const isGlobal=!tournamentId&&!msg.tournament_id;
-    const isTournament=tournamentId&&msg.tournament_id===tournamentId;
-    if(isGlobal||isTournament) onNew(msg);
-  }).subscribe();
-  return()=>db.removeChannel(ch);
-}
-async function fetchMatches(dateStr){try{const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${dateStr}&limit=50`);const d=await r.json();return d.events||[];}catch{return[];}}
-async function fetchMatchRange(){const dates=[];const start=new Date("2026-06-11");for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);dates.push(d.toISOString().slice(0,10).replace(/-/g,""));}const all=await Promise.all(dates.map(d=>fetchMatches(d)));return all.flat();}
-async function fetchStandings(){try{const r=await fetch("https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings");const d=await r.json();return d.children||[];}catch{return[];}}
-</script>
-<script type="text/babel">
-const {useState,useEffect,useCallback}=React;
 
-const COUNTRIES=["日本","ブラジル","アルゼンチン","フランス","イングランド","スペイン","ドイツ","ポルトガル","オランダ","イタリア","クロアチア","ベルギー","その他"];
-const JAPAN_RES=["グループステージ敗退","ベスト32","ベスト16","ベスト8","ベスト4","準優勝","優勝"];
-const ICONS=["⚽","🇯🇵","🦁","🐶","🐵","🐺","🦅","🔥","👑","🏆"];
 
-const FIFA_RANK={"フランス":1,"スペイン":2,"アルゼンチン":3,"イングランド":4,"ポルトガル":5,"ブラジル":6,"オランダ":7,"モロッコ":8,"ベルギー":9,"ドイツ":10,"クロアチア":11,"イタリア":12,"コロンビア":13,"セネガル":14,"メキシコ":15,"アメリカ":16,"ウルグアイ":17,"日本":18,"スイス":19,"デンマーク":20,"イラン":21,"トルコ":22,"エクアドル":23,"オーストリア":24,"韓国":25,"ナイジェリア":26,"オーストラリア":27,"アルジェリア":28,"エジプト":29,"カナダ":30,"ノルウェー":31,"ウクライナ":32,"パナマ":33,"コートジボワール":34,"スコットランド":38,"チュニジア":40,"パラグアイ":42,"スウェーデン":44,"ガーナ":72,"ニュージーランド":90,"ハイチ":83,"キュラソー":85,"ヨルダン":87,"ボスニア":51,"カタール":60,"南アフリカ":61,"チェコ":37,"サウジアラビア":56,"カボベルデ":70,"イラク":65,"コンゴ":78,"ウズベキスタン":75};
-
-const WC_GROUPS=[
-  {name:"A",teams:[{n:"メキシコ",f:"mx"},{n:"南アフリカ",f:"za"},{n:"韓国",f:"kr"},{n:"チェコ",f:"cz"}]},
-  {name:"B",teams:[{n:"カナダ",f:"ca"},{n:"スイス",f:"ch"},{n:"カタール",f:"qa"},{n:"ボスニア",f:"ba"}]},
-  {name:"C",teams:[{n:"ブラジル",f:"br"},{n:"モロッコ",f:"ma"},{n:"ハイチ",f:"ht"},{n:"スコットランド",f:"gb-sct"}]},
-  {name:"D",teams:[{n:"アメリカ",f:"us"},{n:"パラグアイ",f:"py"},{n:"オーストラリア",f:"au"},{n:"トルコ",f:"tr"}]},
-  {name:"E",teams:[{n:"ドイツ",f:"de"},{n:"キュラソー",f:"cw"},{n:"コートジボワール",f:"ci"},{n:"エクアドル",f:"ec"}]},
-  {name:"F",teams:[{n:"オランダ",f:"nl"},{n:"日本",f:"jp"},{n:"チュニジア",f:"tn"},{n:"スウェーデン",f:"se"}]},
-  {name:"G",teams:[{n:"ベルギー",f:"be"},{n:"エジプト",f:"eg"},{n:"イラン",f:"ir"},{n:"ニュージーランド",f:"nz"}]},
-  {name:"H",teams:[{n:"スペイン",f:"es"},{n:"カボベルデ",f:"cv"},{n:"サウジアラビア",f:"sa"},{n:"ウルグアイ",f:"uy"}]},
-  {name:"I",teams:[{n:"フランス",f:"fr"},{n:"セネガル",f:"sn"},{n:"ノルウェー",f:"no"},{n:"イラク",f:"iq"}]},
-  {name:"J",teams:[{n:"アルゼンチン",f:"ar"},{n:"アルジェリア",f:"dz"},{n:"オーストリア",f:"at"},{n:"ヨルダン",f:"jo"}]},
-  {name:"K",teams:[{n:"ポルトガル",f:"pt"},{n:"コロンビア",f:"co"},{n:"コンゴ",f:"cd"},{n:"ウズベキスタン",f:"uz"}]},
-  {name:"L",teams:[{n:"イングランド",f:"gb-eng"},{n:"クロアチア",f:"hr"},{n:"ガーナ",f:"gh"},{n:"パナマ",f:"pa"}]},
-];
 
 // AI優勝確率データ
 // 参照ソース(2026年5月25日時点):
@@ -289,14 +231,16 @@ async function fetchBracketFromESPN(){
   }catch{return[];}
 }
 
+// ⚠️ 本番前: test_ URLを本番用Stripe Payment Link URLに差し替えてください
 const STRIPE={
-  mini:    {url:"https://buy.stripe.com/test_eVq7sL8Yv9Pm30v9oKe7m03",label:"ミニ",people:5,price:200},
+  // ⚠️ 本番公開前に test_ URLを本番用URLに差し替えること
+  // mini: 廃止（無料5人化により不要）
   standard:{url:"https://buy.stripe.com/test_3cIfZh1w33qYbx1dF0e7m00",label:"スタンダード",people:10,price:500},
   premium: {url:"https://buy.stripe.com/test_00wfZha2z2mUfNhasOe7m01",label:"プレミアム",people:30,price:980},
   group:   {url:"https://buy.stripe.com/test_3cI00ja2zaTqcB57gCe7m02",label:"グループ",people:50,price:1480},
   support: {url:"",label:"開発者にコーヒーを奢る",price:100},  // ← Stripeで100円の商品を作成後にURLを入れる
 };
-// 無料プランは3人まで
+// 無料プランは5人まで
 const FREE_LIMIT=5;
 
 const ESPN_TO_JP={"Japan":"日本","Brazil":"ブラジル","Argentina":"アルゼンチン","France":"フランス","England":"イングランド","Spain":"スペイン","Germany":"ドイツ","Portugal":"ポルトガル","Netherlands":"オランダ","Italy":"イタリア","Croatia":"クロアチア","Belgium":"ベルギー","United States":"アメリカ","Mexico":"メキシコ","Canada":"カナダ","Korea Republic":"韓国","Australia":"オーストラリア","Morocco":"モロッコ","Uruguay":"ウルグアイ","Colombia":"コロンビア","Senegal":"セネガル","Norway":"ノルウェー","Sweden":"スウェーデン","Ecuador":"エクアドル","Switzerland":"スイス","Denmark":"デンマーク","Ghana":"ガーナ","Panama":"パナマ","Paraguay":"パラグアイ","Austria":"オーストリア","Algeria":"アルジェリア","Jordan":"ヨルダン","Tunisia":"チュニジア","Egypt":"エジプト","Iran":"イラン","Saudi Arabia":"サウジアラビア","Scotland":"スコットランド","Turkey":"トルコ","Ivory Coast":"コートジボワール","Cote D'Ivoire":"コートジボワール","New Zealand":"ニュージーランド","Serbia":"セルビア","Qatar":"カタール","South Africa":"南アフリカ","Czechia":"チェコ","Bosnia and Herzegovina":"ボスニア","Haiti":"ハイチ","Curacao":"キュラソー","Congo DR":"コンゴ","Uzbekistan":"ウズベキスタン","Iraq":"イラク","Cape Verde":"カボベルデ","Cabo Verde":"カボベルデ"};
@@ -1225,10 +1169,9 @@ function PgJoin({tourn:t,nav,update,setMyId}){
 const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("予想の締め切りが終了しています");return;}
 if(cur.participants.length>=cur.maxParticipants){
-if(!cur.plan||cur.plan==="free") setErr(`無料プランは${FREE_LIMIT}人まで\n5人まで参加するにはミニプランへのアップグレードが必要です\n¥200`);
-      else if(cur.plan==="mini") setErr("ミニプランは5人まで\n10人まで参加するにはスタンダードプランがおすすめです\n¥500");
-      else if(cur.plan==="standard") setErr("スタンダードプランは10人まで\n30人まで参加するにはプレミアムプランがおすすめです\n¥980");
-      else if(cur.plan==="premium") setErr("プレミアムプランは30人まで\n大人数で遊ぶならグループプランがおすすめです\n¥1,480");
+      if(!cur.plan||!cur.plan||cur.plan==="free") setErr("無料プランは5人までです。" + "\n" + "6人以上で遊ぶにはスタンダードプランがおすすめです。10人まで参加できます。" + "\n" + "¥500");
+      else if(cur.plan==="standard") setErr("スタンダードプランは10人まで" + "\n" + "30人まで参加するにはプレミアムプランがおすすめです" + "\n" + "¥980");
+      else if(cur.plan==="premium") setErr("プレミアムプランは30人まで" + "\n" + "大人数で遊ぶならグループプランがおすすめです" + "\n" + "¥1,480");
       else setErr("参加上限に達しました。");
       setShowUpgrade(true);
       return;
@@ -1639,7 +1582,7 @@ function PgUpgrade({nav,tourn:t,update}){
         <div style={{...crd,marginBottom:16}}>
           <div style={{color:G.gold,fontWeight:700,fontSize:12,letterSpacing:1,marginBottom:10}}>👥 何人で遊ぶ？</div>
           <div style={{display:"flex",gap:0,borderRadius:12,overflow:"hidden",border:"1px solid #1A5030"}}>
-            {[["〜3人","無料","#0D2A1C"],["〜5人","200円","#0A1E2A"],["〜10人","500円","#0A2010"],["〜30人","980円","#1A1200"],["〜50人","1,480円","#1A1000"]].map(([p,price,bg],i)=>(
+            {[["〜5人","無料","#0D2A1C"],["〜10人","500円","#0A2010"],["〜30人","980円","#1A1200"],["〜50人","1,480円","#1A1000"]].map(([p,price,bg],i)=>(
               <div key={i} style={{flex:1,background:bg,padding:"8px 4px",textAlign:"center",borderRight:i<4?"1px solid #1A5030":"none"}}>
                 <div style={{color:"#fff",fontSize:10,fontWeight:700,marginBottom:2}}>{p}</div>
                 <div style={{color:G.gold,fontSize:9,fontWeight:800}}>{price}</div>
@@ -1690,7 +1633,6 @@ function PgUpgrade({nav,tourn:t,update}){
                   {plan.url?`${plan.label}プランにアップグレード →`:"準備中"}
                 </button>
               )}
-              {plan.key==="mini"&&!STRIPE.mini.url&&(
                 <div style={{color:G.muted,fontSize:11,textAlign:"center",marginTop:4}}>※ このプランは近日公開予定です</div>
               )}
             </div>
