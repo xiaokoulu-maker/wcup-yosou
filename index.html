@@ -182,6 +182,35 @@ const AI_DATA=[
   {country:"その他",     pct:18.0,trend:"→",reason:"48チーム制で波乱必至。モロッコ・コロンビアなどの台頭に注目"},
 ];
 
+// ══════════════════════════════════════
+// カウントダウン定数（後から修正可）
+// ══════════════════════════════════════
+const WC_START_DATE      = "2026-06-11T00:00:00";  // W杯開幕日
+const JAPAN_FIRST_MATCH  = "2026-06-15T00:00:00";  // 日本代表初戦（確定後に更新）
+// 日本代表候補選手データ
+const JAPAN_PLAYERS=[
+  {name:"三笠 光",     pos:"FW",club:"ブライトン",      tags:["ドリブル","スピード"],note:"左サイドの突破が武器"},
+  {name:"久保 建英",   pos:"MF",club:"レアル・ソシエダ",tags:["技術","創造性"],    note:"欧州トップリーグで活躍"},
+  {name:"遠藤 航",     pos:"MF",club:"リバプール",      tags:["球際","守備"],      note:"中盤の要・キャプテン"},
+  {name:"冨安 健洋",   pos:"DF",club:"アヤックス",      tags:["守備","高さ"],      note:"世界基準のCB・SB兼用"},
+  {name:"上田 綺世",   pos:"FW",club:"フェイエノールト",tags:["ゴール","フィジカル"],note:"欧州で得点量産中"},
+  {name:"鈴木 彩艶",   pos:"GK",club:"シント=トロイデン",tags:["反射","ビルドアップ"],note:"次世代GKの筆頭"},
+  {name:"堂安 律",     pos:"MF",club:"フライブルク",    tags:["シュート","左足"],  note:"強烈なミドルシュートが武器"},
+  {name:"伊東 純也",   pos:"FW",club:"スタッド・ランス",tags:["スピード","右サイド"],note:"圧倒的なスプリント力"},
+  {name:"南野 拓実",   pos:"MF",club:"ASモナコ",        tags:["点取り屋","攻撃"],  note:"高い得点感覚を持つ万能型"},
+  {name:"守田 英正",   pos:"MF",club:"スポルティング",  tags:["パス","インテンシティ"],note:"欧州でも通用する中盤"},
+  {name:"鎌田 大地",   pos:"MF",club:"クリスタル・パレス",tags:["技術","展開力"],  note:"繊細なパスセンスが魅力"},
+  {name:"田中 碧",     pos:"MF",club:"リーズ",          tags:["運動量","ハードワーク"],note:"走力と献身性が光る"},
+  {name:"板倉 滉",     pos:"DF",club:"ボルシアMG",      tags:["空中戦","リーダーシップ"],note:"ドイツで実力証明済み"},
+  {name:"町田 浩樹",   pos:"DF",club:"ユニオン・サンジロワーズ",tags:["高さ","強さ"],note:"ベルギーで欠かせない存在"},
+  {name:"中村 敬斗",   pos:"FW",club:"スタッド・ランス",tags:["左足","突破"],      note:"強烈な左足シュートが魅力"},
+  {name:"前田 大然",   pos:"FW",club:"セルティック",    tags:["スプリント","プレス"],note:"前線からの献身的なプレス"},
+  {name:"旗手 怜央",   pos:"MF",club:"セルティック",    tags:["万能","運動量"],    note:"複数ポジションをこなす"},
+  {name:"菅原 由勢",   pos:"DF",club:"サウサンプトン",  tags:["右SB","攻撃参加"],  note:"攻撃的な右サイドバック"},
+  {name:"谷口 彰悟",   pos:"DF",club:"アル・ラヤン",    tags:["安定感","経験"],    note:"堅実な守備でチームを支える"},
+  {name:"古橋 亨梧",   pos:"FW",club:"セルティック",    tags:["得点","スピード"],  note:"セルティックで得点量産"},
+];
+
 // ════════════════════════════════════
 // W杯2026 決勝トーナメント表データ
 // 後から実際の組み合わせに差し替え可能
@@ -581,6 +610,8 @@ function App(){
       {page==="country"&&<PgCountry nav={nav} country={selCountry} goCountry={goCountry}/>}
       {page==="globalchat"&&<PgGlobalChat nav={nav}/>}
       {page==="bracket"&&<PgBracket nav={nav} tourn={tourn}/>}
+      {page==="world"&&<PgWorldMode nav={nav} tourn={tourn} goCountry={goCountry}/>}
+      {page==="japan"&&<PgJapanMode nav={nav} tourn={tourn}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
     </div>
   );
@@ -638,6 +669,11 @@ function PgHome({nav,goT}){
           <div style={{color:G.muted,fontSize:12,marginTop:7,lineHeight:1.9}}>友達同士の優勝国・得点王・日本代表成績をまとめて管理。<br/>結果に応じて自動でランキング化。</div>
         </div>
         <div style={{marginTop:22,display:"flex",flexDirection:"column",gap:10}}>
+          {/* モード切り替え */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:4}}>
+            <button onClick={()=>{nav("world");trackEvent("open_world_mode",{page:"home"});}} style={{background:"linear-gradient(135deg,rgba(11,61,30,0.8),rgba(6,24,38,0.8))",color:"#22C55E",fontWeight:800,borderRadius:14,padding:"13px 8px",fontSize:13,border:"1.5px solid #22C55E55",cursor:"pointer"}}>🌍 ワールド<br/><span style={{fontSize:10,fontWeight:400,color:"#8ba"}}>W杯全体モード</span></button>
+            <button onClick={()=>{nav("japan");trackEvent("open_japan_mode",{page:"home"});}} style={{background:"linear-gradient(135deg,rgba(0,91,172,0.3),rgba(0,63,143,0.4))",color:"#7DD3FC",fontWeight:800,borderRadius:14,padding:"13px 8px",fontSize:13,border:"1.5px solid #005BAC88",cursor:"pointer"}}>🇯🇵 日本代表<br/><span style={{fontSize:10,fontWeight:400,color:"#94b8d8"}}>サムライブルーモード</span></button>
+          </div>
           <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             <button style={btnO} onClick={()=>nav("ai")}>🤖 AI優勝予想</button>
@@ -2210,6 +2246,296 @@ function PgBracket({nav,tourn}){
         )}
 
         <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ── カウントダウンコンポーネント ── */
+function Countdown({targetDate,label,color="#FACC15"}){
+  const [days,setDays]=React.useState(null);
+  React.useEffect(()=>{
+    const calc=()=>{
+      const diff=new Date(targetDate)-new Date();
+      setDays(diff>0?Math.ceil(diff/86400000):0);
+    };
+    calc();
+    const t=setInterval(calc,60000);
+    return()=>clearInterval(t);
+  },[targetDate]);
+  if(days===null)return null;
+  return(
+    <div style={{textAlign:"center",background:`${color}11`,border:`1px solid ${color}44`,borderRadius:16,padding:"14px 20px"}}>
+      <div style={{color:color,fontSize:11,fontWeight:700,letterSpacing:2,marginBottom:4}}>{label}</div>
+      <div style={{color:"#fff",fontWeight:900,fontSize:42,lineHeight:1,textShadow:`0 0 30px ${color}66`}}>{days}</div>
+      <div style={{color:color,fontSize:13,fontWeight:700,marginTop:2}}>日</div>
+    </div>
+  );
+}
+
+/* ── ワールドモード ── */
+function PgWorldMode({nav,tourn,goCountry}){
+  const participants=tourn?.participants||[];
+  const winCount={};
+  participants.forEach(p=>{if(p.predictions?.winner)winCount[p.predictions.winner]=(winCount[p.predictions.winner]||0)+1;});
+  const topWin=Object.entries(winCount).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const now=new Date();
+  const wcDate=new Date(WC_START_DATE);
+  const started=now>=wcDate;
+
+  return(
+    <div style={{paddingBottom:40}}>
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 24px",textAlign:"center"}}>
+        <Back onClick={()=>nav("home")}/>
+        <div style={{color:"#22C55E",fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:4}}>WORLD MODE</div>
+        <div style={{color:G.gold,fontSize:22,fontWeight:900,marginBottom:6}}>🌍 ワールドモード</div>
+        <div style={{color:G.muted,fontSize:12}}>W杯全体の予想・情報・分析</div>
+      </div>
+      <div style={{padding:"14px 16px 0"}}>
+        {/* カウントダウン */}
+        {!started
+          ?<div style={{marginBottom:14}}><Countdown targetDate={WC_START_DATE} label="🏆 W杯開幕まで" color="#FACC15"/></div>
+          :<div style={{...crd,textAlign:"center",marginBottom:14}}><div style={{color:"#22C55E",fontSize:14,fontWeight:700}}>🟢 W杯開幕中！</div></div>
+        }
+        {/* 大会内の優勝予想 */}
+        {tourn&&topWin.length>0&&<div style={{...crd,marginBottom:14}}>
+          <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>👥 この大会の優勝予想トップ</div>
+          {topWin.map(([c,n],i)=>(
+            <div key={c} onClick={()=>goCountry(c)} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,cursor:"pointer"}}>
+              <span style={{fontSize:18}}>{"🥇🥈🥉"[i]}</span>
+              <FlagImg country={c} size={24}/>
+              <span style={{color:"#fff",flex:1,fontSize:13}}>{c}</span>
+              <span style={{color:G.gold,fontWeight:700}}>{n}人</span>
+            </div>
+          ))}
+        </div>}
+        {/* 機能一覧 */}
+        <div style={{color:G.muted,fontSize:11,fontWeight:700,letterSpacing:1,marginBottom:8}}>MENU</div>
+        {[
+          {icon:"🤖",label:"AI優勝予想",sub:"複数ソースの加重平均データ",action:()=>nav("ai")},
+          {icon:"🏆",label:"トーナメント表",sub:"決勝トーナメントの組み合わせと予想マップ",action:()=>nav("bracket")},
+          {icon:"🗂️",label:"グループ表",sub:"全12グループのチームと順位",action:()=>nav("groups")},
+          {icon:"📅",label:"試合日程",sub:"全試合のスケジュールと結果",action:()=>nav("schedule")},
+          {icon:"⚽",label:"ベスト11メーカー",sub:"あなたの最強スタメンを作成",action:()=>nav("best11")},
+          {icon:"💬",label:"みんなのチャット",sub:"W杯について語ろう",action:()=>nav("globalchat")},
+        ].map((item,i)=>(
+          <div key={i} onClick={item.action} style={{...crd,display:"flex",alignItems:"center",gap:12,cursor:"pointer",marginBottom:8}}>
+            <span style={{fontSize:24,flexShrink:0}}>{item.icon}</span>
+            <div style={{flex:1}}>
+              <div style={{color:"#fff",fontWeight:700,fontSize:13}}>{item.label}</div>
+              <div style={{color:G.muted,fontSize:11,marginTop:2}}>{item.sub}</div>
+            </div>
+            <span style={{color:G.muted,fontSize:14}}>→</span>
+          </div>
+        ))}
+        {!tourn&&<div style={{...crd,textAlign:"center",marginTop:8}}>
+          <div style={{color:G.muted,fontSize:12,marginBottom:10}}>大会を作って友達と予想バトル</div>
+          <button style={btnG} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── 日本代表モード ── */
+function PgJapanMode({nav,tourn}){
+  const [tab,setTab]=React.useState("top");
+  const participants=tourn?.participants||[];
+
+  // 日本成績予想集計
+  const japanResCount={};
+  participants.forEach(p=>{if(p.predictions?.japanResult)japanResCount[p.predictions.japanResult]=(japanResCount[p.predictions.japanResult]||0)+1;});
+  const japanResTotal=Object.values(japanResCount).reduce((a,b)=>a+b,0);
+
+  // 日本MVP予想集計
+  const mvpCount={};
+  participants.forEach(p=>{if(p.predictions?.japanMvp){const k=p.predictions.japanMvp.trim();if(k)mvpCount[k]=(mvpCount[k]||0)+1;}});
+  const mvpRank=Object.entries(mvpCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // 応援コメント
+  const comments=participants.filter(p=>p.predictions?.comment).map(p=>({nick:p.nickname,icon:p.icon,text:p.predictions.comment}));
+
+  const now=new Date();
+  const jpDate=JAPAN_FIRST_MATCH?new Date(JAPAN_FIRST_MATCH):null;
+  const jpStarted=jpDate&&now>=jpDate;
+
+  const JB={bg:"#061826",accent:"#005BAC",light:"#7DD3FC",gold:"#FACC15",red:"#E60033"};
+
+  return(
+    <div style={{paddingBottom:40}}>
+      {/* ヘッダー */}
+      <div style={{background:`linear-gradient(180deg,${JB.accent} 0%,#003F8F 50%,${JB.bg} 100%)`,padding:"36px 20px 20px",textAlign:"center",position:"relative",overflow:"hidden"}}>
+        {/* 日の丸装飾 */}
+        <div style={{position:"absolute",top:-40,right:-40,width:120,height:120,borderRadius:"50%",background:`${JB.red}22`,border:`2px solid ${JB.red}44`}}/>
+        <div style={{position:"absolute",bottom:-30,left:-30,width:100,height:100,borderRadius:"50%",background:`${JB.red}11`,border:`1px solid ${JB.red}33`}}/>
+        <Back onClick={()=>nav("home")}/>
+        <div style={{fontSize:48,marginBottom:6}}>🇯🇵</div>
+        <div style={{color:JB.gold,fontSize:11,fontWeight:700,letterSpacing:3,marginBottom:4}}>SAMURAI BLUE MODE</div>
+        <div style={{color:"#fff",fontSize:22,fontWeight:900}}>日本代表モード</div>
+        <div style={{color:"#94b8d8",fontSize:12,marginTop:4}}>サムライブルーと共に戦おう</div>
+      </div>
+
+      {/* カウントダウン */}
+      <div style={{padding:"14px 16px 0"}}>
+        {jpDate&&!jpStarted
+          ?<div style={{marginBottom:14}}><Countdown targetDate={JAPAN_FIRST_MATCH} label="🇯🇵 日本代表 初戦まで" color={JB.accent}/></div>
+          :jpStarted
+            ?<div style={{...crd,textAlign:"center",marginBottom:14,background:`${JB.accent}22`,border:`1px solid ${JB.accent}66`}}><div style={{color:JB.light,fontSize:14,fontWeight:700}}>🔴 日本代表 試合中！</div></div>
+            :<div style={{background:`${JB.accent}11`,border:`1px solid ${JB.accent}33`,borderRadius:14,padding:"12px 16px",marginBottom:14,textAlign:"center"}}>
+              <div style={{color:JB.light,fontSize:12,fontWeight:700,marginBottom:4}}>📅 日本代表初戦</div>
+              <div style={{color:"#94b8d8",fontSize:11}}>日本代表の試合日程が確定次第、カウントダウンを表示します</div>
+            </div>
+        }
+
+        {/* タブ */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:4,marginBottom:14}}>
+          {[["top","🇯🇵 概要"],["stats","📊 予想"],["players","⚽ 選手"],["route","🗺️ 展望"]].map(([v,lb])=>(
+            <button key={v} onClick={()=>setTab(v)} style={{background:tab===v?JB.accent:"rgba(0,91,172,0.1)",color:tab===v?"#fff":JB.light,border:`1px solid ${tab===v?JB.accent:JB.accent+"44"}`,borderRadius:10,padding:"8px 4px",fontSize:10,cursor:"pointer",fontWeight:tab===v?800:400}}>{lb}</button>
+          ))}
+        </div>
+
+        {/* 概要タブ */}
+        {tab==="top"&&(
+          <>
+            <div style={{...crd,background:`${JB.accent}11`,border:`1px solid ${JB.accent}44`,marginBottom:10}}>
+              <div style={{color:JB.gold,fontWeight:700,fontSize:13,marginBottom:10}}>🏆 グループF - 日本代表</div>
+              {WC_GROUPS.find(g=>g.name==="F")?.teams.map((t,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 8px",borderRadius:8,background:t.n==="日本"?`${JB.accent}22`:"transparent",marginBottom:4}}>
+                  <FlagImg code={t.f} country={t.n} size={24}/>
+                  <span style={{color:t.n==="日本"?JB.gold:"#ccc",fontWeight:t.n==="日本"?700:400,fontSize:13,flex:1}}>{t.n}</span>
+                  {FIFA_RANK[t.n]&&<span style={{color:G.muted,fontSize:11}}>FIFA {FIFA_RANK[t.n]}位</span>}
+                </div>
+              ))}
+            </div>
+            <div style={{...crd,background:`${JB.accent}11`,border:`1px solid ${JB.accent}44`}}>
+              <div style={{color:JB.gold,fontWeight:700,fontSize:13,marginBottom:10}}>💬 みんなの応援コメント</div>
+              {comments.length===0
+                ?<div style={{color:"#94b8d8",fontSize:12,textAlign:"center",padding:"16px 0"}}>大会に参加すると応援コメントが表示されます</div>
+                :comments.slice(0,5).map((c,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
+                    <span style={{fontSize:20,flexShrink:0}}>{c.icon}</span>
+                    <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px 12px",flex:1}}>
+                      <div style={{color:"#94b8d8",fontSize:9,marginBottom:2}}>{c.nick}</div>
+                      <div style={{color:"#ddd",fontSize:12}}>"{c.text}"</div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </>
+        )}
+
+        {/* 予想統計タブ */}
+        {tab==="stats"&&(
+          <>
+            <div style={{...crd,background:`${JB.accent}11`,border:`1px solid ${JB.accent}44`,marginBottom:10}}>
+              <div style={{color:JB.gold,fontWeight:700,fontSize:13,marginBottom:6}}>🇯🇵 日本代表成績予想の分布</div>
+              {tourn
+                ?<div style={{color:"#94b8d8",fontSize:11,marginBottom:10}}>「この大会のみんな」は日本をここまで行くと予想しています</div>
+                :<div style={{color:"#94b8d8",fontSize:11,marginBottom:10}}>大会を選択すると予想データが表示されます</div>
+              }
+              {japanResTotal>0
+                ?JAPAN_RES.filter(r=>japanResCount[r]).sort((a,b)=>(japanResCount[b]||0)-(japanResCount[a]||0)).map(r=>{
+                  const n=japanResCount[r]||0;
+                  const pct=Math.round(n/japanResTotal*100);
+                  return(
+                    <div key={r} style={{marginBottom:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                        <span style={{color:"#ccc",fontSize:12}}>{r}</span>
+                        <span style={{color:JB.gold,fontWeight:700,fontSize:12}}>{n}人 ({pct}%)</span>
+                      </div>
+                      <div style={{background:"rgba(0,0,0,0.3)",borderRadius:6,height:8,overflow:"hidden"}}>
+                        <div style={{background:`linear-gradient(90deg,${JB.accent},${JB.light})`,height:"100%",width:`${pct}%`,borderRadius:6}}/>
+                      </div>
+                    </div>
+                  );
+                })
+                :<div style={{color:"#94b8d8",fontSize:12,textAlign:"center",padding:"20px 0"}}>予想が集まると表示されます</div>
+              }
+            </div>
+            <div style={{...crd,background:`${JB.accent}11`,border:`1px solid ${JB.accent}44`}}>
+              <div style={{color:JB.gold,fontWeight:700,fontSize:13,marginBottom:10}}>🌟 みんなが期待している日本代表選手</div>
+              {mvpRank.length>0
+                ?mvpRank.map(([name,n],i)=>{
+                  const player=JAPAN_PLAYERS.find(p=>p.name.replace(" ","")===name.replace(" ","")||p.name.includes(name)||name.includes(p.name.split(" ")[0]));
+                  return(
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:i===0?`${JB.accent}22`:"transparent",borderRadius:8,marginBottom:4}}>
+                      <span style={{fontSize:18,flexShrink:0}}>{"🥇🥈🥉🏅🏅"[i]}</span>
+                      <div style={{flex:1}}>
+                        <div style={{color:"#fff",fontWeight:700,fontSize:13}}>{name}</div>
+                        {player&&<div style={{color:"#94b8d8",fontSize:10}}>{player.pos} · {player.club}</div>}
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{color:JB.gold,fontWeight:800,fontSize:16}}>{n}</div>
+                        <div style={{color:"#94b8d8",fontSize:9}}>票</div>
+                      </div>
+                    </div>
+                  );
+                })
+                :<div style={{color:"#94b8d8",fontSize:12,textAlign:"center",padding:"20px 0"}}>予想が集まると表示されます</div>
+              }
+            </div>
+          </>
+        )}
+
+        {/* 選手タブ */}
+        {tab==="players"&&(
+          <div>
+            <div style={{color:"#94b8d8",fontSize:11,marginBottom:10}}>日本代表候補選手 · 顔写真は使用していません</div>
+            {JAPAN_PLAYERS.map((p,i)=>(
+              <div key={i} style={{...crd,background:`${JB.accent}11`,border:`1px solid ${JB.accent}33`,marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  {/* 番号風アイコン */}
+                  <div style={{width:42,height:42,borderRadius:"50%",background:`linear-gradient(135deg,${JB.accent},#003F8F)`,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${JB.accent}88`,flexShrink:0}}>
+                    <span style={{color:JB.gold,fontWeight:900,fontSize:14}}>{(i+1).toString().padStart(2,"0")}</span>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                      <span style={{color:"#fff",fontWeight:700,fontSize:14}}>{p.name}</span>
+                      <span style={{background:`${JB.accent}44`,color:JB.light,fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:8}}>{p.pos}</span>
+                    </div>
+                    <div style={{color:"#94b8d8",fontSize:11,marginBottom:4}}>{p.club}</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                      {p.tags.map((tag,j)=><span key={j} style={{background:"rgba(255,255,255,0.06)",color:"#94b8d8",fontSize:9,padding:"1px 6px",borderRadius:6}}>{tag}</span>)}
+                    </div>
+                  </div>
+                </div>
+                <div style={{color:"#94b8d8",fontSize:11,marginTop:8,paddingLeft:54}}>💡 {p.note}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 展望タブ */}
+        {tab==="route"&&(
+          <div>
+            <div style={{background:"rgba(230,0,51,0.08)",border:"1px solid rgba(230,0,51,0.2)",borderRadius:10,padding:"8px 14px",marginBottom:12}}>
+              <div style={{color:"#FCA5A5",fontSize:11}}>⚠️ 以下はすべて仮想ルートです。実際の組み合わせは開幕後に確定します。</div>
+            </div>
+            {[
+              {label:"1位通過の場合",color:"#22C55E",bg:"rgba(34,197,94,0.08)",border:"rgba(34,197,94,0.3)",matches:["ベスト32: グループH2位と対戦（仮）","ベスト16: グループG1位の勝者と対戦（仮）","準々決勝: 上位シード国と対戦（仮）"]},
+              {label:"2位通過の場合",color:JB.light,bg:`${JB.accent}11`,border:`${JB.accent}44`,matches:["ベスト32: グループE1位と対戦（仮）","ベスト16: グループF1位の勝者と対戦（仮）","準々決勝: 反対山の強豪と対戦（仮）"]},
+              {label:"3位通過の場合",color:"#F97316",bg:"rgba(249,115,22,0.08)",border:"rgba(249,115,22,0.3)",matches:["ベスト32: 勝ち上がり相手は抽選次第（仮）","ベスト16: 各グループの強豪と対戦（仮）","準々決勝: 上位シードと対戦（仮）"]},
+            ].map((route,i)=>(
+              <div key={i} style={{...crd,background:route.bg,border:`1px solid ${route.border}`,marginBottom:10}}>
+                <div style={{color:route.color,fontWeight:700,fontSize:13,marginBottom:10}}>🇯🇵 {route.label}の仮想ルート</div>
+                {route.matches.map((m,j)=>(
+                  <div key={j} style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:6}}>
+                    <span style={{color:route.color,fontSize:12,flexShrink:0}}>▷</span>
+                    <span style={{color:"#ccc",fontSize:12,lineHeight:1.5}}>{m}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+            <div style={{background:"rgba(0,91,172,0.1)",borderRadius:10,padding:"10px 14px"}}>
+              <div style={{color:"#94b8d8",fontSize:11,lineHeight:1.8}}>
+                ※ グループFの実際の組み合わせ: 日本・オランダ・チュニジア・スウェーデン<br/>
+                ※ 決勝トーナメントの具体的な組み合わせは開幕後に確定します
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
