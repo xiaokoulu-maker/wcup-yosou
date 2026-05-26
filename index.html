@@ -764,19 +764,12 @@ function CharSVG({char}){
 function SplashScreen({onDone}){
   const [visible,setVisible]=React.useState(true);
   const [fading,setFading]=React.useState(false);
-  const [char]=React.useState(()=>{
-    const today=new Date().toDateString();
-    const saved=localStorage.getItem("splash_shown");
-    if(saved===today)return null; // 同日は2回目以降スキップ
-    return SPLASH_CHARS[Math.floor(Math.random()*SPLASH_CHARS.length)];
-  });
+  const [char]=React.useState(()=>SPLASH_CHARS[Math.floor(Math.random()*SPLASH_CHARS.length)]);
   const charRef=React.useRef(char);
 
   React.useEffect(()=>{
-    if(!char){onDone();return;}
     try{trackEvent("view_loading_animation",{character:char.id});}catch{}
-    localStorage.setItem("splash_shown",new Date().toDateString());
-    const t=setTimeout(()=>dismiss(),1600);
+    const t=setTimeout(()=>dismiss(),2500);
     return()=>clearTimeout(t);
   },[]);
 
@@ -790,7 +783,7 @@ function SplashScreen({onDone}){
     dismiss();
   };
 
-  if(!char||!visible)return null;
+  if(!visible)return null;
   const c=char.colors;
   return(
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:9999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(160deg,#061826 0%,#0B3D1E 50%,#061826 100%)`,opacity:fading?0:1,transition:"opacity 0.35s ease",userSelect:"none"}}>
