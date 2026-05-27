@@ -643,39 +643,30 @@ function BarChart({data,title}){
 
 /* ══════════ ROOT ══════════ */
 function App(){
-  const [page,setPage]=useState("loading");
-  const [splashDone,setSplashDone]=useState(false);
+  const [page,setPage]=useState("home");
   const [tourn,setTourn]=useState(null);
   const [myId,setMyId]=useState(null);
   const [adminOk,setAdminOk]=useState(false);
   const [selCountry,setSelCountry]=useState(null);
 
   useEffect(()=>{
-    let cancelled=false;
-    const timer=setTimeout(()=>{if(!cancelled){cancelled=true;setPage("home");}},3000);
-
     const init=async()=>{
       try{
         await trackEvent("site_open",{page:window.location.pathname,hash:window.location.hash});
         const hash=window.location.hash;
         if(hash.startsWith("#t-")){
           const t=await loadT(hash.slice(3));
-          if(cancelled) return;
-          setTourn(t);
-          setPage(t?"tournament":"home");
-        }else{
-          if(!cancelled) setPage("home");
+          if(t){
+            setTourn(t);
+            setPage("tournament");
+          }
         }
       }catch(e){
         console.warn("[init] failed:",e?.message||e);
-        if(!cancelled) setPage("home");
-      }finally{
-        if(!cancelled) clearTimeout(timer);
       }
     };
 
     init();
-    return()=>{cancelled=true;clearTimeout(timer);};
   },[]);
 
   const nav=useCallback((p)=>{
@@ -696,8 +687,6 @@ function App(){
 
   return(
     <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
-      {!splashDone&&<SplashScreen onDone={()=>setSplashDone(true)}/>}
-      {page==="loading"&&<PgLoad/>}
       {page==="home"&&<PgHome nav={nav} goT={goT}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
