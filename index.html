@@ -1209,10 +1209,50 @@ if(cur.participants.length>=cur.maxParticipants){
   );
 }
 
+/* ── 予想完了・共有ボックス ── */
+function ShareBox({pred,tournId,nav}){
+  const [copied,setCopied]=useState(false);
+  const BASE="https://xiaokoulu-maker.github.io/wcup-yosou/";
+  const url=tournId?`${window.location.origin}${window.location.pathname}#t-${tournId}`:BASE;
+  const winner=pred?.winner||"？";
+  const japanResult=pred?.japanResult||"？";
+  const shareText=`私の2026W杯優勝予想は【${winner}】！\n日本代表は【${japanResult}】予想です。\n\nあなたも予想してみて👇\n${url}\n\n#W杯予想 #サッカー日本代表 #WorldCup2026`;
+  const xUrl=`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+  const lineUrl=`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
+  const copy=async()=>{
+    try{await navigator.clipboard.writeText(url);setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{}
+  };
+  return(
+    <div>
+      <div style={{background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:14,padding:16,textAlign:"center",marginBottom:16}}>
+        <div style={{fontSize:32,marginBottom:6}}>✅</div>
+        <div style={{color:"#22C55E",fontWeight:700,fontSize:15,marginBottom:4}}>予想を保存しました！</div>
+        <div style={{color:G.muted,fontSize:12}}>友だちにシェアして予想対決しよう🔥</div>
+      </div>
+      <div style={{color:G.muted,fontSize:11,fontWeight:700,letterSpacing:1,marginBottom:8}}>📤 シェアする</div>
+      <div style={{display:"flex",gap:8,marginBottom:8}}>
+        <a href={xUrl} target="_blank" rel="noopener noreferrer"
+          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,
+            background:"#000",color:"#fff",borderRadius:12,padding:"11px 6px",
+            fontWeight:700,textDecoration:"none",fontSize:13}}>𝕏 で投稿</a>
+        <a href={lineUrl} target="_blank" rel="noopener noreferrer"
+          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,
+            background:"#06C755",color:"#fff",borderRadius:12,padding:"11px 6px",
+            fontWeight:700,textDecoration:"none",fontSize:13}}>📱 LINEで共有</a>
+      </div>
+      <button onClick={copy} style={{...btnGr,padding:"11px 20px",fontSize:13,
+        color:copied?"#22C55E":G.muted,borderColor:copied?"rgba(34,197,94,0.4)":"#1A4A28"}}>
+        {copied?"✅ コピーしました":"🔗 URLをコピー"}
+      </button>
+      <button style={{...btnO,marginTop:10}} onClick={()=>nav("predictions")}>みんなの予想を見る →</button>
+    </div>
+  );
+}
+
 /* ── Predict ── */
 function PgPredict({tourn:t,nav,update,myId}){
   const [pred,setPred]=useState({winner:"",runnerUp:"",topScorer:"",japanResult:"",favoriteCountry:"",comment:""});
-  const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
+  const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const [saved,setSaved]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
   if(isDeadlinePassed(t.deadline))return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
       <div style={{background:"rgba(255,60,60,0.1)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
@@ -1226,7 +1266,7 @@ function PgPredict({tourn:t,nav,update,myId}){
 setLoading(true);const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("締め切りが終了しています");setLoading(false);return;}
 const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,predictions:pred,points:cur.results?calcPts(pred,cur.results):0}:p)};
-await update(updated);nav("predictions");setLoading(false);
+await update(updated);setSaved(true);setLoading(false);
   };
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
@@ -1241,7 +1281,10 @@ await update(updated);nav("predictions");setLoading(false);
         <div style={{marginBottom:18}}><label style={lbl}>❤️ 一番応援している国 ＊</label><Chips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
         <div><label style={lbl}>💬 一言コメント</label><textarea style={{...inp,height:72,resize:"none"}} placeholder="予想の根拠や意気込みを！" value={pred.comment} onChange={e=>set("comment")(e.target.value)}/></div>
       </div>
-      <Err msg={err}/><button style={btnG} onClick={save} disabled={loading}>{loading?"保存中...":"💾 予想を保存する"}</button>
+      {saved
+        ?<ShareBox pred={pred} tournId={t?.id} nav={nav}/>
+        :<><Err msg={err}/><button style={btnG} onClick={save} disabled={loading}>{loading?"保存中...":"💾 予想を保存する"}</button></>
+      }
     </div>
   );
 }
