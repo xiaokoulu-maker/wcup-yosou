@@ -706,7 +706,6 @@ function App(){
 
   return(
     <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
-      {!splashDone&&<SplashScreen onDone={()=>setSplashDone(true)}/>}
       {page==="home"&&<PgHome nav={nav} goT={goT}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
@@ -729,102 +728,6 @@ function App(){
       {page==="singlepred"&&<PgSinglePred nav={nav} tourn={tourn} update={update} myId={myId}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
       {page==="globalstats"&&<PgGlobalStats nav={nav}/>}
-    </div>
-  );
-}
-
-/* ── 起動アニメーション：トロフィー演出 ── */
-function SplashScreen({onDone}){
-  const [visible,setVisible]=React.useState(true);
-  const [fading,setFading]=React.useState(false);
-
-  React.useEffect(()=>{
-    try{trackEvent("view_loading_animation",{character:"trophy"});}catch{}
-    const t=setTimeout(()=>dismiss(),2300);
-    return()=>clearTimeout(t);
-  },[]);
-
-  const dismiss=()=>{
-    if(!visible)return;
-    setFading(true);
-    setTimeout(()=>{setVisible(false);onDone();},380);
-  };
-  const skip=()=>{
-    try{trackEvent("skip_loading_animation",{character:"trophy"});}catch{}
-    dismiss();
-  };
-
-  if(!visible)return null;
-
-  return(
-    <div style={{
-      position:"fixed",inset:0,zIndex:9999,overflow:"hidden",
-      width:"100%",height:"100dvh",minHeight:"100dvh",
-      background:"linear-gradient(160deg,#061826 0%,#0B3D1E 55%,#061826 100%)",
-      opacity:fading?0:1,transition:"opacity 0.38s ease",
-    }}>
-      {/* ピッチライン（薄く） */}
-      <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}
-        viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" style={{opacity:0.07}}>
-        {[0,1,2,3,4,5,6,7].map(i=><rect key={i} x="0" y={i*88} width="400" height="44"
-          fill={i%2===0?"#0a3318":"#0c3d1e"} opacity="0.8"/>)}
-        <rect x="25" y="25" width="350" height="650" fill="none" stroke="rgba(34,197,94,0.18)" strokeWidth="2"/>
-        <line x1="25" y1="350" x2="375" y2="350" stroke="rgba(34,197,94,0.15)" strokeWidth="2"/>
-        <circle cx="200" cy="350" r="65" fill="none" stroke="rgba(34,197,94,0.15)" strokeWidth="2"/>
-        <circle cx="200" cy="350" r="3" fill="rgba(34,197,94,0.3)"/>
-      </svg>
-
-      {/* スタジアムライトビーム（4コーナー） */}
-      {[{l:"12%",t:"0",r:"-15deg"},{l:"88%",t:"0",r:"15deg"},{l:"5%",t:"60%",r:"-8deg"},{l:"95%",t:"60%",r:"8deg"}].map((b,i)=>(
-        <div key={i} style={{
-          position:"absolute",left:b.l,top:b.t,
-          width:3,height:"45%",
-          background:`linear-gradient(180deg,rgba(250,204,21,0.35) 0%,rgba(250,204,21,0) 100%)`,
-          transform:`rotate(${b.r}) translateX(-50%)`,
-          transformOrigin:"top center",
-          animation:`lightBeam ${1.4+i*0.3}s ease-in-out infinite`,
-          animationDelay:`${i*0.2}s`,
-        }}/>
-      ))}
-
-      {/* 光の粒子 */}
-      {[[-80,200],[60,280],[-120,340],[100,180],[0,260],[80,320],[-50,240]].map(([x,y],i)=>(
-        <div key={i} style={{
-          position:"absolute",
-          left:`calc(50% + ${x}px)`,top:`calc(50% + ${y-80}px)`,
-          width:i%2===0?3:2,height:i%2===0?3:2,borderRadius:"50%",
-          background:"rgba(250,204,21,0.6)",
-          animation:`particleRise ${1.2+i*0.15}s ease-out infinite`,
-          animationDelay:`${i*0.18}s`,
-        }}/>
-      ))}
-
-      {/* 中央グロー */}
-      <div style={{
-        position:"absolute",top:"50%",left:"50%",
-        transform:"translate(-50%,-50%)",
-        width:"min(280px,40vw)",height:"min(280px,40vw)",borderRadius:"50%",
-        background:"radial-gradient(circle,rgba(250,204,21,0.12) 0%,rgba(250,204,21,0) 70%)",
-        animation:"trophyGlow 2s ease-in-out infinite",
-      }}/>
-
-      {/* ロゴ */}
-      <div style={{
-        position:"absolute",top:"50%",left:"50%",
-        transform:"translate(-50%,-50%)",
-        display:"flex",alignItems:"center",justifyContent:"center",width:"fit-content"
-      }}>
-        <img src={LOGO_IMG} alt="W杯予想メーカー" style={{width:"clamp(120px,42vw,180px)",height:"clamp(120px,42vw,180px)",borderRadius:"50%",objectFit:"cover",boxShadow:"0 0 40px rgba(250,204,21,0.5), 0 0 80px rgba(250,204,21,0.2)",animation:"trophyIn 0.9s cubic-bezier(.2,0,.4,1) forwards, trophyGlow 2s ease-in-out 0.9s infinite"}}/>
-      </div>
-
-      {/* Skip */}
-      <button onClick={skip} style={{
-        position:"absolute",bottom:28,right:18,
-        background:"rgba(255,255,255,0.05)",
-        border:"1px solid rgba(255,255,255,0.1)",
-        borderRadius:20,color:"rgba(255,255,255,0.3)",
-        fontSize:11,padding:"5px 14px",cursor:"pointer",zIndex:10,
-      }}>Skip ▶</button>
     </div>
   );
 }
@@ -3132,15 +3035,9 @@ function PgGlobalChat({nav}){
 }
 
 
-/* ── GlobalStats ── */
-function PgGlobalStats({nav}){
-  const [stats,setStats]=useState(null);
-  const [loading,setLoading]=useState(true);
-  useEffect(()=>{
-    (async()=>{const s=await fetchGlobalStats();setStats(s);setLoading(false);})();
-  },[]);
-  const noData=<div style={{color:G.muted,textAlign:"center",padding:"24px 0",fontSize:13}}>まだ予想データがありません</div>;
-  const BarRow=({label,count,pct,flag})=>(
+/* ── GlobalStats BarRow（外部コンポーネント） ── */
+function GsBarRow({label,count,pct,flag}){
+  return(
     <div style={{marginBottom:10}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -3154,6 +3051,14 @@ function PgGlobalStats({nav}){
       </div>
     </div>
   );
+}
+/* ── GlobalStats ── */
+function PgGlobalStats({nav}){
+  const [stats,setStats]=useState(null);
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{
+    (async()=>{const s=await fetchGlobalStats();setStats(s);setLoading(false);})();
+  },[]);
   return(
     <div style={{paddingBottom:40}}>
       <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden"}}>
@@ -3165,7 +3070,7 @@ function PgGlobalStats({nav}){
         {loading?(
           <div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>読み込み中...</div>
         ):(!stats?(
-          noData
+          <div style={{color:G.muted,textAlign:"center",padding:"24px 0",fontSize:13}}>まだ予想データがありません</div>
         ):(
           <>
             <div style={{...crd,marginBottom:14,textAlign:"center"}}>
@@ -3174,21 +3079,25 @@ function PgGlobalStats({nav}){
             </div>
             <div style={{...crd,marginBottom:14}}>
               <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12,letterSpacing:1}}>🥇 優勝予想ランキング</div>
-              {stats.champRank.length===0?noData:stats.champRank.slice(0,10).map(([c,n])=>(
-                <BarRow key={c} label={c} count={n} pct={Math.round(n*100/stats.total)} flag={true}/>
+              {stats.champRank.length===0?(
+                <div style={{color:G.muted,textAlign:"center",padding:"24px 0",fontSize:13}}>まだ予想データがありません</div>
+              ):stats.champRank.slice(0,10).map(([c,n])=>(
+                <GsBarRow key={c} label={c} count={n} pct={Math.round(n*100/stats.total)} flag={true}/>
               ))}
             </div>
             <div style={{...crd,marginBottom:14}}>
               <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12,letterSpacing:1}}>🇯🇵 日本代表成績予想ランキング</div>
-              {stats.japRank.length===0?noData:stats.japRank.map(([r,n])=>(
-                <BarRow key={r} label={r} count={n} pct={Math.round(n*100/stats.total)} flag={false}/>
+              {stats.japRank.length===0?(
+                <div style={{color:G.muted,textAlign:"center",padding:"24px 0",fontSize:13}}>まだ予想データがありません</div>
+              ):stats.japRank.map(([r,n])=>(
+                <GsBarRow key={r} label={r} count={n} pct={Math.round(n*100/stats.total)} flag={false}/>
               ))}
             </div>
             {stats.playerRank.length>0?(
               <div style={{...crd,marginBottom:14}}>
                 <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12,letterSpacing:1}}>🌟 期待されている日本代表選手ランキング</div>
                 {stats.playerRank.slice(0,10).map(([name,n])=>(
-                  <BarRow key={name} label={name} count={n} pct={Math.round(n*100/stats.playerRank[0][1])} flag={false}/>
+                  <GsBarRow key={name} label={name} count={n} pct={Math.round(n*100/stats.playerRank[0][1])} flag={false}/>
                 ))}
               </div>
             ):null}
