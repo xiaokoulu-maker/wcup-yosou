@@ -773,6 +773,7 @@ function PgHome({nav,goT}){
 
   // メニューカード定義
   const MENU_CARDS=[
+    {icon:"⚽",label:"予想する",   sub:"優勝国・日本代表成績を入力",action:()=>nav("predict"),color:"#22C55E",bg:"rgba(34,197,94,0.12)", border:"rgba(34,197,94,0.3)"},
     {icon:"🤖",label:"AI優勝予想",sub:"複数市場データの加重平均",action:()=>nav("ai"),      color:"#0EA5E9",bg:"rgba(14,165,233,0.1)",  border:"rgba(14,165,233,0.25)"},
     {icon:"📅",label:"試合日程",  sub:"全試合スケジュール・結果",action:()=>nav("schedule"), color:"#22C55E",bg:"rgba(34,197,94,0.1)",   border:"rgba(34,197,94,0.25)"},
     {icon:"🗂️",label:"グループ表",sub:"全12グループ・FIFAランク",action:()=>nav("groups"),   color:"#FACC15",bg:"rgba(250,204,21,0.08)",  border:"rgba(250,204,21,0.2)"},
@@ -1253,6 +1254,16 @@ function ShareBox({pred,tournId,nav}){
 function PgPredict({tourn:t,nav,update,myId}){
   const [pred,setPred]=useState({winner:"",runnerUp:"",topScorer:"",japanResult:"",favoriteCountry:"",comment:""});
   const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const [saved,setSaved]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
+  if(!t)return(
+    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("home")}/>
+      <div style={{background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
+        <div style={{fontSize:40,marginBottom:12}}>⚽</div>
+        <div style={{color:"#22C55E",fontWeight:700,fontSize:16,marginBottom:8}}>まず大会に参加してください</div>
+        <div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>大会IDで参加するか、新しい大会を作成してから予想を入力できます。</div>
+        <button style={{...btnO,marginTop:16}} onClick={()=>nav("home")}>← トップへ戻る</button>
+      </div>
+    </div>
+  );
   if(isDeadlinePassed(t.deadline))return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
       <div style={{background:"rgba(255,60,60,0.1)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
