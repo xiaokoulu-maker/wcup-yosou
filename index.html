@@ -749,6 +749,7 @@ function SplashScreen({onDone}){
   return(
     <div style={{
       position:"fixed",inset:0,zIndex:9999,overflow:"hidden",
+      width:"100%",height:"100dvh",minHeight:"100dvh",
       background:"linear-gradient(160deg,#061826 0%,#0B3D1E 55%,#061826 100%)",
       opacity:fading?0:1,transition:"opacity 0.38s ease",
     }}>
@@ -790,7 +791,7 @@ function SplashScreen({onDone}){
 
       {/* 中央グロー */}
       <div style={{
-        position:"absolute",top:"45%",left:"50%",
+        position:"absolute",top:"50%",left:"50%",
         transform:"translate(-50%,-50%)",
         width:"min(280px,40vw)",height:"min(280px,40vw)",borderRadius:"50%",
         background:"radial-gradient(circle,rgba(250,204,21,0.12) 0%,rgba(250,204,21,0) 70%)",
@@ -800,10 +801,10 @@ function SplashScreen({onDone}){
       {/* ロゴ */}
       <div style={{
         position:"absolute",top:"50%",left:"50%",
-        transform:"translate(-50%,-60%)",
+        transform:"translate(-50%,-50%)",
         animation:"trophyIn 0.9s cubic-bezier(.2,0,.4,1) forwards, trophyGlow 2s ease-in-out 0.9s infinite",
       }}>
-        <img src={LOGO_IMG} alt="W杯予想メーカー" style={{width:"min(200px,30vw)",height:"min(200px,30vw)",borderRadius:"50%",objectFit:"cover",boxShadow:"0 0 40px rgba(250,204,21,0.5), 0 0 80px rgba(250,204,21,0.2)"}}/>
+        <img src={LOGO_IMG} alt="W杯予想メーカー" style={{width:"clamp(120px,42vw,180px)",height:"clamp(120px,42vw,180px)",borderRadius:"50%",objectFit:"cover",boxShadow:"0 0 40px rgba(250,204,21,0.5), 0 0 80px rgba(250,204,21,0.2)"}}/>
       </div>
 
       {/* Skip */}
