@@ -48,12 +48,13 @@ textarea:focus{border-color:rgba(250,204,21,0.7) !important;box-shadow:0 0 0 3px
 
 const SUPABASE_URL="https://evodfdwgcogviscdnveb.supabase.co";
 const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2b2RmZHdnY29ndmlzY2RudmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODIwNTUsImV4cCI6MjA5NTE1ODA1NX0.nevoums6mBnp0bK8vmRqCIJI4rcr04nPnwBmQtt-9oU";
-const {createClient}=supabase;
-const db=createClient(SUPABASE_URL,SUPABASE_ANON);
+const supabaseClient=window.supabase?.createClient?window.supabase:supabase;
+const db=supabaseClient?.createClient?supabaseClient.createClient(SUPABASE_URL,SUPABASE_ANON):null;
 // ═══════════════════════════════
 // アクセス解析・行動ログ
 // ═══════════════════════════════
 async function trackEvent(eventName, meta={}){
+  if(!db) return;
   try{
     await db.from("events").insert({
       event_name: eventName,
@@ -68,12 +69,13 @@ async function trackEvent(eventName, meta={}){
 }
 
 function dbToApp(d){return{id:d.id,name:d.name,creatorName:d.creator_name,maxParticipants:d.max_participants,adminPasscode:d.admin_passcode,participants:d.participants||[],results:d.results||null,plan:d.plan||"free",deadline:d.deadline||null,predictionSettings:d.prediction_settings||null,allowLateJoin:d.allow_late_join!==false,createdAt:d.created_at};}
-async function loadT(id){try{const{data,error}=await db.from("tournaments").select("*").eq("id",id).single();if(error||!data)return null;return dbToApp(data);}catch{return null;}}
-async function saveT(t){try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null,prediction_settings:t.predictionSettings||null,allow_late_join:t.allowLateJoin!==false},{onConflict:"id"});}catch(e){console.error(e);}}
-function subscribeToTournament(id,onUpdate){const ch=db.channel("t-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"tournaments",filter:`id=eq.${id}`},p=>{if(p.new)onUpdate(dbToApp(p.new));}).subscribe();return()=>db.removeChannel(ch);}
+async function loadT(id){if(!db) return null;try{const{data,error}=await db.from("tournaments").select("*").eq("id",id).single();if(error||!data)return null;return dbToApp(data);}catch{return null;}}
+async function saveT(t){if(!db) return;try{await db.from("tournaments").upsert({id:t.id,name:t.name,creator_name:t.creatorName,max_participants:t.maxParticipants,admin_passcode:t.adminPasscode,participants:t.participants,results:t.results,plan:t.plan||"free",deadline:t.deadline||null,prediction_settings:t.predictionSettings||null,allow_late_join:t.allowLateJoin!==false},{onConflict:"id"});}catch(e){console.error(e);}}
+function subscribeToTournament(id,onUpdate){if(!db) return ()=>{};const ch=db.channel("t-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"tournaments",filter:`id=eq.${id}`},p=>{if(p.new)onUpdate(dbToApp(p.new));}).subscribe();return()=>db.removeChannel(ch);}
 
 // チャット: メッセージ取得
 async function fetchMessages(tournamentId,limit=50){
+  if(!db) return [];
   try{
     let q=db.from("messages").select("*").order("created_at",{ascending:true}).limit(limit);
     if(tournamentId) q=q.eq("tournament_id",tournamentId);
@@ -84,6 +86,7 @@ async function fetchMessages(tournamentId,limit=50){
 }
 // チャット: メッセージ送信
 async function sendMessage(tournamentId,nickname,icon,body){
+  if(!db) return false;
   try{
     const row={nickname,icon,body};
     if(tournamentId) row.tournament_id=tournamentId;
@@ -93,6 +96,7 @@ async function sendMessage(tournamentId,nickname,icon,body){
 }
 // チャット: リアルタイム購読
 function subscribeToChat(tournamentId,onNew){
+  if(!db) return ()=>{};
   const chName="chat-"+(tournamentId||"global");
   const ch=db.channel(chName).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},p=>{
     if(!p.new)return;
@@ -647,10 +651,31 @@ function App(){
   const [selCountry,setSelCountry]=useState(null);
 
   useEffect(()=>{
-    trackEvent("site_open",{page:window.location.pathname,hash:window.location.hash});
-    const hash=window.location.hash;
-    if(hash.startsWith("#t-")){loadT(hash.slice(3)).then(t=>{setTourn(t);setPage(t?"tournament":"home");});}
-    else setPage("home");
+    let cancelled=false;
+    const timer=setTimeout(()=>{if(!cancelled){cancelled=true;setPage("home");}},3000);
+
+    const init=async()=>{
+      try{
+        await trackEvent("site_open",{page:window.location.pathname,hash:window.location.hash});
+        const hash=window.location.hash;
+        if(hash.startsWith("#t-")){
+          const t=await loadT(hash.slice(3));
+          if(cancelled) return;
+          setTourn(t);
+          setPage(t?"tournament":"home");
+        }else{
+          if(!cancelled) setPage("home");
+        }
+      }catch(e){
+        console.warn("[init] failed:",e?.message||e);
+        if(!cancelled) setPage("home");
+      }finally{
+        if(!cancelled) clearTimeout(timer);
+      }
+    };
+
+    init();
+    return()=>{cancelled=true;clearTimeout(timer);};
   },[]);
 
   const nav=useCallback((p)=>{
