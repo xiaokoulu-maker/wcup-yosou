@@ -108,8 +108,27 @@ function subscribeToChat(tournamentId,onNew){
   return()=>db.removeChannel(ch);
 }
 
-
-
+// 全体匿名集計: participants の winner / japanResult / japanMvp のみ集約
+async function fetchGlobalStats(){
+  if(!db) return null;
+  try{
+    const{data,error}=await db.from("tournaments").select("participants");
+    if(error||!data||data.length===0) return null;
+    const all=data.flatMap(t=>t.participants||[]).filter(p=>p.predictions);
+    if(all.length===0) return null;
+    const total=all.length;
+    const champMap={};
+    all.forEach(p=>{if(p.predictions.winner){const k=p.predictions.winner;champMap[k]=(champMap[k]||0)+1;}});
+    const champRank=Object.entries(champMap).sort((a,b)=>b[1]-a[1]);
+    const japMap={};
+    all.forEach(p=>{if(p.predictions.japanResult){const k=p.predictions.japanResult;japMap[k]=(japMap[k]||0)+1;}});
+    const japRank=Object.entries(japMap).sort((a,b)=>b[1]-a[1]);
+    const playerMap={};
+    all.forEach(p=>{if(p.predictions.japanMvp){const k=p.predictions.japanMvp.trim();if(k)playerMap[k]=(playerMap[k]||0)+1;}});
+    const playerRank=Object.entries(playerMap).sort((a,b)=>b[1]-a[1]);
+    return{total,champRank,japRank,playerRank};
+  }catch(e){console.warn("[globalStats]",e.message);return null;}
+}
 
 // AI優勝確率データ
 // 参照ソース(2026年5月25日時点):
@@ -687,6 +706,7 @@ function App(){
 
   return(
     <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
+      {!splashDone&&<SplashScreen onDone={()=>setSplashDone(true)}/>}
       {page==="home"&&<PgHome nav={nav} goT={goT}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
@@ -708,6 +728,7 @@ function App(){
       {page==="survival"&&<PgSurvival nav={nav} tourn={tourn} update={update}/>}
       {page==="singlepred"&&<PgSinglePred nav={nav} tourn={tourn} update={update} myId={myId}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
+      {page==="globalstats"&&<PgGlobalStats nav={nav}/>}
     </div>
   );
 }
@@ -855,6 +876,7 @@ function PgHome({nav,goT}){
     {icon:"🏆",label:"トーナメント",sub:"決勝T表・予想マップ",   action:()=>nav("bracket"),  color:"#F97316",bg:"rgba(249,115,22,0.08)", border:"rgba(249,115,22,0.2)"},
     {icon:"🇯🇵",label:"日本代表",  sub:"選手・成績・展望データ",  action:()=>{nav("japan");trackEvent("open_japan_mode",{page:"home"});},color:"#7DD3FC",bg:"rgba(0,91,172,0.12)",border:"rgba(14,165,233,0.3)"},
     {icon:"💬",label:"全体チャット",sub:"W杯について語ろう",      action:()=>nav("globalchat"),color:"#A78BFA",bg:"rgba(139,92,246,0.1)",border:"rgba(139,92,246,0.25)"},
+    {icon:"📊",label:"みんなの予想データ",sub:"全体の匿名集計ランキング",action:()=>nav("globalstats"),color:"#F97316",bg:"rgba(249,115,22,0.08)",border:"rgba(249,115,22,0.2)"},
   ];
 
   return(
@@ -3109,6 +3131,73 @@ function PgGlobalChat({nav}){
   );
 }
 
+
+/* ── GlobalStats ── */
+function PgGlobalStats({nav}){
+  const [stats,setStats]=useState(null);
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{
+    (async()=>{const s=await fetchGlobalStats();setStats(s);setLoading(false);})();
+  },[]);
+  const noData=<div style={{color:G.muted,textAlign:"center",padding:"24px 0",fontSize:13}}>まだ予想データがありません</div>;
+  const BarRow=({label,count,pct,flag})=>(
+    <div style={{marginBottom:10}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          {flag&&<FlagImg country={label} size={18}/>}
+          <span style={{color:"#eee",fontSize:13}}>{label}</span>
+        </div>
+        <span style={{color:G.gold,fontWeight:700,fontSize:13}}>{count}人</span>
+      </div>
+      <div style={{background:"rgba(0,0,0,0.4)",borderRadius:6,height:7,overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(90deg,#FACC15,#22C55E)",height:"100%",borderRadius:6,width:pct+"%"}}/>
+      </div>
+    </div>
+  );
+  return(
+    <div style={{paddingBottom:40}}>
+      <div style={{background:"linear-gradient(180deg,#0B3D1E 0%,#061826 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden"}}>
+        <Back onClick={()=>nav("home")}/>
+        <div style={{color:G.gold,fontSize:22,fontWeight:900}}>📊 みんなの予想データ</div>
+        <div style={{color:G.muted,fontSize:12,marginTop:4}}>全体の匿名集計データ</div>
+      </div>
+      <div style={{padding:"14px 16px"}}>
+        {loading?(
+          <div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>読み込み中...</div>
+        ):(!stats?(
+          noData
+        ):(
+          <>
+            <div style={{...crd,marginBottom:14,textAlign:"center"}}>
+              <div style={{color:G.muted,fontSize:12,marginBottom:4}}>総予想数</div>
+              <div style={{color:G.gold,fontSize:36,fontWeight:900}}>{stats.total}<span style={{fontSize:16,color:G.muted,fontWeight:400}}> 件</span></div>
+            </div>
+            <div style={{...crd,marginBottom:14}}>
+              <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12,letterSpacing:1}}>🥇 優勝予想ランキング</div>
+              {stats.champRank.length===0?noData:stats.champRank.slice(0,10).map(([c,n])=>(
+                <BarRow key={c} label={c} count={n} pct={Math.round(n*100/stats.total)} flag={true}/>
+              ))}
+            </div>
+            <div style={{...crd,marginBottom:14}}>
+              <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12,letterSpacing:1}}>🇯🇵 日本代表成績予想ランキング</div>
+              {stats.japRank.length===0?noData:stats.japRank.map(([r,n])=>(
+                <BarRow key={r} label={r} count={n} pct={Math.round(n*100/stats.total)} flag={false}/>
+              ))}
+            </div>
+            {stats.playerRank.length>0?(
+              <div style={{...crd,marginBottom:14}}>
+                <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:12,letterSpacing:1}}>🌟 期待されている日本代表選手ランキング</div>
+                {stats.playerRank.slice(0,10).map(([name,n])=>(
+                  <BarRow key={name} label={name} count={n} pct={Math.round(n*100/stats.playerRank[0][1])} flag={false}/>
+                ))}
+              </div>
+            ):null}
+          </>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 
