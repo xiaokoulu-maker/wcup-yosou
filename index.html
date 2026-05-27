@@ -262,11 +262,47 @@ const STRIPE={
 };
 // 無料プランは5人まで
 const FREE_LIMIT=5;
+function getPlanLimit(plan){
+  if(plan==="standard") return STRIPE.standard.people;
+  if(plan==="premium")  return STRIPE.premium.people;
+  if(plan==="group")    return STRIPE.group.people;
+  return FREE_LIMIT;
+}
+function getRequiredPlanByPeople(count){
+  if(count<=FREE_LIMIT)              return {key:"free",    label:"無料",       price:0,                    people:FREE_LIMIT,          url:""};
+  if(count<=STRIPE.standard.people)  return {key:"standard",...STRIPE.standard};
+  if(count<=STRIPE.premium.people)   return {key:"premium", ...STRIPE.premium};
+  return                                    {key:"group",   ...STRIPE.group};
+}
 
 const {useState,useEffect,useCallback}=React;
 
 const COUNTRIES=["日本","ブラジル","アルゼンチン","フランス","イングランド","スペイン","ドイツ","ポルトガル","オランダ","イタリア","クロアチア","ベルギー","その他"];
 const JAPAN_RES=["グループステージ敗退","ベスト32","ベスト16","ベスト8","ベスト4","準優勝","優勝"];
+const TOP_SCORER_CANDIDATES=[
+  {name:"エムバペ",      country:"フランス"},
+  {name:"ハーランド",    country:"ノルウェー"},
+  {name:"ヴィニシウス",  country:"ブラジル"},
+  {name:"ロドリゴ",      country:"ブラジル"},
+  {name:"エンドリック",  country:"ブラジル"},
+  {name:"ケイン",        country:"イングランド"},
+  {name:"ベリンガム",    country:"イングランド"},
+  {name:"ラウタロ",      country:"アルゼンチン"},
+  {name:"アルバレス",    country:"アルゼンチン"},
+  {name:"ムシアラ",      country:"ドイツ"},
+  {name:"ハバーツ",      country:"ドイツ"},
+  {name:"ヤマル",        country:"スペイン"},
+  {name:"モラタ",        country:"スペイン"},
+  {name:"ガクポ",        country:"オランダ"},
+  {name:"ルカク",        country:"ベルギー"},
+  {name:"デ・ブライネ",  country:"ベルギー"},
+  {name:"C.ロナウド",    country:"ポルトガル"},
+  {name:"グリーズマン",  country:"フランス"},
+  {name:"上田 綺世",     country:"日本"},
+  {name:"浅野 拓磨",     country:"日本"},
+  {name:"プリシッチ",    country:"アメリカ"},
+  {name:"その他",        country:""},
+];
 const ICONS=["⚽","🇯🇵","🦁","🐶","🐵","🐺","🦅","🔥","👑","🏆"];
 
 const FIFA_RANK={
@@ -639,6 +675,70 @@ function Badge({label:lb,val}){return<div style={{background:"rgba(4,14,7,0.7)",
 function FlagImg({code,country,size=26}){const c=code||(WC_GROUPS.flatMap(g=>g.teams).find(t=>t.n===country)?.f)||null;if(!c)return<span style={{fontSize:size*0.7}}>🏳️</span>;return<img src={`https://flagcdn.com/w40/${c}.png`} alt={country} style={{width:size,height:size*0.67,objectFit:"cover",borderRadius:3,verticalAlign:"middle"}} onError={e=>e.target.style.display="none"}/>;}
 function FIFARank({country,small}){const r=FIFA_RANK[country];if(!r)return null;return<span style={{background:"rgba(247,201,72,0.1)",color:G.gold,fontSize:small?9:10,fontWeight:700,padding:"2px 6px",borderRadius:8,marginLeft:4,border:"1px solid rgba(247,201,72,0.2)"}}>FIFA {r}位</span>;}
 
+function FlagChips({opts,value,onChange}){
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {opts.map(c=>(
+        <button key={c} onClick={()=>onChange(c)} style={{
+          background:value===c?"linear-gradient(135deg,#F7C948,#E8B830)":"rgba(4,14,7,0.8)",
+          color:value===c?"#0A1400":"#9AB5A0",
+          border:`1.5px solid ${value===c?"#F7C948":"#1A4A28"}`,
+          borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",
+          fontWeight:value===c?700:400,lineHeight:1.3,minHeight:44,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+        }}>
+          <FlagImg country={c} size={16}/><span>{c}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+function PlayerChips({opts,value,onChange}){
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      <button onClick={()=>onChange("")} style={{
+        gridColumn:"1/-1",background:value===""?"rgba(107,114,128,0.15)":"rgba(4,14,7,0.8)",
+        color:"#9AB5A0",border:`1.5px solid ${value===""?"#6B7280":"#1A4A28"}`,
+        borderRadius:10,padding:"8px",fontSize:11,cursor:"pointer",fontWeight:400,
+      }}>選択しない</button>
+      {opts.map(p=>(
+        <button key={p.name} onClick={()=>onChange(value===p.name?"":p.name)} style={{
+          background:value===p.name?"linear-gradient(135deg,#F7C948,#E8B830)":"rgba(4,14,7,0.8)",
+          color:value===p.name?"#0A1400":"#9AB5A0",
+          border:`1.5px solid ${value===p.name?"#F7C948":"#1A4A28"}`,
+          borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",
+          fontWeight:value===p.name?700:400,lineHeight:1.4,minHeight:52,textAlign:"left",
+        }}>
+          <div style={{fontSize:12,fontWeight:"inherit"}}>{p.name}</div>
+          <div style={{fontSize:9,opacity:0.65,marginTop:2}}>{p.pos} · {p.club}</div>
+        </button>
+      ))}
+    </div>
+  );
+}
+function ScorerChips({opts,value,onChange}){
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {opts.map(s=>(
+        <button key={s.name} onClick={()=>onChange(s.name)} style={{
+          background:value===s.name?"linear-gradient(135deg,#F7C948,#E8B830)":"rgba(4,14,7,0.8)",
+          color:value===s.name?"#0A1400":"#9AB5A0",
+          border:`1.5px solid ${value===s.name?"#F7C948":"#1A4A28"}`,
+          borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",
+          fontWeight:value===s.name?700:400,lineHeight:1.4,minHeight:48,
+          display:"flex",alignItems:"center",gap:6,
+        }}>
+          {s.country?<FlagImg country={s.country} size={14}/>:<span style={{width:14}}/>}
+          <div>
+            <div style={{fontSize:12,fontWeight:"inherit"}}>{s.name}</div>
+            {s.country&&<div style={{fontSize:9,opacity:0.65}}>{s.country}</div>}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // シンプルバーチャート
 function BarChart({data,title}){
   const max=Math.max(...data.map(d=>d.count),1);
@@ -728,6 +828,8 @@ function App(){
       {page==="singlepred"&&<PgSinglePred nav={nav} tourn={tourn} update={update} myId={myId}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
       {page==="globalstats"&&<PgGlobalStats nav={nav}/>}
+      {page==="solopredict"&&<PgSoloPredict nav={nav}/>}
+      {page==="moremenu"&&<PgMoreMenu nav={nav}/>}
     </div>
   );
 }
@@ -771,16 +873,15 @@ function PgHome({nav,goT}){
     );
   };
 
-  // メニューカード定義
-  const MENU_CARDS=[
-    {icon:"⚽",label:"予想する",   sub:"優勝国・日本代表成績を入力",action:()=>nav("predict"),color:"#22C55E",bg:"rgba(34,197,94,0.12)", border:"rgba(34,197,94,0.3)"},
-    {icon:"🤖",label:"AI優勝予想",sub:"複数市場データの加重平均",action:()=>nav("ai"),      color:"#0EA5E9",bg:"rgba(14,165,233,0.1)",  border:"rgba(14,165,233,0.25)"},
-    {icon:"📅",label:"試合日程",  sub:"全試合スケジュール・結果",action:()=>nav("schedule"), color:"#22C55E",bg:"rgba(34,197,94,0.1)",   border:"rgba(34,197,94,0.25)"},
-    {icon:"🗂️",label:"グループ表",sub:"全12グループ・FIFAランク",action:()=>nav("groups"),   color:"#FACC15",bg:"rgba(250,204,21,0.08)",  border:"rgba(250,204,21,0.2)"},
-    {icon:"🏆",label:"トーナメント",sub:"決勝T表・予想マップ",   action:()=>nav("bracket"),  color:"#F97316",bg:"rgba(249,115,22,0.08)", border:"rgba(249,115,22,0.2)"},
-    {icon:"🇯🇵",label:"日本代表",  sub:"選手・成績・展望データ",  action:()=>{nav("japan");trackEvent("open_japan_mode",{page:"home"});},color:"#7DD3FC",bg:"rgba(0,91,172,0.12)",border:"rgba(14,165,233,0.3)"},
-    {icon:"💬",label:"全体チャット",sub:"W杯について語ろう",      action:()=>nav("globalchat"),color:"#A78BFA",bg:"rgba(139,92,246,0.1)",border:"rgba(139,92,246,0.25)"},
-    {icon:"📊",label:"みんなの予想データ",sub:"全体の匿名集計ランキング",action:()=>nav("globalstats"),color:"#F97316",bg:"rgba(249,115,22,0.08)",border:"rgba(249,115,22,0.2)"},
+  // ① まず予想する
+  const CARDS_PREDICT=[
+    {icon:"👤",label:"今すぐ個人予想",sub:"大会に参加せず、自分だけの予想を作成",action:()=>nav("solopredict"),color:G.gold,  bg:"rgba(247,201,72,0.1)", border:"rgba(247,201,72,0.3)"},
+    {icon:"⚽",label:"大会で予想する",sub:"参加中の大会で予想を入力",             action:()=>nav("predict"),  color:"#22C55E",bg:"rgba(34,197,94,0.12)",border:"rgba(34,197,94,0.3)"},
+  ];
+  // ③ データを見る（2枚）
+  const CARDS_DATA=[
+    {icon:"📅",label:"試合日程",         sub:"全試合スケジュール・結果",    action:()=>nav("schedule"),  color:"#22C55E",bg:"rgba(34,197,94,0.1)",   border:"rgba(34,197,94,0.25)"},
+    {icon:"📊",label:"みんなの予想データ",sub:"全体の匿名集計ランキング",  action:()=>nav("globalstats"),color:"#F97316",bg:"rgba(249,115,22,0.08)", border:"rgba(249,115,22,0.2)"},
   ];
 
   return(
@@ -875,46 +976,61 @@ function PgHome({nav,goT}){
           {myJoined.filter(id=>!myCreated.includes(id)).map(id=><TCard key={id} id={id} isCreated={false}/>)}
         </div>}
 
-        {/* 大会IDで参加 */}
-        <div style={{...crd,marginBottom:16}}>
-          <div style={{color:G.gold,fontWeight:700,fontSize:13,marginBottom:10}}>🔗 大会IDで参加する</div>
-          <div style={{display:"flex",gap:8}}>
-            <input style={{...inp,flex:1,textTransform:"uppercase"}}
-              placeholder="大会IDを入力 (例: AB12CD34)" value={joinId}
-              onChange={e=>{setJoinId(e.target.value);setJoinErr("");}}
-              onKeyDown={e=>e.key==="Enter"&&joinByID()}/>
-            <button onClick={joinByID} style={{background:G.gold,color:"#111",border:"none",
-              borderRadius:10,padding:"0 16px",fontWeight:700,cursor:"pointer",flexShrink:0,fontSize:13}}>
-              参加
-            </button>
+        {/* ━━ ① まず予想する ━━ */}
+        <div style={{marginBottom:18}}>
+          <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:2,marginBottom:10}}>⚡ まず予想する</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {CARDS_PREDICT.map((m,i)=>(
+              <div key={i} onClick={m.action} style={{background:`linear-gradient(135deg,${m.bg},rgba(6,24,38,0.8))`,border:`1px solid ${m.border}`,borderRadius:16,padding:"16px 14px",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.3)"}}>
+                <div style={{width:38,height:38,borderRadius:10,background:m.bg,border:`1px solid ${m.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginBottom:10,boxShadow:`0 0 12px ${m.color}33`}}>{m.icon}</div>
+                <div style={{color:"#fff",fontWeight:700,fontSize:13,marginBottom:3}}>{m.label}</div>
+                <div style={{color:G.muted,fontSize:10,lineHeight:1.4}}>{m.sub}</div>
+                <div style={{color:m.color,fontSize:10,marginTop:6,fontWeight:600}}>→ 開く</div>
+              </div>
+            ))}
           </div>
-          {joinErr&&<div style={{marginTop:8}}><Err msg={joinErr}/></div>}
         </div>
 
-        {/* メニューカード 2列グリッド */}
-        <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:2,marginBottom:10}}>MENU</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-          {MENU_CARDS.map((m,i)=>(
-            <div key={i} onClick={m.action} style={{
-              background:`linear-gradient(135deg,${m.bg},rgba(6,24,38,0.8))`,
-              border:`1px solid ${m.border}`,
-              borderRadius:16,padding:"16px 14px",cursor:"pointer",
-              boxShadow:"0 4px 16px rgba(0,0,0,0.3)",
-              transition:"transform 0.12s ease",
-            }}>
-              {/* アイコンバッジ */}
-              <div style={{
-                width:38,height:38,borderRadius:10,
-                background:`${m.bg}`,border:`1px solid ${m.border}`,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:20,marginBottom:10,
-                boxShadow:`0 0 12px ${m.color}33`,
-              }}>{m.icon}</div>
-              <div style={{color:"#fff",fontWeight:700,fontSize:13,marginBottom:3}}>{m.label}</div>
-              <div style={{color:G.muted,fontSize:10,lineHeight:1.4}}>{m.sub}</div>
-              <div style={{color:m.color,fontSize:10,marginTop:6,fontWeight:600}}>→ 開く</div>
+        {/* ━━ ② 大会を使う ━━ */}
+        <div style={{marginBottom:18}}>
+          <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:2,marginBottom:10}}>🏆 大会を使う</div>
+          <button style={{...btnG,marginBottom:10,fontSize:14,padding:"14px 20px"}} onClick={()=>nav("create")}>🏆 大会を作成・管理する</button>
+          <div style={{...crd,marginBottom:0}}>
+            <div style={{color:G.gold,fontWeight:700,fontSize:12,marginBottom:10}}>🔗 大会IDで参加する</div>
+            <div style={{display:"flex",gap:8}}>
+              <input style={{...inp,flex:1,textTransform:"uppercase"}}
+                placeholder="大会IDを入力 (例: AB12CD34)" value={joinId}
+                onChange={e=>{setJoinId(e.target.value);setJoinErr("");}}
+                onKeyDown={e=>e.key==="Enter"&&joinByID()}/>
+              <button onClick={joinByID} style={{background:G.gold,color:"#111",border:"none",borderRadius:10,padding:"0 16px",fontWeight:700,cursor:"pointer",flexShrink:0,fontSize:13}}>参加</button>
             </div>
-          ))}
+            {joinErr&&<div style={{marginTop:8}}><Err msg={joinErr}/></div>}
+          </div>
+        </div>
+
+        {/* ━━ ③ データを見る ━━ */}
+        <div style={{marginBottom:16}}>
+          <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:2,marginBottom:10}}>📊 データを見る</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            {CARDS_DATA.map((m,i)=>(
+              <div key={i} onClick={m.action} style={{background:`linear-gradient(135deg,${m.bg},rgba(6,24,38,0.8))`,border:`1px solid ${m.border}`,borderRadius:16,padding:"16px 14px",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.3)"}}>
+                <div style={{width:38,height:38,borderRadius:10,background:m.bg,border:`1px solid ${m.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginBottom:10,boxShadow:`0 0 12px ${m.color}33`}}>{m.icon}</div>
+                <div style={{color:"#fff",fontWeight:700,fontSize:13,marginBottom:3}}>{m.label}</div>
+                <div style={{color:G.muted,fontSize:10,lineHeight:1.4}}>{m.sub}</div>
+                <div style={{color:m.color,fontSize:10,marginTop:6,fontWeight:600}}>→ 開く</div>
+              </div>
+            ))}
+          </div>
+          <div onClick={()=>nav("moremenu")} style={{background:"linear-gradient(135deg,rgba(139,92,246,0.1),rgba(6,24,38,0.8))",border:"1px solid rgba(139,92,246,0.25)",borderRadius:16,padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:38,height:38,borderRadius:10,background:"rgba(139,92,246,0.1)",border:"1px solid rgba(139,92,246,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,boxShadow:"0 0 12px rgba(139,92,246,0.2)"}}>📋</div>
+              <div>
+                <div style={{color:"#fff",fontWeight:700,fontSize:13}}>もっと見る</div>
+                <div style={{color:G.muted,fontSize:10,marginTop:2}}>AI予想・グループ表・日本代表など</div>
+              </div>
+            </div>
+            <div style={{color:"#A78BFA",fontSize:14,fontWeight:700}}>→</div>
+          </div>
         </div>
 
         {/* 料金案内 */}
@@ -944,13 +1060,6 @@ function PgHome({nav,goT}){
             </span>
           </div>
         </div>
-
-        <button style={{
-          background:"linear-gradient(135deg,#FACC15 0%,#E8B830 50%,#FACC15 100%)",
-          color:"#0A1400",fontWeight:900,borderRadius:16,padding:"15px 20px",fontSize:15,
-          border:"none",cursor:"pointer",width:"100%",
-          boxShadow:"0 4px 20px rgba(250,204,21,0.3)",marginBottom:4,
-        }} onClick={()=>nav("create")}>🏆 無料で予想大会を作る</button>
 
         <CoffeeSupport compact={true}/>
         <AffiliateBlock title="🎉 W杯観戦をもっと楽しむ" keys={["streaming","uniform","goods","pizza"]} compact={true}/>
@@ -986,13 +1095,15 @@ function PgCreate({nav,goT}){
   const toggleItem=(key)=>{setSelectedPreset(null);setPredSet(p=>({...p,[key]:!p[key]}));};
   const [err,setErr]=useState("");const [loading,setLoading]=useState(false);
   const setF=k=>v=>setForm(f=>({...f,[k]:v}));
-  const submit=async()=>{
+  const submit=async(overrideMax=null)=>{
     if(!form.name.trim()||!form.creatorName.trim()||!form.adminPasscode.trim()){setErr("すべての項目を入力してください");return;}
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
 setLoading(true);
-    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:Number(form.maxParticipants),adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,predictionSettings:predSet,allowLateJoin:form.allowLateJoin!==false,createdAt:new Date().toISOString()};
+    const maxP=overrideMax!==null?overrideMax:Number(form.maxParticipants);
+    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:maxP,adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,predictionSettings:predSet,allowLateJoin:form.allowLateJoin!==false,createdAt:new Date().toISOString()};
     saveMyCreated(t.id);trackEvent("create_tournament",{tournamentId:t.id,page:"create"});await goT(t);setLoading(false);
   };
+  const reqPlan=getRequiredPlanByPeople(form.maxParticipants);
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("home")}/>
       <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>予想大会を作る</div>
@@ -1001,10 +1112,24 @@ setLoading(true);
         <FInput label="大会名 ＊" placeholder="例: 2026 友達W杯予想大会" value={form.name} onChange={setF("name")}/>
         <FInput label="作成者名 ＊" placeholder="例: たろう" value={form.creatorName} onChange={setF("creatorName")}/>
         <div style={{marginBottom:16}}>
-          <label style={lbl}>参加上限人数（無料：5人まで）</label>
-          <select style={inp} value={form.maxParticipants} onChange={e=>setForm(f=>({...f,maxParticipants:Number(e.target.value)}))}>
-            {[1,2,3,4,5].map(n=><option key={n} value={n}>{n}人（無料）</option>)}
-          </select>
+          <label style={lbl}>👥 何人で遊ぶ？</label>
+          <div style={{color:G.muted,fontSize:11,marginBottom:12}}>人数に応じて最適なプランを自動で表示します</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:20,marginBottom:14}}>
+            <button onClick={()=>setForm(f=>({...f,maxParticipants:Math.max(2,f.maxParticipants-1)}))} style={{width:52,height:52,borderRadius:14,background:"rgba(4,14,7,0.9)",border:"2px solid #1A4A28",color:"#9AB5A0",fontSize:28,cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>－</button>
+            <div style={{textAlign:"center",minWidth:90}}>
+              <div style={{color:"#fff",fontSize:42,fontWeight:900,lineHeight:1}}>{form.maxParticipants}</div>
+              <div style={{color:G.muted,fontSize:12,marginTop:3}}>人</div>
+            </div>
+            <button onClick={()=>setForm(f=>({...f,maxParticipants:Math.min(50,f.maxParticipants+1)}))} style={{width:52,height:52,borderRadius:14,background:"rgba(4,14,7,0.9)",border:"2px solid #1A4A28",color:"#9AB5A0",fontSize:28,cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>＋</button>
+          </div>
+          <div style={{background:reqPlan.key==="free"?"rgba(34,197,94,0.08)":"rgba(247,201,72,0.07)",border:`1px solid ${reqPlan.key==="free"?"rgba(34,197,94,0.3)":"rgba(247,201,72,0.3)"}`,borderRadius:12,padding:"12px 14px"}}>
+            {reqPlan.key==="free"&&<div style={{color:"#22C55E",fontWeight:800,fontSize:13,marginBottom:2}}>✅ 無料プランで利用できます</div>}
+            {reqPlan.key==="free"&&<div style={{color:G.muted,fontSize:12}}>{FREE_LIMIT}人まで無料</div>}
+            {reqPlan.key!=="free"&&<div style={{color:G.gold,fontWeight:800,fontSize:13,marginBottom:4}}>💳 この人数では有料プランが必要です</div>}
+            {reqPlan.key!=="free"&&<div style={{color:"#fff",fontSize:13}}><span style={{color:reqPlan.key==="standard"?"#22C55E":reqPlan.key==="premium"?G.gold:"#A78BFA",fontWeight:700}}>{reqPlan.label}プラン</span><span style={{color:G.muted}}> · {reqPlan.people}人まで · </span><span style={{color:G.gold,fontWeight:700}}>¥{reqPlan.price.toLocaleString()}</span></div>}
+            {reqPlan.key!=="free"&&<div style={{color:"#6B9E80",fontSize:11,marginTop:5}}>カード / Apple Pay / Google Pay</div>}
+            {reqPlan.key!=="free"&&<div style={{color:"#3a5a45",fontSize:10,marginTop:1}}>対応端末ではウォレット決済が使えます · PayPayは今後対応予定</div>}
+          </div>
         </div>
         <FInput label="管理用パスコード ＊" placeholder="3文字以上" type="password" value={form.adminPasscode} onChange={setF("adminPasscode")}/>
       </div>
@@ -1051,7 +1176,11 @@ setLoading(true);
           <div style={{color:G.muted,fontSize:10,marginTop:4}}>途中参加OKにすると、締め切り後も新規参加できます（残り項目でのみ得点）</div>
         </div>
       </div>
-      <Err msg={err}/><button style={btnG} onClick={submit} disabled={loading}>{loading?"作成中...":"🚀 大会を作成する"}</button>
+      <Err msg={err}/>
+      {reqPlan.key==="free"&&<button style={btnG} onClick={submit} disabled={loading}>{loading?"作成中...":"🏆 無料で予想大会を作る"}</button>}
+      {reqPlan.key!=="free"&&<a href={reqPlan.url} target="_blank" rel="noopener noreferrer" style={{...btnG,display:"block",textDecoration:"none",textAlign:"center",marginBottom:6}}>この人数でかんたん決済へ進む</a>}
+      {reqPlan.key!=="free"&&<div style={{color:"#2a3a30",fontSize:10,textAlign:"center",marginBottom:8}}>※現在はテスト決済です。本番公開時に正式リンクへ切り替えます</div>}
+      {reqPlan.key!=="free"&&<button style={{...btnGr,fontSize:12,padding:"10px"}} onClick={()=>submit(FREE_LIMIT)} disabled={loading}>{loading?"作成中...":"まず5人で作成する（後でアップグレード可）"}</button>}
     </div>
   );
 }
@@ -1076,7 +1205,11 @@ ${url}`);
       <div style={{background:"linear-gradient(180deg,#0A2E14 0%,#061A0D 100%)",padding:"16px 20px 26px",textAlign:"center",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-40,left:"50%",transform:"translateX(-50%)",width:300,height:200,background:"radial-gradient(ellipse,rgba(22,163,74,0.12) 0%,transparent 65%)",pointerEvents:"none"}}/>
         <img src={LOGO_IMG} alt="ロゴ" style={{width:52,height:52,borderRadius:"50%",objectFit:"cover",marginBottom:6,boxShadow:"0 0 16px rgba(250,204,21,0.35)"}}/>
         <div style={{color:G.gold,fontSize:19,fontWeight:900}}>{t.name}</div>
-        <div style={{color:G.muted,fontSize:12,marginTop:4}}>作成者: {t.creatorName}{isPaid&&<span style={{color:G.gold}}>　★ {STRIPE[t.plan]?.label}プラン</span>}</div>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:6,background:isPaid?"rgba(247,201,72,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isPaid?"rgba(247,201,72,0.35)":"#1A4A28"}`,borderRadius:20,padding:"3px 12px"}}>
+          <span style={{color:isPaid?G.gold:G.muted,fontSize:11,fontWeight:700}}>{isPaid?`★ ${STRIPE[t.plan]?.label}プラン`:"無料プラン"}</span>
+          <span style={{color:"#2a5a3a",fontSize:10}}>|</span>
+          <span style={{color:t.participants.length>=t.maxParticipants?"#f88":"#22C55E",fontSize:11,fontWeight:700}}>{t.participants.length} / {t.maxParticipants}人</span>
+        </div>
         {t.deadline&&<div style={{marginTop:6,display:"inline-block",background:deadlinePassed?"#2d1010":"#1a3a28",borderRadius:8,padding:"4px 12px"}}>
           <span style={{color:deadlinePassed?"#f77":"#4caf50",fontSize:12,fontWeight:700}}>{deadlinePassed?"⛔ 予想締め切り済み":"⏰ 締め切り: "+fmtDeadline(t.deadline)}</span>
         </div>}
@@ -1163,11 +1296,7 @@ function PgJoin({tourn:t,nav,update,setMyId}){
     if(!nick.trim()){setErr("ニックネームを入力してください");return;}
 const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("予想の締め切りが終了しています");return;}
-if(cur.participants.length>=cur.maxParticipants){
-      if(!cur.plan||!cur.plan||cur.plan==="free") setErr("無料プランは5人までです。" + "\n" + "6人以上で遊ぶにはスタンダードプランがおすすめです。10人まで参加できます。" + "\n" + "¥500");
-      else if(cur.plan==="standard") setErr("スタンダードプランは10人まで" + "\n" + "30人まで参加するにはプレミアムプランがおすすめです" + "\n" + "¥980");
-      else if(cur.plan==="premium") setErr("プレミアムプランは30人まで" + "\n" + "大人数で遊ぶならグループプランがおすすめです" + "\n" + "¥1,480");
-      else setErr("参加上限に達しました。");
+if(cur.participants.length>=getPlanLimit(cur.plan)){
       setShowUpgrade(true);
       return;
     }
@@ -1194,14 +1323,27 @@ if(cur.participants.length>=cur.maxParticipants){
         <div><label style={lbl}>アイコンを選ぶ</label><div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginTop:6}}>{ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{fontSize:26,background:icon===ic?`${G.gold}22`:"transparent",border:`2px solid ${icon===ic?G.gold:"transparent"}`,borderRadius:12,padding:"8px 0",cursor:"pointer"}}>{ic}</button>)}</div></div>
         <div style={{marginTop:16,background:G.dark,borderRadius:12,padding:16,textAlign:"center"}}><div style={{fontSize:36}}>{icon}</div><div style={{color:"#fff",fontSize:14,fontWeight:700,marginTop:6}}>{nick||"（名前未入力）"}</div></div>
       </div>
-      {err&&showUpgrade?(
-        <div style={{background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.3)",borderRadius:12,padding:"14px 16px",marginBottom:12}}>
-          <div style={{color:"#FCA5A5",fontWeight:700,fontSize:13,marginBottom:6}}>⚠️ 参加できません</div>
-          {err.split("\n").map((line,i)=>(
-            <div key={i} style={{color:i===0?"#fff":i===1?G.muted:G.gold,fontSize:i===2?16:12,fontWeight:i===2?800:i===0?700:400,marginBottom:i===2?8:3}}>{i===2?"→ "+line:line}</div>
+      {showUpgrade?(
+        <div style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:14,padding:"16px",marginBottom:12}}>
+          <div style={{color:"#FCA5A5",fontWeight:800,fontSize:14,marginBottom:4}}>⚠️ 参加上限に達しています</div>
+          <div style={{color:G.muted,fontSize:12,marginBottom:14}}>この大会は現在のプランの参加上限に達しました。大会作成者がプランをアップグレードすると参加できます。</div>
+          {[
+            {key:"standard",label:"スタンダード",people:STRIPE.standard.people,price:STRIPE.standard.price,url:STRIPE.standard.url,color:"#22C55E"},
+            {key:"premium", label:"プレミアム",  people:STRIPE.premium.people, price:STRIPE.premium.price, url:STRIPE.premium.url, color:G.gold},
+            {key:"group",   label:"グループ",    people:STRIPE.group.people,   price:STRIPE.group.price,   url:STRIPE.group.url,   color:"#A78BFA"},
+          ].map(plan=>(
+            <div key={plan.key} style={{background:"rgba(4,14,7,0.9)",border:`1.5px solid ${plan.color}44`,borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+              <div>
+                <div style={{color:plan.color,fontWeight:800,fontSize:13}}>{plan.label}プラン</div>
+                <div style={{color:"#fff",fontSize:12,marginTop:2}}>{plan.people}人まで参加可能</div>
+                <div style={{color:G.gold,fontSize:15,fontWeight:900,marginTop:2}}>¥{plan.price.toLocaleString()}</div>
+                <div style={{color:"#6B9E80",fontSize:10,marginTop:4}}>カード / Apple Pay / Google Pay</div>
+                <div style={{color:"#3a5a45",fontSize:9,marginTop:1}}>対応端末ではウォレット決済が使えます</div>
+              </div>
+              <a href={plan.url} target="_blank" rel="noopener noreferrer" style={{background:plan.color,color:"#000",borderRadius:10,padding:"9px 14px",fontWeight:800,fontSize:12,textDecoration:"none",whiteSpace:"nowrap",flexShrink:0,textAlign:"center"}}>かんたん<br/>決済へ進む</a>
+            </div>
           ))}
-          <button onClick={()=>nav("upgrade")} style={{...btnG,padding:"11px",fontSize:13,marginTop:6}}>⬆️ アップグレードして人数を増やす</button>
-          <button onClick={()=>setShowUpgrade(false)} style={{...btnGr,padding:"8px",fontSize:12,marginTop:6}}>キャンセル</button>
+          <button onClick={()=>setShowUpgrade(false)} style={{...btnGr,padding:"9px",fontSize:12,marginTop:4}}>← 戻る</button>
         </div>
       ):(
         <><Err msg={err}/><button style={btnG} onClick={join} disabled={loading}>{loading?"参加中...":"参加して予想を入力する →"}</button></>
@@ -1285,11 +1427,11 @@ await update(updated);setSaved(true);setLoading(false);
       <div style={{color:G.muted,fontSize:13,marginBottom:16}}>あなたの予想を教えてください！</div>
       {t.deadline&&<div style={{background:"rgba(247,201,72,0.08)",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:"#4caf50",fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
       <div style={crd}>
-        <div style={{marginBottom:18}}><label style={lbl}>🥇 優勝国 ＊</label><Chips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>🥈 準優勝国 ＊</label><Chips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>⚽ 得点王（名前を入力）</label><input style={inp} placeholder="例: エムバペ" value={pred.topScorer} onChange={e=>set("topScorer")(e.target.value)}/></div>
+        <div style={{marginBottom:18}}><label style={lbl}>🥇 優勝国 ＊</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
+        <div style={{marginBottom:18}}><label style={lbl}>🥈 準優勝国 ＊</label><FlagChips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
+        <div style={{marginBottom:18}}><label style={lbl}>⚽ 得点王予想</label><ScorerChips opts={TOP_SCORER_CANDIDATES} value={pred.topScorer} onChange={set("topScorer")}/></div>
         <div style={{marginBottom:18}}><label style={lbl}>🇯🇵 日本代表の成績 ＊</label><Chips opts={JAPAN_RES} value={pred.japanResult} onChange={set("japanResult")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>❤️ 一番応援している国 ＊</label><Chips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
+        <div style={{marginBottom:18}}><label style={lbl}>❤️ 一番応援している国 ＊</label><FlagChips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
         <div><label style={lbl}>💬 一言コメント</label><textarea style={{...inp,height:72,resize:"none"}} placeholder="予想の根拠や意気込みを！" value={pred.comment} onChange={e=>set("comment")(e.target.value)}/></div>
       </div>
       {saved
@@ -1676,12 +1818,19 @@ function PgUpgrade({nav,tourn:t,update}){
                 ))}
               </div>
 
+              {isSelectable&&!isCurrentPlan&&STRIPE[plan.key]?.url&&(
+                <div style={{textAlign:"center",marginBottom:8}}>
+                  <div style={{color:"#6B9E80",fontSize:11}}>カード / Apple Pay / Google Pay</div>
+                  <div style={{color:"#3a5a45",fontSize:10,marginTop:1}}>対応端末ではウォレット決済が使えます · PayPayは今後対応予定</div>
+                </div>
+              )}
               {isSelectable&&!isCurrentPlan&&(
                 <button onClick={()=>openPayment(plan.key)} style={{...btnG,padding:"11px",fontSize:13}}>
-                  {plan.url?`${plan.label}プランにアップグレード →`:"準備中"}
+                  {STRIPE[plan.key]?.url?"かんたん決済へ進む":"準備中"}
                 </button>
               )}
-                <div style={{color:G.muted,fontSize:11,textAlign:"center",marginTop:4}}>※ このプランは近日公開予定です</div>
+              {isSelectable&&!isCurrentPlan&&STRIPE[plan.key]?.url&&(
+                <div style={{color:"#2a3a30",fontSize:10,textAlign:"center",marginTop:4}}>※現在はテスト決済です。本番公開時に正式リンクへ切り替えます</div>
               )}
             </div>
           );
@@ -3158,6 +3307,117 @@ function PgGlobalStats({nav}){
           </>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ── もっと見るメニュー ── */
+function PgMoreMenu({nav}){
+  const MORE=[
+    {icon:"🤖",label:"AI優勝予想",  sub:"複数市場データの加重平均",   action:()=>nav("ai"),       color:"#0EA5E9",bg:"rgba(14,165,233,0.1)", border:"rgba(14,165,233,0.25)"},
+    {icon:"🗂️",label:"グループ表",  sub:"全12グループ・FIFAランク",   action:()=>nav("groups"),   color:"#FACC15",bg:"rgba(250,204,21,0.08)",border:"rgba(250,204,21,0.2)"},
+    {icon:"🎖️",label:"トーナメント",sub:"決勝T表・予想マップ",         action:()=>nav("bracket"),  color:"#F97316",bg:"rgba(249,115,22,0.08)",border:"rgba(249,115,22,0.2)"},
+    {icon:"🇯🇵",label:"日本代表特集",sub:"選手・成績・展望データ",      action:()=>{nav("japan");trackEvent("open_japan_mode",{page:"moremenu"});},color:"#7DD3FC",bg:"rgba(0,91,172,0.12)",border:"rgba(14,165,233,0.3)"},
+    {icon:"💬",label:"全体チャット",sub:"W杯について語ろう",           action:()=>nav("globalchat"),color:"#A78BFA",bg:"rgba(139,92,246,0.1)",border:"rgba(139,92,246,0.25)"},
+  ];
+  return(
+    <div style={{padding:"20px 16px 40px"}}>
+      <Back onClick={()=>nav("home")}/>
+      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>📋 もっと見る</div>
+      <div style={{color:G.muted,fontSize:13,marginBottom:16}}>その他のコンテンツ・情報</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {MORE.map((m,i)=>(
+          <div key={i} onClick={m.action} style={{background:`linear-gradient(135deg,${m.bg},rgba(6,24,38,0.8))`,border:`1px solid ${m.border}`,borderRadius:16,padding:"16px 14px",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.3)"}}>
+            <div style={{width:38,height:38,borderRadius:10,background:m.bg,border:`1px solid ${m.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginBottom:10,boxShadow:`0 0 12px ${m.color}33`}}>{m.icon}</div>
+            <div style={{color:"#fff",fontWeight:700,fontSize:13,marginBottom:3}}>{m.label}</div>
+            <div style={{color:G.muted,fontSize:10,lineHeight:1.4}}>{m.sub}</div>
+            <div style={{color:m.color,fontSize:10,marginTop:6,fontWeight:600}}>→ 開く</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 個人予想モード ── */
+function PgSoloPredict({nav}){
+  const SOLO_KEY="soloPrediction";
+  const initPred=()=>{try{const s=localStorage.getItem(SOLO_KEY);return s?JSON.parse(s):{winner:"",japanResult:"",japanPlayer:""};}catch{return{winner:"",japanResult:"",japanPlayer:""};} };
+  const initDone=()=>{try{const s=localStorage.getItem(SOLO_KEY);const d=s?JSON.parse(s):{};return!!(d.winner&&d.japanResult);}catch{return false;} };
+  const [pred,setPred]=useState(initPred);
+  const [done,setDone]=useState(initDone);
+  const [err,setErr]=useState("");
+  const [copied,setCopied]=useState(false);
+  const set=k=>v=>setPred(p=>({...p,[k]:v}));
+  const save=()=>{
+    if(!pred.winner||!pred.japanResult){setErr("優勝予想と日本代表成績は必須です");return;}
+    try{localStorage.setItem(SOLO_KEY,JSON.stringify(pred));}catch{}
+    setDone(true);
+  };
+  const reset=()=>{
+    try{localStorage.removeItem(SOLO_KEY);}catch{}
+    setPred({winner:"",japanResult:"",japanPlayer:""});
+    setErr("");
+    setDone(false);
+  };
+  const BASE="https://xiaokoulu-maker.github.io/wcup-yosou/";
+  const shareText=`私の2026W杯優勝予想は【${pred.winner}】！\n日本代表は【${pred.japanResult}】予想です。${pred.japanPlayer?"\n期待の選手は【"+pred.japanPlayer+"】！":""}\n\nあなたも予想してみて👇\n${BASE}\n\n#W杯予想 #サッカー日本代表 #WorldCup2026`;
+  const xUrl=`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+  const lineUrl=`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
+  const copy=async()=>{try{await navigator.clipboard.writeText(BASE);setCopied(true);setTimeout(()=>setCopied(false),2000);}catch{}};
+
+  if(done)return(
+    <div style={{padding:"20px 18px 40px"}}>
+      <Back onClick={()=>nav("home")}/>
+      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:16}}>⚽ 私のW杯予想</div>
+      <div style={{...crd,marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+          <FlagImg country={pred.winner} size={36}/>
+          <div>
+            <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1}}>優勝予想</div>
+            <div style={{color:"#fff",fontWeight:900,fontSize:20}}>{pred.winner}</div>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <Badge label="🇯🇵 日本代表" val={pred.japanResult}/>
+          {pred.japanPlayer&&<Badge label="🌟 期待選手" val={pred.japanPlayer}/>}
+        </div>
+      </div>
+      <div style={{color:G.muted,fontSize:11,fontWeight:700,letterSpacing:1,marginBottom:8}}>📤 シェアする</div>
+      <div style={{display:"flex",gap:8,marginBottom:8}}>
+        <a href={xUrl} target="_blank" rel="noopener noreferrer"
+          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,
+            background:"#000",color:"#fff",borderRadius:12,padding:"11px 6px",
+            fontWeight:700,textDecoration:"none",fontSize:13}}>𝕏 で投稿</a>
+        <a href={lineUrl} target="_blank" rel="noopener noreferrer"
+          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,
+            background:"#06C755",color:"#fff",borderRadius:12,padding:"11px 6px",
+            fontWeight:700,textDecoration:"none",fontSize:13}}>📱 LINEで共有</a>
+      </div>
+      <button onClick={copy} style={{...btnGr,padding:"11px 20px",fontSize:13,marginBottom:10,
+        color:copied?"#22C55E":G.muted,borderColor:copied?"rgba(34,197,94,0.4)":"#1A4A28"}}>
+        {copied?"✅ コピーしました":"🔗 URLをコピー"}
+      </button>
+      <button style={{...btnG,marginBottom:8}} onClick={()=>nav("create")}>🏆 友達と大会を作る</button>
+      <button style={btnO} onClick={reset}>🔄 予想を作り直す</button>
+    </div>
+  );
+
+  return(
+    <div style={{padding:"20px 18px 40px"}}>
+      <Back onClick={()=>nav("home")}/>
+      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>⚽ 今すぐ予想する</div>
+      <div style={{color:G.muted,fontSize:13,marginBottom:16}}>大会に参加せずに自分だけのW杯予想を作れます</div>
+      <div style={crd}>
+        <div style={{marginBottom:18}}><label style={lbl}>🥇 優勝予想 ＊</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
+        <div style={{marginBottom:18}}><label style={lbl}>🇯🇵 日本代表の成績 ＊</label><Chips opts={JAPAN_RES} value={pred.japanResult} onChange={set("japanResult")}/></div>
+        <div>
+          <label style={lbl}>🌟 期待する日本代表選手（任意）</label>
+          <PlayerChips opts={JAPAN_PLAYERS} value={pred.japanPlayer} onChange={set("japanPlayer")}/>
+        </div>
+      </div>
+      <Err msg={err}/>
+      <button style={btnG} onClick={save}>⚽ 予想を確定する</button>
     </div>
   );
 }
