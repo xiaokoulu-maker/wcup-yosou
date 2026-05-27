@@ -802,9 +802,9 @@ function SplashScreen({onDone}){
       <div style={{
         position:"absolute",top:"50%",left:"50%",
         transform:"translate(-50%,-50%)",
-        animation:"trophyIn 0.9s cubic-bezier(.2,0,.4,1) forwards, trophyGlow 2s ease-in-out 0.9s infinite",
+        display:"flex",alignItems:"center",justifyContent:"center",width:"fit-content"
       }}>
-        <img src={LOGO_IMG} alt="W杯予想メーカー" style={{width:"clamp(120px,42vw,180px)",height:"clamp(120px,42vw,180px)",borderRadius:"50%",objectFit:"cover",boxShadow:"0 0 40px rgba(250,204,21,0.5), 0 0 80px rgba(250,204,21,0.2)"}}/>
+        <img src={LOGO_IMG} alt="W杯予想メーカー" style={{width:"clamp(120px,42vw,180px)",height:"clamp(120px,42vw,180px)",borderRadius:"50%",objectFit:"cover",boxShadow:"0 0 40px rgba(250,204,21,0.5), 0 0 80px rgba(250,204,21,0.2)",animation:"trophyIn 0.9s cubic-bezier(.2,0,.4,1) forwards, trophyGlow 2s ease-in-out 0.9s infinite"}}/>
       </div>
 
       {/* Skip */}
