@@ -12,6 +12,12 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#005BAC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="W杯予想">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:linear-gradient(180deg,#F4F8FF 0%,#FFFFFF 45%,#EAF3FF 100%);min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#0B1F3A;}
@@ -1165,6 +1171,10 @@ function PgHome({nav,goT}){
         <CoffeeSupport compact={true}/>
         <AffiliateBlock title="🎉 W杯観戦をもっと楽しむ" keys={["streaming","uniform","goods","pizza"]} compact={true}/>
         <LegalFooter/>
+        <div style={{marginTop:12,background:"rgba(0,91,172,0.04)",borderRadius:12,padding:"10px 14px",border:"1px solid #D9E8FF",display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:18,flexShrink:0}}>📱</span>
+          <div style={{color:G.muted,fontSize:11,lineHeight:1.6}}>ホーム画面に追加すると、次回からアプリのように開けます</div>
+        </div>
       </div>
     </div>
   );
@@ -3525,6 +3535,13 @@ function PgSoloPredict({nav}){
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("./service-worker.js").catch(console.warn);
+  });
+}
 </script>
 
 </body>
