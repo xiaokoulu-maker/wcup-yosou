@@ -3533,7 +3533,19 @@ function PgSoloPredict({nav}){
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+console.log("[render] start");
+console.log("[render] root:", document.getElementById("root"));
+console.log("[render] React:", typeof React);
+console.log("[render] ReactDOM:", typeof ReactDOM);
+
+try {
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  console.log("[render] success");
+} catch(e) {
+  console.error("[render] failed:", e);
+  document.getElementById("root").innerHTML =
+    "<div style='padding:20px;color:red;background:white;font-family:sans-serif;'>読み込みエラーが発生しました。Consoleを確認してください。<br>" + e.message + "</div>";
+}
 
 </script>
 <!-- SW登録は一時無効化（表示確認後に再実装予定）
