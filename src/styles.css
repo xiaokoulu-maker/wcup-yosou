@@ -325,6 +325,14 @@ textarea:focus{border-color:#005BAC !important;box-shadow:0 0 0 3px rgba(0,91,17
 .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:24px;font-weight:600}
 .foot b{color:#ff5a60}
 .foot a{color:#9fb4f0;text-decoration:none;font-weight:700}
+/* my-prediction */
+.champ{display:flex;align-items:center;gap:15px;padding:6px 2px 16px;border-bottom:1px solid var(--line-soft)}
+.champ .big-flag{min-width:64px;height:46px;border-radius:11px;display:grid;place-items:center;font-family:"Roboto Mono";font-weight:700;font-size:18px;color:#fff;background:rgba(255,255,255,.05);box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.champ .clbl{font-family:"Roboto Mono";font-size:10px;letter-spacing:.18em;color:var(--gold);font-weight:700;text-transform:uppercase}
+.champ .cnm{font-size:24px;font-weight:900;margin-top:4px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}
+.kv .k{font-family:"Roboto Mono";font-size:10px;letter-spacing:.1em;color:var(--dim);font-weight:700}
+.kv .v{font-size:16px;font-weight:800;margin-top:5px}
 /* join / form */
 .field-lbl{font-family:"Roboto Mono";font-size:10.5px;letter-spacing:.14em;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:9px;display:block}
 .tinput{width:100%;height:52px;border-radius:13px;background:#0a1024;border:1px solid var(--line);color:#fff;padding:0 16px;font-family:inherit;font-size:15px;font-weight:600;outline:none}

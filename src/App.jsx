@@ -3506,30 +3506,39 @@ function ShareBox({pred,tournId,nav}){
   };
   return(
     <div>
-      <div style={{background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:14,padding:16,textAlign:"center",marginBottom:16}}>
-        <div style={{fontSize:32,marginBottom:6}}>✅</div>
-        <div style={{color:"#22C55E",fontWeight:700,fontSize:15,marginBottom:4}}>予想を保存しました！</div>
-        <div style={{color:G.muted,fontSize:12}}>友だちにシェアして予想対決しよう🔥</div>
+      <div className="card lg" style={{marginBottom:16}}>
+        <div className="eyebrow gold">My Final Pick</div>
+        <div className="champ" style={{marginTop:12}}>
+          <span className="big-flag" style={{boxShadow:`inset 0 3px 0 ${(TEAMS[winner]||["","#8b93ad"])[1]}, 0 6px 16px rgba(0,0,0,.35)`}}>
+            {(TEAMS[winner]||["？","#8b93ad"])[0]}
+          </span>
+          <div>
+            <div className="clbl">優勝予想</div>
+            <div className="cnm">{winner}</div>
+          </div>
+        </div>
+        <div className="kv">
+          <div><div className="k">日本の成績</div><div className="v">{pred?.japanResult||"—"}</div></div>
+          <div><div className="k">応援国</div><div className="v" style={{fontSize:14}}>{pred?.favoriteCountry||"—"}</div></div>
+        </div>
       </div>
-      <button onClick={doShareChamp} disabled={sharingChamp} style={{display:"block",width:"100%",background:"linear-gradient(135deg,#E60033,#AA0025)",color:"#fff",border:"none",borderRadius:14,padding:"14px",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:10,opacity:sharingChamp?0.7:1}}>
-        {sharingChamp?"🔄 画像生成中...":"📷 優勝予想を画像でシェア"}
-      </button>
-      <div style={{color:G.muted,fontSize:11,fontWeight:700,letterSpacing:1,marginBottom:8}}>📤 テキストでシェア</div>
-      <div style={{display:"flex",gap:8,marginBottom:8}}>
-        <a href={xUrl} target="_blank" rel="noopener noreferrer"
-          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,
-            background:"#000",color:"#fff",borderRadius:12,padding:"11px 6px",
-            fontWeight:700,textDecoration:"none",fontSize:13}}>𝕏 で投稿</a>
-        <a href={lineUrl} target="_blank" rel="noopener noreferrer"
-          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,
-            background:"#06C755",color:"#fff",borderRadius:12,padding:"11px 6px",
-            fontWeight:700,textDecoration:"none",fontSize:13}}>📱 LINEで共有</a>
+      <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        <button className="btn btn-red lg" onClick={doShareChamp} disabled={sharingChamp} style={{opacity:sharingChamp?0.7:1}}>
+          <DsIcon name="camera" size={18}/>{sharingChamp?"画像生成中...":"優勝予想を画像でシェア"}
+        </button>
+        <div style={{display:"flex",gap:9}}>
+          <a href={xUrl} target="_blank" rel="noopener noreferrer" className="btn btn-dark md" style={{flex:1,textDecoration:"none"}}>
+            <DsIcon name="xLogo" size={17}/> Xで投稿
+          </a>
+          <a href={lineUrl} target="_blank" rel="noopener noreferrer" className="btn btn-line md" style={{flex:1,textDecoration:"none"}}>
+            <span className="lk">L</span> LINEで共有
+          </a>
+        </div>
+        <button className="btn btn-dark md" onClick={copy}>
+          <DsIcon name={copied?"check":"link"} size={17}/>{copied?"コピーしました":"URLをコピー"}
+        </button>
+        <button className="btn btn-dark sm" onClick={()=>nav("predictions")}>みんなの予想を見る →</button>
       </div>
-      <button onClick={copy} style={{...btnGr,padding:"11px 20px",fontSize:13,
-        color:copied?"#22C55E":G.muted,borderColor:copied?"rgba(34,197,94,0.4)":"#D9E8FF"}}>
-        {copied?"✅ コピーしました":"🔗 URLをコピー"}
-      </button>
-      <button style={{...btnO,marginTop:10}} onClick={()=>nav("predictions")}>みんなの予想を見る →</button>
     </div>
   );
 }
@@ -3539,20 +3548,26 @@ function PgPredict({tourn:t,nav,update,myId}){
   const [pred,setPred]=useState({winner:"",runnerUp:"",topScorer:"",japanResult:"",favoriteCountry:"",comment:""});
   const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const [saved,setSaved]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
   if(!t)return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("home")}/>
-      <div style={{background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
-        <div style={{fontSize:40,marginBottom:12}}>⚽</div>
-        <div style={{color:"#22C55E",fontWeight:700,fontSize:16,marginBottom:8}}>まず大会に参加してください</div>
-        <div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>大会IDで参加するか、新しい大会を作成してから予想を入力できます。</div>
-        <button style={{...btnO,marginTop:16}} onClick={()=>nav("home")}>← トップへ戻る</button>
+    <div className="screen">
+      <DsBackRow onClick={()=>nav("home")}/>
+      <div className="wrap section">
+        <div className="card lg" style={{textAlign:"center",padding:"32px 20px"}}>
+          <div style={{fontSize:40,marginBottom:12}}>⚽</div>
+          <div style={{color:"#37d67a",fontWeight:800,fontSize:16,marginBottom:8}}>まず大会に参加してください</div>
+          <div style={{color:"var(--muted)",fontSize:13,lineHeight:1.7}}>大会IDで参加するか、新しい大会を作成してから予想を入力できます。</div>
+          <button className="btn btn-dark sm" style={{marginTop:16}} onClick={()=>nav("home")}>← トップへ戻る</button>
+        </div>
       </div>
     </div>
   );
   if(isDeadlinePassed(t.deadline))return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{background:"rgba(255,60,60,0.1)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
-        <div style={{fontSize:40,marginBottom:12}}>⛔</div>
-        <div style={{color:"#f88",fontWeight:700,fontSize:16}}>予想の締め切りが終了しました</div>
+    <div className="screen">
+      <DsBackRow onClick={()=>nav("tournament")}/>
+      <div className="wrap section">
+        <div className="card lg" style={{textAlign:"center",padding:"32px 20px"}}>
+          <div style={{fontSize:40,marginBottom:12}}>⛔</div>
+          <div style={{color:"#ff6066",fontWeight:800,fontSize:16}}>予想の締め切りが終了しました</div>
+        </div>
       </div>
     </div>
   );
@@ -3564,22 +3579,34 @@ const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,pre
 await update(updated);setSaved(true);setLoading(false);
   };
   return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>予想を入力する</div>
-      <div style={{color:G.muted,fontSize:13,marginBottom:16}}>あなたの予想を教えてください！</div>
-      {t.deadline&&<div style={{background:"rgba(0,104,183,0.06)",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:G.gold,fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
-      <div style={crd}>
-        <div style={{marginBottom:18}}><label style={lbl}>🥇 優勝国 ＊</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>🥈 準優勝国 ＊</label><FlagChips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>⚽ 得点王予想</label><ScorerChips opts={TOP_SCORER_CANDIDATES} value={pred.topScorer} onChange={set("topScorer")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>🇯🇵 日本代表の成績 ＊</label><Chips opts={JAPAN_RES} value={pred.japanResult} onChange={set("japanResult")}/></div>
-        <div style={{marginBottom:18}}><label style={lbl}>❤️ 一番応援している国 ＊</label><FlagChips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
-        <div><label style={lbl}>💬 一言コメント</label><textarea style={{...inp,height:72,resize:"none"}} placeholder="予想の根拠や意気込みを！" value={pred.comment} onChange={e=>set("comment")(e.target.value)}/></div>
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("tournament")} eyebrow="MY PREDICTION" title="予想を入力する"/>
+      <div className="wrap section tight">
+        {t.deadline&&(
+          <div className="banner gold" style={{marginBottom:14}}>
+            <DsIcon name="clock" size={15}/> ⏰ 締め切り: {fmtDeadline(t.deadline)}
+          </div>
+        )}
+        <div className="card lg">
+          <div style={{marginBottom:18}}><label className="field-lbl">🥇 優勝国</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
+          <div style={{marginBottom:18}}><label className="field-lbl">🥈 準優勝国</label><FlagChips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
+          <div style={{marginBottom:18}}><label className="field-lbl">⚽ 得点王予想</label><ScorerChips opts={TOP_SCORER_CANDIDATES} value={pred.topScorer} onChange={set("topScorer")}/></div>
+          <div style={{marginBottom:18}}><label className="field-lbl">🇯🇵 日本代表の成績</label><Chips opts={JAPAN_RES} value={pred.japanResult} onChange={set("japanResult")}/></div>
+          <div style={{marginBottom:18}}><label className="field-lbl">❤️ 応援国</label><FlagChips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
+          <div><label className="field-lbl">💬 一言コメント</label><textarea className="tinput" style={{height:72,resize:"none",paddingTop:14,paddingBottom:14}} placeholder="予想の根拠や意気込みを！" value={pred.comment} onChange={e=>set("comment")(e.target.value)}/></div>
+        </div>
       </div>
-      {saved
-        ?<ShareBox pred={pred} tournId={t?.id} nav={nav}/>
-        :<><Err msg={err}/><button style={btnG} onClick={save} disabled={loading}>{loading?"保存中...":"💾 予想を保存する"}</button></>
-      }
+      <div className="wrap section">
+        {saved
+          ?<ShareBox pred={pred} tournId={t?.id} nav={nav}/>
+          :<>
+            {err&&<div className="banner blue" style={{marginBottom:12,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080"}}>⚠️ {err}</div>}
+            <button className="btn btn-red lg" onClick={save} disabled={loading}>
+              <DsIcon name="check" size={18}/>{loading?"保存中...":"予想を保存する"}
+            </button>
+          </>
+        }
+      </div>
     </div>
   );
 }
