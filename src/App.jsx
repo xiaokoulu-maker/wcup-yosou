@@ -6730,129 +6730,101 @@ function PgBadges({nav,tourn,myId}){
   }
 
   return(
-    <div className="bg-navy-base text-text-on-navy min-h-screen pb-10">
-      {/* ヘッダー */}
-      <div className="bg-navy-hero px-5 pt-4 pb-4 flex items-center gap-3">
-        <button onClick={()=>nav("tournament")} className="text-white text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none active:scale-90 transition-transform">←</button>
-        <div className="flex-1 text-center">
-          <div className="text-white font-black text-lg">🏅 マイ・バッジ</div>
-        </div>
-        <div className="w-8"/>
-      </div>
-
-      {/* サマリーカード */}
-      <div className="bg-gradient-to-br from-gold/20 to-transparent border-2 border-gold rounded-card-lg p-5 mx-5 mt-4">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-shrink-0" style={{width:64,height:64}}>
-            <svg width="64" height="64" viewBox="0 0 64 64" style={{transform:"rotate(-90deg)"}}>
-              <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6"/>
-              <circle cx="32" cy="32" r="28" fill="none" stroke="#F4B400" strokeWidth="6" strokeLinecap="round"
-                strokeDasharray={`${2*Math.PI*28*(BADGES.length>0?earned/BADGES.length:0)} ${2*Math.PI*28}`}/>
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center font-black text-white text-lg">{earned}</span>
-          </div>
-          <div>
-            <div className="text-white font-black text-xl">{earned} / {BADGES.length} 獲得</div>
-            <div className="text-text-on-navy-dim text-xs mt-1">バッジを集めて全国TOPプレイヤーへ</div>
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("tournament")} title="マイ・バッジ" icon="medal"/>
+      <div className="wrap section tight">
+        <div className="card lg">
+          <div className="bprog">
+            <div className="ring" style={{background:`conic-gradient(var(--gold) 0deg ${BADGES.length>0?Math.round(earned/BADGES.length*360):0}deg, rgba(255,255,255,.07) ${BADGES.length>0?Math.round(earned/BADGES.length*360):0}deg 360deg)`}}>
+              <span>{earned}</span>
+            </div>
+            <div>
+              <div className="t">{earned} / {BADGES.length} 獲得</div>
+              <div className="s">バッジを集めて全国TOPプレイヤーへ</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {!me&&<EmptyState icon="🏅" title="まだバッジを獲得していません" description={"最初の予想を入れて\n「🎯 予想デビュー」を獲得しよう！"} cta="⚽ 予想する →" onCtaClick={()=>nav("matches")}/>}
-      {me&&BADGES.filter(b=>earnedIds.has(b.id)).length===0&&(
-        <EmptyState icon="🏅" title="まだバッジを獲得していません" description={"最初の予想を入れて\n「🎯 予想デビュー」を獲得しよう！"} cta="⚽ 予想する →" onCtaClick={()=>nav("matches")}/>
+      {(!me||BADGES.filter(b=>earnedIds.has(b.id)).length===0)&&(
+        <div className="wrap section"><div className="banner blue">最初の予想を入れて「🎯 予想デビュー」を獲得しよう！</div></div>
       )}
 
-      {/* 獲得済みバッジ */}
       {me&&BADGES.filter(b=>earnedIds.has(b.id)).length>0&&(
-        <div className="mx-5 mt-6">
-          <div className="font-bold text-sm mb-3 text-text-on-navy">獲得済み ({BADGES.filter(b=>earnedIds.has(b.id)).length})</div>
-          <div className="grid grid-cols-4 gap-2">
-            {BADGES.filter(b=>earnedIds.has(b.id)).map(b=>{
-              const earnedAt=myBadges.find(x=>x.id===b.id)?.earnedAt;
-              return(
-                <div key={b.id} className="bg-gold/10 border-2 border-gold rounded-card p-3 text-center transition active:scale-[.95]">
-                  <div className="text-3xl">{b.icon}</div>
-                  <div className="mt-2 text-xs font-bold text-text-on-navy leading-tight">{b.name}</div>
-                  <div className="text-[10px] text-gold mt-1">✓</div>
-                  {earnedAt&&<div className="text-[9px] text-text-on-navy-weak mt-0.5">{new Date(earnedAt).toLocaleDateString("ja-JP")}</div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 進捗中バッジ */}
-      {me&&BADGES.filter(b=>!earnedIds.has(b.id)&&progress(b.id)).length>0&&(
-        <div className="mx-5 mt-5">
-          <div className="font-bold text-sm mb-3 text-text-on-navy-dim">あと一歩 ({BADGES.filter(b=>!earnedIds.has(b.id)&&progress(b.id)).length})</div>
-          <div className="grid grid-cols-4 gap-2">
-            {BADGES.filter(b=>!earnedIds.has(b.id)&&progress(b.id)).map(b=>{
-              const pg=progress(b.id);
-              return(
-                <div key={b.id} className="bg-white/5 border border-white/15 rounded-card p-3 text-center transition">
-                  <div className="text-3xl">{b.icon}</div>
-                  <div className="mt-2 text-xs font-bold text-text-on-navy leading-tight">{b.name}</div>
-                  {pg&&<div className="text-[10px] text-text-on-navy-dim mt-1 tabular-nums">{pg.cur}/{pg.max}</div>}
-                  {pg&&(
-                    <div className="w-full bg-white/10 rounded-full h-1 mt-1 overflow-hidden">
-                      <div className="bg-hinomaru h-1 rounded-full" style={{width:`${Math.round(pg.cur/pg.max*100)}%`}}/>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 未獲得バッジ */}
-      {me&&BADGES.filter(b=>!earnedIds.has(b.id)&&!progress(b.id)).length>0&&(
-        <div className="mx-5 mt-5">
-          <div className="font-bold text-sm mb-3 text-text-on-navy-dim">未獲得 ({BADGES.filter(b=>!earnedIds.has(b.id)&&!progress(b.id)).length})</div>
-          <div className="grid grid-cols-4 gap-2">
-            {BADGES.filter(b=>!earnedIds.has(b.id)&&!progress(b.id)).map(b=>(
-              <div key={b.id} className="bg-white/5 border border-white/10 rounded-card p-3 text-center opacity-50">
-                <div className="text-3xl">🔒</div>
-                <div className="mt-2 text-xs font-bold text-text-on-navy-weak leading-tight">{b.name}</div>
+        <div className="wrap section">
+          <DsSectionHead gold title={`獲得済み (${BADGES.filter(b=>earnedIds.has(b.id)).length})`}/>
+          <div className="badge-grid">
+            {BADGES.filter(b=>earnedIds.has(b.id)).map(b=>(
+              <div key={b.id} className="bcell got">
+                <div className="bi"><span style={{fontSize:20}}>{b.icon}</span></div>
+                <div className="bn">{b.name}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* バッジ説明（全リスト） */}
-      {me&&(
-        <div className="mx-5 mt-6">
-          <div className="font-bold text-sm mb-3 text-text-on-navy-dim">バッジ一覧</div>
-          {BADGES.map(b=>{
-            const got=earnedIds.has(b.id);
-            const pg=progress(b.id);
-            const earnedAt=myBadges.find(x=>x.id===b.id)?.earnedAt;
-            return(
-              <div key={b.id} className={`flex items-center gap-3 p-3 rounded-card mb-2 border ${got?"bg-gold/5 border-gold/30":"bg-white/5 border-white/10"}`} style={{opacity:got?1:0.6}}>
-                <div className="text-2xl flex-shrink-0 w-9 text-center">{b.icon}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-bold text-sm ${got?"text-text-on-navy":"text-text-on-navy-dim"}`}>{b.name}</span>
-                    {got&&<span className="text-success text-xs">✅</span>}
-                    {!got&&pg&&<span className="text-text-on-navy-weak text-xs">⏳</span>}
-                  </div>
-                  <div className="text-text-on-navy-weak text-xs mt-0.5">{b.desc}</div>
-                  {!got&&pg&&(
-                    <div className="mt-1.5">
-                      <div className="bg-white/10 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-hinomaru h-1.5 rounded-full transition-all" style={{width:`${Math.round(pg.cur/pg.max*100)}%`}}/>
-                      </div>
-                      <div className="text-text-on-navy-weak text-[10px] mt-1">{pg.cur} / {pg.max}</div>
-                    </div>
-                  )}
-                  {got&&earnedAt&&<div className="text-text-on-navy-weak text-[10px] mt-0.5">取得: {new Date(earnedAt).toLocaleDateString("ja-JP")}</div>}
+      {me&&BADGES.filter(b=>!earnedIds.has(b.id)&&progress(b.id)).length>0&&(
+        <div className="wrap section">
+          <DsSectionHead title={`あと一歩 (${BADGES.filter(b=>!earnedIds.has(b.id)&&progress(b.id)).length})`}/>
+          <div className="badge-grid">
+            {BADGES.filter(b=>!earnedIds.has(b.id)&&progress(b.id)).map(b=>{
+              const pg=progress(b.id);
+              return(
+                <div key={b.id} className="bcell near">
+                  <div className="bi"><span style={{fontSize:20}}>{b.icon}</span></div>
+                  <div className="bn">{b.name}</div>
+                  {pg&&<div className="bp">{pg.cur}/{pg.max}</div>}
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {me&&BADGES.filter(b=>!earnedIds.has(b.id)&&!progress(b.id)).length>0&&(
+        <div className="wrap section">
+          <DsSectionHead title="未獲得"/>
+          <div className="badge-grid">
+            {BADGES.filter(b=>!earnedIds.has(b.id)&&!progress(b.id)).map(b=>(
+              <div key={b.id} className="bcell" style={{opacity:.62}}>
+                <div className="bi"><DsIcon name="lock" size={18}/></div>
+                <div className="bn">{b.name}</div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {me&&(
+        <div className="wrap section">
+          <DsSectionHead title="バッジ一覧"/>
+          <div className="card">
+            {BADGES.map(b=>{
+              const got=earnedIds.has(b.id);
+              const pg=progress(b.id);
+              const earnedAt=myBadges.find(x=>x.id===b.id)?.earnedAt;
+              return(
+                <div key={b.id} className={"blist-row"+(got?" got":"")} style={{opacity:got?1:0.6}}>
+                  <div className="bi"><span style={{fontSize:18}}>{b.icon}</span></div>
+                  <div className="mid">
+                    <div className="bn">{b.name}</div>
+                    <div className="bd">{b.desc}</div>
+                    {!got&&pg&&(
+                      <div style={{marginTop:6}}>
+                        <div style={{background:"rgba(255,255,255,.08)",borderRadius:4,height:4,overflow:"hidden"}}>
+                          <div style={{background:"var(--red)",height:"100%",borderRadius:4,width:`${Math.round(pg.cur/pg.max*100)}%`}}/>
+                        </div>
+                        <div style={{fontFamily:"'Roboto Mono',monospace",fontSize:10,color:"var(--dim)",marginTop:3}}>{pg.cur} / {pg.max}</div>
+                      </div>
+                    )}
+                    {got&&earnedAt&&<div style={{fontSize:10,color:"var(--dim)",marginTop:2}}>取得: {new Date(earnedAt).toLocaleDateString("ja-JP")}</div>}
+                  </div>
+                  {got?<span className="chk"><DsIcon name="check" size={19}/></span>:<span style={{fontFamily:"Roboto Mono",fontSize:10.5,color:"var(--dim)",fontWeight:700}}>{pg?`${pg.cur}/${pg.max}`:"—"}</span>}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
