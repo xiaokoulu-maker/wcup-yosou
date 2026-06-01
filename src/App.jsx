@@ -5571,86 +5571,64 @@ function PgJapanMode({nav,tourn}){
   const CHEER_QUICK=["🔥 がんばれ日本！","⚽ ゴール！","😭 惜しい！","🙏 守れ！"];
 
   return(
-    <div className="bg-navy-base text-text-on-navy min-h-screen pb-10">
-      {/* ── ヘッダー ── */}
-      <div className="bg-navy-hero px-5 pt-4 pb-4 flex items-center gap-3 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 rounded-full pointer-events-none" style={{background:"radial-gradient(circle,rgba(230,0,51,0.25),transparent 65%)",transform:"translate(30%,-30%)"}}/>
-        <button onClick={()=>nav("home")} className="text-white text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none z-10 active:scale-90 transition-transform">←</button>
-        <div className="flex-1 text-center z-10">
-          <div className="text-white font-black text-lg">🇯🇵 日本代表モード</div>
-        </div>
-        <div className="z-10">
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{background:"rgba(255,255,255,0.1)",color:"#C9D6EC"}}>SAMURAI BLUE</span>
-        </div>
-      </div>
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("home")} eyebrow="SAMURAI BLUE" title="日本代表モード" icon="flag"
+        right={<span className="chip red"><span className="dot"/>JP</span>}/>
 
-      {/* ── ライブバナー（試合中のみ） ── */}
       {liveJapanMatch&&(
-        <div className="mx-5 mt-2 bg-hinomaru text-white rounded-card flex items-center gap-2 px-4 py-2 shadow-cta-red">
-          <span className="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0"/>
-          <span className="font-bold text-sm">LIVE</span>
-          <span className="text-sm flex-1">🇯🇵 日本 vs {liveJapanMatch.home==="日本"?liveJapanMatch.away:liveJapanMatch.home}</span>
-          <span className="text-xs text-white/80">試合中</span>
+        <div className="wrap section tight">
+          <div className="live"><span className="blip"/>LIVE 🇯🇵 日本 vs {liveJapanMatch.home==="日本"?liveJapanMatch.away:liveJapanMatch.home} 試合中</div>
         </div>
       )}
 
-      {/* ── 次の日本戦カードバナー ── */}
-      <div className="px-5 mt-4">
+      {/* 次の日本戦ヒーロー */}
+      <div className="wrap section tight">
         {nextJapanMatch?(
-          <button onClick={()=>nav("matches")}
-            className="w-full bg-gradient-to-br from-gold/30 to-gold/10 border-2 border-gold rounded-card-lg p-5 text-left shadow-cta-gold active:scale-[.99] transition-transform">
-            <div className="text-xs text-gold font-bold tracking-widest">次の日本戦まで</div>
-            <div className="mt-3 text-xl font-black text-text-on-navy">
-              🇯🇵 日本 <span className="text-text-on-navy-dim text-lg">vs</span> {nextJapanMatch.home==="日本"?nextJapanMatch.away:nextJapanMatch.home}
+          <button onClick={()=>nav("matches")} className="jp-hero" style={{width:"100%",textAlign:"left",border:"none",cursor:"pointer",display:"block"}}>
+            <div className="glow"/>
+            <div className="lbl">次の日本戦まで</div>
+            <div className="vs">
+              <span className="jp">JP</span>
+              <span className="nm">日本<span className="x">VS</span>{nextJapanMatch.home==="日本"?nextJapanMatch.away:nextJapanMatch.home}</span>
             </div>
-            <div className="mt-4 flex items-baseline gap-3 justify-center font-black tabular-nums text-gold">
-              <div><span className="text-5xl">{cd.d}</span><span className="text-sm ml-1">日</span></div>
-              <div><span className="text-5xl">{String(cd.h).padStart(2,"0")}</span><span className="text-sm ml-1">時</span></div>
-              <div><span className="text-5xl">{String(cd.m).padStart(2,"0")}</span><span className="text-sm ml-1">分</span></div>
+            <div className="big">
+              <span className="n">{cd.d}</span><span className="u">日</span>
+              <span className="n">{String(cd.h).padStart(2,"0")}</span><span className="u">時</span>
+              <span className="n">{String(cd.m).padStart(2,"0")}</span><span className="u">分</span>
             </div>
-            <div className="mt-3 text-sm text-text-on-navy-dim text-center">{fmtKO(nextJapanMatch.kickoff)}</div>
+            <div className="ko"><DsIcon name="calendar" size={14}/> {fmtKO(nextJapanMatch.kickoff)}</div>
           </button>
         ):(
-          <div className="w-full bg-white/5 border border-white/10 rounded-card-lg p-5 text-center text-text-on-navy-dim">
-            🇯🇵 日本代表お疲れ様でした
-          </div>
+          <div className="card" style={{textAlign:"center",padding:"24px"}}>🇯🇵 日本代表お疲れ様でした</div>
         )}
       </div>
 
-      {/* ── 応援クイック投稿（日本戦時間帯のみ） ── */}
       {isJapanMatchTime&&(
-        <div className="mx-5 mt-4 bg-white/5 border border-white/10 rounded-card p-3">
-          <div className="text-hinomaru text-xs font-bold mb-2">🇯🇵 応援メッセージを送ろう！</div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {CHEER_QUICK.map(msg=>(
-              <button key={msg}
-                className="bg-hinomaru/10 text-hinomaru border border-hinomaru/30 rounded-xl px-3 py-2 text-xs font-bold cursor-pointer active:scale-[.98] transition-transform text-center">
-                {msg}
-              </button>
-            ))}
+        <div className="wrap section tight">
+          <div className="card">
+            <div style={{color:"#ff6066",fontSize:12,fontWeight:700,marginBottom:10}}>🇯🇵 応援メッセージを送ろう！</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {CHEER_QUICK.map(msg=>(
+                <button key={msg} className="chip red" style={{border:"none",cursor:"pointer",justifyContent:"center",padding:"10px 8px",borderRadius:12}}>{msg}</button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── 得点者予想ミニ ── */}
       {nextJapanMatch&&(
-        <div className="mx-5 mt-4">
-          <div className="flex items-baseline justify-between mb-2">
-            <div className="font-bold text-text-on-navy text-sm">日本の得点者を予想 <span className="text-gold text-xs">+5pt</span></div>
-            <button onClick={()=>nav("matches")} className="text-xs text-text-on-navy-dim bg-transparent border-0 cursor-pointer">全選手を見る ›</button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="wrap section">
+          <DsSectionHead gold title="日本の得点者を予想" action="全選手を見る" onAction={()=>nav("matches")}/>
+          <DsBanner tone="gold" icon="target" style={{marginBottom:12}}>的中で <span className="pts">+{SCORER_BONUS}pt</span>。誰が決める？</DsBanner>
+          <div className="players">
             {top4Scorers.map(p=>{
               const votes=scorerVotes.counts[p.id]||0;
               const pct=scorerVotes.total>0?Math.round((votes/scorerVotes.total)*100):null;
               return(
-                <button key={p.id} onClick={()=>nav("matches")}
-                  className="bg-white/5 border border-white/15 rounded-card p-3 text-left active:scale-[.98] transition">
-                  <div className="flex items-baseline justify-between">
-                    <div className="text-xs text-text-on-navy-dim">#{p.number} {p.pos}</div>
-                    {pct!==null&&<div className="text-xs text-text-on-navy-weak">本命 {pct}%</div>}
-                  </div>
-                  <div className="mt-1 font-bold text-text-on-navy text-sm">{p.name}</div>
+                <button key={p.id} className="player" onClick={()=>nav("matches")} style={{border:"1px solid var(--line)"}}>
+                  <span className="chk"><DsIcon name="arrowRight" size={14}/></span>
+                  <div className="pos">#{p.number} {p.pos}{pct!==null&&` · 本命 ${pct}%`}</div>
+                  <div className="nm">{p.name}</div>
                 </button>
               );
             })}
@@ -5658,35 +5636,34 @@ function PgJapanMode({nav,tourn}){
         </div>
       )}
 
-      {/* 全国注目選手予想（spec-14） */}
       <GlobalJapanScorerPicks data={globalScorerData}/>
 
-      {/* ── タブ ── */}
-      <div className="px-5 mt-4">
-        <div className="grid grid-cols-4 gap-1 mb-4">
-          {[["top","🇯🇵 概要"],["stats","📊 予想"],["players","⚽ 選手"],["route","🗺️ 展望"]].map(([v,lb])=>(
-            <button key={v} onClick={()=>setTab(v)}
-              className={`rounded-xl py-2 text-[10px] font-bold cursor-pointer border transition-colors${tab===v?" bg-navy-elevated border-hinomaru/40 text-white":" bg-white/5 border-white/10 text-text-on-navy-dim"}`}>
-              {lb}
-            </button>
-          ))}
-        </div>
+      {/* タブ */}
+      <div className="wrap section">
+        <DsTabs value={tab} onChange={setTab} items={[
+          {key:"top",     label:"概要"},
+          {key:"stats",   label:"予想"},
+          {key:"players", label:"選手"},
+          {key:"route",   label:"展望"},
+        ]}/>
+      </div>
+      <div className="wrap section tight">
 
         {/* 概要タブ */}
         {tab==="top"&&(
           <>
-            <div className="bg-white/5 border border-white/10 rounded-card p-4 mb-3">
-              <div className="text-gold font-bold text-sm mb-3">🏆 グループF - 日本代表</div>
+            <div className="card" style={{marginBottom:12}}>
+              <div style={{color:"var(--gold)",fontWeight:700,fontSize:13,marginBottom:10}}>🏆 グループF - 日本代表</div>
               {WC_GROUPS.find(g=>g.name==="F")?.teams.map((t,i)=>(
-                <div key={i} className={`flex items-center gap-3 py-2 px-2 rounded-lg mb-1${t.n==="日本"?" bg-hinomaru/10":""}`}>
-                  <FlagImg code={t.f} country={t.n} size={24}/>
-                  <span className={`flex-1 text-sm${t.n==="日本"?" text-gold font-bold":" text-text-on-navy-dim font-normal"}`}>{t.n}</span>
-                  {FIFA_RANK[t.n]&&<span className="text-text-on-navy-weak text-xs">FIFA {FIFA_RANK[t.n]}位</span>}
+                <div key={i} className={"rank-row"+(t.n==="日本"?" me":"")}>
+                  <Flag name={t.n}/>
+                  <div className="nm">{t.n}</div>
+                  {FIFA_RANK[t.n]&&<div className="fifa">FIFA {FIFA_RANK[t.n]}位</div>}
                 </div>
               ))}
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-card p-4">
-              <div className="text-gold font-bold text-sm mb-3">💬 みんなの応援コメント</div>
+            <div className="card">
+              <div style={{color:"var(--gold)",fontWeight:700,fontSize:13,marginBottom:10}}>💬 みんなの応援コメント</div>
               {comments.length===0
                 ?<div className="text-text-on-navy-dim text-xs text-center py-4">大会に参加すると応援コメントが表示されます</div>
                 :comments.slice(0,5).map((c,i)=>(
