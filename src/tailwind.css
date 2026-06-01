@@ -1,0 +1,8 @@
+/*
+ * Tailwind CSS — wcup-vite
+ *
+ * @tailwind base は既存スタイル（styles.css）への影響を避けるため省略。
+ * D2 以降で画面を段階的に移行する際に必要であれば追加する。
+ */
+@tailwind components;
+@tailwind utilities;
