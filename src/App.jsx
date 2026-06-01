@@ -5955,19 +5955,23 @@ function PgSinglePred({nav,tourn,update,myId}){
 /* ── 全体チャット ── */
 function PgGlobalChat({nav}){
   return(
-    <div style={{paddingBottom:40}}>
-      <div style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 100%)",padding:"36px 20px 22px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
-        <Back onClick={()=>nav("home")}/>
-        <div style={{color:"#0068B7",fontSize:11,fontWeight:800,letterSpacing:3,marginBottom:4}}>GLOBAL CHAT</div>
-        <div style={{color:G.gold,fontSize:22,fontWeight:900}}>💬 みんなの全体チャット</div>
-        <div style={{color:G.muted,fontSize:12,marginTop:6,lineHeight:1.7}}>
+    <div className="screen">
+      <div style={{textAlign:"center",padding:"8px 18px 0"}}><DsBackRow onClick={()=>nav("home")}/></div>
+      <div style={{textAlign:"center",padding:"10px 18px 4px"}}>
+        <div className="eyebrow" style={{justifyContent:"center"}}>Global Chat</div>
+        <h1 style={{fontSize:24,fontWeight:900,marginTop:12,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          <DsIcon name="chatBig" size={22} style={{color:"#ff5a60"}}/> みんなの全体チャット
+        </h1>
+        <p style={{fontSize:12.5,color:"var(--muted)",marginTop:9,lineHeight:1.6}}>
           W杯について、誰とでも話せるチャットです。<br/>予想・応援・感想を投稿しよう。
-        </div>
+        </p>
       </div>
-      <div style={{padding:"14px 16px 0"}}>
-        <ChatBox tournamentId={null} currentUser={null} title="全体チャット" maxHeight={480}/>
-        <div style={{marginTop:10,background:"rgba(239,68,68,0.06)",borderRadius:10,padding:"8px 14px"}}>
-          <div style={{color:"#FCA5A5",fontSize:11}}>⚠️ 個人情報・誹謗中傷・スパムは禁止です。楽しくご利用ください。</div>
+      <div className="wrap section">
+        <div className="card flush">
+          <ChatBox tournamentId={null} currentUser={null} title="全体チャット" maxHeight={480}/>
+        </div>
+        <div className="banner gold" style={{marginTop:12}}>
+          <DsIcon name="shield" size={15}/><div>個人情報・誹謗中傷・スパムは禁止です。楽しくご利用ください。</div>
         </div>
       </div>
     </div>
