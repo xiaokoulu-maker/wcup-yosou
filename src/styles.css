@@ -1,5 +1,5 @@
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:linear-gradient(180deg,#F4F8FF 0%,#FFFFFF 45%,#EAF3FF 100%);min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#0B1F3A;}
+html,body{background:linear-gradient(180deg,#F4F8FF 0%,#FFFFFF 45%,#EAF3FF 100%);min-height:100vh;font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,Arial,sans-serif;color:#0B1F3A;}
 select option{background:#FFFFFF;color:#102A43;}
 textarea,input,select{font-family:inherit;}
 ::-webkit-scrollbar{width:4px;}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, Component } from 'react'
 import ReactDOM from 'react-dom/client'
 import { LayoutGrid, Trophy, Users, MessageCircle, Calendar, Globe, ChevronRight, Zap, Medal, Target, Star, BarChart2, Clock, CheckCircle, XCircle, Flame } from 'lucide-react'
+import { HoIcon, HoAvatar, HoScreenHeader } from './ds-components'
 
 // true にすれば「ベスト11」ボタンが復活し、「ベスト16予想」ボタンが非表示になる
 const SHOW_BEST11 = false;
@@ -804,7 +805,7 @@ function getAIPct(country){const d=AI_DATA.find(a=>a.country===country);if(d)ret
 function isDeadlinePassed(deadline){if(!deadline)return false;return new Date()>new Date(deadline);}
 function fmtDeadline(deadline){if(!deadline)return null;return new Date(deadline).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});}
 
-const G={bg:"#0a1f4c",card:"#12244f",dark:"#0d2a5e",gold:"#D4AF37",green:"#0e8a46",muted:"#8fa3c9",border:"rgba(255,255,255,0.1)",blue:"#60a5fa",navy:"#FFFFFF",red:"#E60033"};
+const G={bg:"#0a1f4c",card:"#12244f",dark:"#0d2a5e",gold:"#F4B400",green:"#0e8a46",muted:"#8fa3c9",border:"rgba(255,255,255,0.1)",blue:"#60a5fa",navy:"#FFFFFF",red:"#E60033"};
 const btnG={background:"linear-gradient(135deg,#E60033 0%,#AA0025 100%)",color:"#FFFFFF",fontWeight:800,borderRadius:16,padding:"16px 20px",fontSize:15,border:"none",cursor:"pointer",width:"100%",boxShadow:"0 8px 24px rgba(230,0,51,0.28)",letterSpacing:0.3};
 const btnO={background:"rgba(255,255,255,0.05)",color:"#C9D6EC",fontWeight:700,borderRadius:16,padding:"14px 20px",fontSize:14,border:"1.5px solid rgba(255,255,255,0.15)",cursor:"pointer",width:"100%"};
 const btnGr={background:"rgba(0,0,0,0.03)",color:"#5B6B7A",fontWeight:600,borderRadius:16,padding:"12px 20px",fontSize:13,border:"1px solid #D9E8FF",cursor:"pointer",width:"100%"};
@@ -2274,8 +2275,9 @@ function PgHome({nav,goT,tourn,myId}){
   const myCoins=getCoins(me).balance;
   const myBadgesCount=me?.badges?.length||0;
 
-  // ── HomeB ──
+  // ── HomeB (handoff home.jsx / HomeB デザイン適用) ──
   if(isLoggedIn&&!showLandingOverride){
+    // 日本戦カウントダウンバナー（ロジック温存・スタイルのみ更新）
     const JapanBanner=()=>{
       const [jpNow,setJpNow]=useState(Date.now());
       useEffect(()=>{const t=setInterval(()=>setJpNow(Date.now()),1000);return()=>clearInterval(t);},[]);
@@ -2287,160 +2289,236 @@ function PgHome({nav,goT,tourn,myId}){
       const opp=nextJapanMatchB.home==="日本"?nextJapanMatchB.away:nextJapanMatchB.home;
       const koStr=new Date(nextJapanMatchB.kickoff).toLocaleString("ja-JP",{month:"numeric",day:"numeric",weekday:"short",hour:"2-digit",minute:"2-digit"});
       return(
-        <button onClick={()=>nav("japan")} className="w-full text-left mx-0 rounded-card shadow-cta-gold p-4 mt-3"
-          style={{background:"linear-gradient(135deg,#F4B400,#ffce4a)",display:"block",border:"none",cursor:"pointer"}}>
-          <div className="text-xs font-bold text-navy-base opacity-70 mb-1">次の日本戦まで</div>
-          <div className="text-navy-base font-black text-base mb-1">🇯🇵 日本 vs {opp}</div>
-          <div className="font-black text-navy-base" style={{fontSize:22}}>
-            {diff2>0?`${jd>0?jd+"日 ":""}${String(jh).padStart(2,"0")}:${String(jm).padStart(2,"0")}`:' KO!'}
+        <button onClick={()=>nav("japan")} style={{
+          width:"100%",textAlign:"left",position:"relative",borderRadius:16,overflow:"hidden",
+          padding:"14px 16px",border:"1px solid rgba(244,180,0,.35)",cursor:"pointer",
+          background:"linear-gradient(110deg,#0d2a5e,#11367a)",
+          boxShadow:"0 10px 26px rgba(4,12,33,.35)",display:"block",marginTop:10,
+        }}>
+          <div style={{position:"absolute",pointerEvents:"none",top:-40,right:-20,width:130,height:130,background:"radial-gradient(circle,rgba(244,180,0,.22),transparent 60%)"}}/>
+          <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:22}}>🇯🇵</span>
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:G.gold,whiteSpace:"nowrap"}}>次の日本戦まで</p>
+                <p style={{color:"#fff",fontWeight:900,fontSize:15,lineHeight:1.25,whiteSpace:"nowrap"}}>日本 <span style={{color:G.muted}}>vs</span> {opp}</p>
+              </div>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0,paddingLeft:8}}>
+              <p style={{color:"#fff",fontWeight:900,lineHeight:1,whiteSpace:"nowrap"}}>
+                {diff2>0?(
+                  <><span style={{fontSize:26}}>{jd>0?jd:jh}</span><span style={{fontSize:13,fontWeight:700,color:G.muted}}>{jd>0?"日 ":"h "}</span><span style={{fontSize:19}}>{String(jd>0?jh:jm).padStart(2,"0")}:{String(jd>0?jm:Math.floor((diff2%60000)/1000)).padStart(2,"0")}</span></>
+                ):" KO!"}
+              </p>
+              <p style={{fontSize:10,fontWeight:700,marginTop:4,color:G.muted,whiteSpace:"nowrap"}}>{koStr} KO</p>
+            </div>
           </div>
-          <div className="text-xs text-navy-base opacity-60 mt-1">{koStr} キックオフ</div>
         </button>
       );
     };
+
     return(
       <>
-      <div className="bg-navy-base min-h-screen pb-10" style={{maxWidth:480,margin:"0 auto"}}>
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between px-5 pt-10 pb-4">
+      <div style={{background:G.bg,minHeight:"100vh",paddingBottom:40}}>
+        {/* ── ヘッダー ── */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 20px 16px"}}>
           <div>
-            <div className="text-xs text-text-on-navy-weak font-bold tracking-widest uppercase">大会</div>
-            <div className="text-white font-black text-lg leading-tight mt-0.5">{tourn.name}</div>
+            <p style={{fontSize:11,fontWeight:700,color:G.muted,letterSpacing:"0.1em",textTransform:"uppercase"}}>大会</p>
+            <h1 style={{color:"#fff",fontWeight:900,fontSize:19,lineHeight:1.25,marginTop:2}}>{tourn.name}</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            {/* ベル通知ボタン（条件付き表示・handler温存） */}
             {isNotificationSupported()&&!notifEnabled&&(
-              <button onClick={async()=>{const ok=await requestNotificationPermission();setNotifEnabled(ok);}} className="text-2xl" title="通知をオン">🔔</button>
+              <button onClick={async()=>{const ok=await requestNotificationPermission();setNotifEnabled(ok);}}
+                style={{position:"relative",width:38,height:38,borderRadius:"50%",background:"rgba(255,255,255,.08)",border:"none",cursor:"pointer",color:G.muted,display:"inline-flex",alignItems:"center",justifyContent:"center"}}
+                className="active:scale-90 transition-transform" title="通知をオン">
+                <HoIcon name="bell" size={20}/>
+                <span style={{position:"absolute",top:7,right:8,width:9,height:9,borderRadius:5,background:G.red,border:`2px solid ${G.bg}`}}/>
+              </button>
             )}
-            <button onClick={()=>nav("mypage")} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border-0 cursor-pointer active:scale-95 transition-transform" title="マイページ">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                <circle cx="12" cy="7.5" r="4.5"/>
-                <path d="M3 21c0-4.97 4.03-9 9-9s9 4.03 9 9H3z"/>
-              </svg>
+            {/* アバター → マイページ */}
+            <button onClick={()=>nav("mypage")} style={{background:"none",border:"none",cursor:"pointer",padding:0}} className="active:scale-90 transition-transform" title="マイページ">
+              <HoAvatar name={me.nickname?.[0]||me.icon||"?"} size={38} bg="linear-gradient(135deg,#E60033,#ff5a7a)"/>
             </button>
+            {/* ハンバーガー（既存スライドメニュー） */}
             <button onClick={()=>setShowHamMenu(v=>!v)}
-              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm border-0 cursor-pointer active:scale-95 transition-transform"
-              title="メニュー">
+              style={{width:36,height:36,borderRadius:"50%",background:"rgba(255,255,255,.08)",border:"none",cursor:"pointer",color:"#fff",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:15}}
+              className="active:scale-90 transition-transform" title="メニュー">
               {showHamMenu?"✕":"☰"}
             </button>
           </div>
         </div>
 
-        <div className="px-5">
+        <div style={{padding:"0 20px"}}>
           {/* 日本戦バナー */}
           <JapanBanner/>
 
-          {/* 今日の試合フィーチャーカード */}
+          {/* ── 今日の試合フィーチャーカード ── */}
           {featuredMatch&&(
-            <button onClick={()=>nav("matches")} className="w-full text-left mt-3 bg-white rounded-card shadow-data-card p-4 block border-0 cursor-pointer">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="bg-hinomaru text-white text-xs rounded-full px-2 py-0.5 font-bold">
-                    未予想 {unpredictedTodayMatches.length||1}
+            <button onClick={()=>nav("matches")} style={{
+              width:"100%",textAlign:"left",marginTop:10,borderRadius:16,background:"#fff",
+              padding:"14px 16px",border:"none",cursor:"pointer",
+              boxShadow:"0 10px 26px rgba(4,12,33,.30)",display:"block",
+            }} className="active:scale-[.99] transition-transform">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:22,height:22,borderRadius:7,background:"rgba(230,0,51,.12)",color:G.red,flexShrink:0}}>
+                    <HoIcon name="ball" size={14}/>
                   </span>
-                  <span className="text-text-on-white-gray text-xs">今日の試合</span>
+                  <span style={{fontSize:12,fontWeight:700,color:"#5B6B85"}}>今日の試合</span>
                 </div>
-                {featuredMatch&&(()=>{
-                  const diff3=new Date(featuredMatch.kickoff)-now;
-                  const rh=Math.floor(diff3/3600000);const rm=Math.floor((diff3%3600000)/60000);
-                  return<span className="text-xs text-text-on-white-gray">あと {rh>0?rh+"h ":""}{rm}m</span>;
-                })()}
+                <span style={{fontSize:11,fontWeight:800,padding:"1px 8px",borderRadius:99,background:"rgba(230,0,51,.10)",color:G.red,whiteSpace:"nowrap"}}>
+                  未予想 {unpredictedTodayMatches.length||1}
+                </span>
               </div>
-              <div className="flex items-center justify-center gap-3 text-text-on-white font-black text-lg my-2">
-                <span>{featuredMatch.home}</span>
-                <span className="text-text-on-white-gray font-normal text-sm">VS</span>
-                <span>{featuredMatch.away}</span>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:10}}>
+                <span style={{fontWeight:900,fontSize:16,color:G.bg,whiteSpace:"nowrap"}}>{featuredMatch.home}</span>
+                <span style={{fontWeight:900,fontSize:12,padding:"4px 10px",borderRadius:8,background:"#F0F4FA",color:"#5B6B85",flexShrink:0}}>VS</span>
+                <span style={{fontWeight:900,fontSize:16,color:G.bg,whiteSpace:"nowrap"}}>{featuredMatch.away}</span>
               </div>
-              <div className="text-center text-xs text-text-on-white-gray mt-1">当たれば <span className="text-navy-base font-bold">+{SCORING.outcome}pt</span></div>
+              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:10,fontSize:11,fontWeight:700,color:G.red}}>
+                <HoIcon name="clock" size={14}/>
+                {(()=>{const diff3=new Date(featuredMatch.kickoff)-now;const rh=Math.floor(diff3/3600000);const rm=Math.floor((diff3%3600000)/60000);return`締切まで ${rh>0?rh+"h ":""}${rm}m`;})()}
+                <span style={{marginLeft:"auto",fontWeight:700,color:"#5B6B85"}}>当たれば <span style={{fontWeight:900,color:G.bg}}>+{SCORING.outcome}pt</span></span>
+              </div>
             </button>
           )}
 
-          {/* 2×2 ステータスカード */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
+          {/* ── 2×2 ステータスカード ── */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:10}}>
             {[
-              {label:"順位",value:`${myRankIdx>=0?myRankIdx+1:"－"}位`,sub:`/ ${sortedP.length}人`,action:()=>nav("ranking"),icon:"🏆"},
-              {label:"連続的中",value:myStreak>0?`${myStreak}🔥`:"0",sub:"ストリーク",action:()=>nav("badges"),icon:"🔥"},
-              {label:"コイン",value:myCoins.toLocaleString()+"🪙",sub:"残高",action:()=>nav("coinshop"),icon:"🪙"},
-              {label:"バッジ",value:`${myBadgesCount}/${BADGES.length}`,sub:"獲得済み",action:()=>nav("badges"),icon:"🏅"},
+              {icon:"chart",iconBg:"rgba(13,42,94,.10)",iconInk:G.dark,label:"現在の順位",
+                val:<p style={{color:G.bg,fontWeight:900,lineHeight:1,marginTop:6}}><span style={{fontSize:26}}>{myRankIdx>=0?myRankIdx+1:"－"}</span><span style={{fontSize:13,fontWeight:700,color:"#5B6B85"}}> 位 / {sortedP.length}人</span></p>,
+                action:()=>nav("ranking")},
+              {icon:"flame",iconBg:"rgba(244,180,0,.16)",iconInk:G.gold,label:"連続的中",
+                val:<p style={{fontWeight:900,lineHeight:1,marginTop:6,color:G.red}}><span style={{fontSize:26}}>{myStreak}</span><span style={{fontSize:13,fontWeight:700,color:G.bg}}> 連続 {myStreak>0?"🔥":""}</span></p>,
+                action:()=>nav("badges")},
+              {icon:"coin",iconBg:"rgba(244,180,0,.16)",iconInk:G.gold,label:"コイン残高",
+                val:<p style={{color:G.bg,fontWeight:900,lineHeight:1,marginTop:6}}><span style={{fontSize:26}}>{myCoins.toLocaleString()}</span><span style={{fontSize:13,fontWeight:700,color:G.gold}}> 🪙</span></p>,
+                action:()=>nav("coinshop")},
+              {icon:"trophy",iconBg:"rgba(230,0,51,.12)",iconInk:G.red,label:"獲得バッジ",
+                val:<p style={{color:G.bg,fontWeight:900,lineHeight:1,marginTop:6}}><span style={{fontSize:26}}>{myBadgesCount}</span><span style={{fontSize:13,fontWeight:700,color:"#5B6B85"}}> / {BADGES.length}</span></p>,
+                action:()=>nav("badges")},
             ].map(c=>(
-              <button key={c.label} onClick={c.action} className="bg-white rounded-card shadow-data-card p-4 text-left cursor-pointer border-0">
-                <div className="text-text-on-white-gray text-xs mb-1">{c.label}</div>
-                <div className="text-text-on-white font-black text-xl leading-tight">{c.value}</div>
-                <div className="text-text-on-white-gray text-xs mt-0.5">{c.sub}</div>
+              <button key={c.label} onClick={c.action} style={{
+                textAlign:"left",borderRadius:16,background:"#fff",padding:"14px",
+                border:"none",cursor:"pointer",boxShadow:"0 10px 26px rgba(4,12,33,.30)",
+                display:"flex",flexDirection:"column",
+              }} className="active:scale-[.98] transition-transform">
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:22,height:22,borderRadius:7,background:c.iconBg,color:c.iconInk,flexShrink:0}}>
+                    <HoIcon name={c.icon} size={14}/>
+                  </span>
+                  <span style={{fontSize:11,fontWeight:700,color:"#5B6B85",whiteSpace:"nowrap"}}>{c.label}</span>
+                </div>
+                {c.val}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* メイン CTA */}
-          <button onClick={()=>nav("matches")}
-            className="w-full mt-4 bg-hinomaru hover:bg-hinomaru-hover text-white font-black text-lg rounded-card-lg shadow-cta-red py-5 border-0 cursor-pointer transition-transform active:scale-[.98]">
-            ⚽ 試合を予想する
+        {/* ── メイン CTA ── */}
+        <div style={{padding:"14px 20px 4px",background:"linear-gradient(180deg,transparent,#081a40 40%)"}}>
+          <button onClick={()=>nav("matches")} style={{
+            width:"100%",borderRadius:16,padding:"16px",
+            background:G.red,boxShadow:"0 10px 26px rgba(230,0,51,.42)",
+            border:"none",cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+            fontWeight:900,fontSize:17,color:"#fff",whiteSpace:"nowrap",
+          }} className="active:scale-[.98] transition-transform">
+            <HoIcon name="ball" size={20}/> 試合を予想する
           </button>
+        </div>
 
-          {/* 大会内機能グリッド */}
-          <div className="mt-5">
-            <button onClick={()=>setExtraOpen(v=>!v)}
-              className="flex items-center justify-between w-full text-text-on-navy-dim text-sm font-bold mb-3 bg-transparent border-0 cursor-pointer py-1">
+        <div style={{padding:"4px 20px"}}>
+          {/* ── 大会内機能グリッド ── */}
+          <div style={{marginTop:8}}>
+            <button onClick={()=>setExtraOpen(v=>!v)} style={{
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              width:"100%",color:G.muted,fontSize:13,fontWeight:700,
+              background:"transparent",border:"none",cursor:"pointer",padding:"4px 0 10px",
+            }}>
               <span>この大会のその他の機能</span>
-              <span>{extraOpen?"▲":"▼"}</span>
+              <span style={{transform:extraOpen?"rotate(180deg)":"none",transition:"transform .2s",display:"inline-flex"}}>
+                <HoIcon name="chevdown" size={16}/>
+              </span>
             </button>
             {extraOpen&&(
-              <div className="grid grid-cols-4 gap-2">
-                {[["🏆","優勝予想",()=>nav("predict")],["🇯🇵","日本代表",()=>nav("japan")],["⭐","ベスト11",()=>nav("best11")],["📋","グループ表",()=>nav("groups")],["💬","チャット",()=>nav("tournament"),chatUnread],["🏅","バッジ",()=>nav("badges")],["🪙","コイン",()=>nav("coinshop")],["⚙️","設定",()=>nav("admin")]].map(([icon,label,action,badge])=>(
-                  <button key={label} onClick={action}
-                    className="bg-white/5 border border-white/10 rounded-card text-white text-center py-3 cursor-pointer relative text-xs font-bold">
-                    <div className="text-xl mb-1 relative inline-block">
-                      {icon}
-                      {badge>0&&<span className="absolute -top-1 -right-2 bg-hinomaru text-white rounded-full text-[9px] font-black px-1 leading-4 min-w-[14px] text-center">{badge>99?"99+":badge}</span>}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+                {[
+                  {ico:<HoIcon name="trophy" size={20}/>,   label:"優勝予想", action:()=>nav("predict"),     badge:0},
+                  {ico:<span style={{fontSize:18}}>🇯🇵</span>,label:"日本代表", action:()=>nav("japan"),      badge:0},
+                  {ico:<span style={{fontSize:18}}>⭐</span>, label:"ベスト11", action:()=>nav("best11"),     badge:0},
+                  {ico:<HoIcon name="chart" size={20}/>,    label:"グループ表",action:()=>nav("groups"),     badge:0},
+                  {ico:<HoIcon name="chat" size={20}/>,     label:"チャット",  action:()=>nav("tournament"), badge:chatUnread},
+                  {ico:<HoIcon name="flame" size={20}/>,    label:"バッジ",    action:()=>nav("badges"),     badge:0},
+                  {ico:<HoIcon name="coin" size={20}/>,     label:"コイン",    action:()=>nav("coinshop"),   badge:0},
+                  {ico:<HoIcon name="cog" size={20}/>,      label:"設定",      action:()=>nav("admin"),      badge:0},
+                ].map(c=>(
+                  <button key={c.label} onClick={c.action} style={{
+                    background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.10)",
+                    borderRadius:14,color:"#fff",textAlign:"center",padding:"12px 4px",
+                    cursor:"pointer",fontSize:12,fontWeight:700,
+                  }} className="active:scale-95 transition-transform">
+                    <div style={{display:"flex",justifyContent:"center",marginBottom:4}}>
+                      <span style={{position:"relative",display:"inline-flex",color:G.muted}}>
+                        {c.ico}
+                        {c.badge>0&&<span style={{position:"absolute",top:-4,right:-8,background:G.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:900,padding:"0 4px",lineHeight:"14px",minWidth:14,textAlign:"center"}}>{c.badge>99?"99+":c.badge}</span>}
+                      </span>
                     </div>
-                    <div className="text-text-on-navy-dim">{label}</div>
+                    <div style={{color:G.muted}}>{c.label}</div>
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* LINE招待 */}
-          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 mt-4 rounded-card py-3 text-sm font-bold text-white no-underline"
-            style={{background:"rgba(6,199,85,0.15)",border:"1px solid rgba(6,199,85,0.3)"}}>
-            📱 友達を招待する
+          {/* ── LINE招待 ── */}
+          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer" style={{
+            display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+            marginTop:12,borderRadius:14,padding:"12px",
+            fontSize:14,fontWeight:700,color:"#fff",textDecoration:"none",
+            background:"rgba(6,199,85,.15)",border:"1px solid rgba(6,199,85,.30)",
+          }}>
+            <HoIcon name="share" size={16}/>📱 友達を招待する
           </a>
         </div>
       </div>
+
+      {/* JapanCelebrationModal（温存） */}
       {japanCelebration&&<JapanCelebrationModal data={japanCelebration} onClose={()=>{localStorage.setItem(japanCelebration.key,"1");setJapanCelebration(null);}}/>}
-      {/* ── ハンバーガーナビメニュー ── */}
+
+      {/* ── ハンバーガーナビメニュー（スライドイン・温存） ── */}
       {showHamMenu&&(
         <>
-          {/* バックドロップ（外側タップで閉じる） */}
           <div onClick={()=>setShowHamMenu(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:80}}/>
-          {/* スライドインパネル */}
           <div style={{position:"fixed",top:0,right:0,bottom:0,width:240,background:"#0e1942",zIndex:90,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.5)"}}>
             <div style={{padding:"56px 20px 12px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
               <div style={{color:"rgba(255,255,255,0.4)",fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase"}}>メニュー</div>
             </div>
             <div style={{flex:1,overflowY:"auto"}}>
               {[
-                {icon:"⚽",label:"試合を予想",dest:"matches"},
-                {icon:"🏆",label:"優勝予想",dest:"predict"},
-                {icon:"📊",label:"ランキング",dest:"ranking"},
-                {icon:"🗂️",label:"グループ表",dest:"groups"},
-                {icon:"🇯🇵",label:"日本代表",dest:"japan"},
-                {icon:"🏆",label:"決勝T",dest:"bracket"},
-                {icon:"💬",label:"チャット",dest:"tournament"},
-                {icon:"🏅",label:"バッジ",dest:"badges"},
-                {icon:"🪙",label:"コイン",dest:"coinshop"},
-                {icon:"⚙️",label:"設定",dest:"admin"},
+                {ico:<HoIcon name="ball" size={18}/>,   label:"試合を予想", dest:"matches"},
+                {ico:<HoIcon name="trophy" size={18}/>, label:"優勝予想",   dest:"predict"},
+                {ico:<HoIcon name="chart" size={18}/>,  label:"ランキング", dest:"ranking"},
+                {ico:<HoIcon name="chart" size={18}/>,  label:"グループ表", dest:"groups"},
+                {ico:<span style={{fontSize:16}}>🇯🇵</span>,label:"日本代表",dest:"japan"},
+                {ico:<HoIcon name="trophy" size={18}/>, label:"決勝T",      dest:"bracket"},
+                {ico:<HoIcon name="chat" size={18}/>,   label:"チャット",   dest:"tournament"},
+                {ico:<HoIcon name="flame" size={18}/>,  label:"バッジ",     dest:"badges"},
+                {ico:<HoIcon name="coin" size={18}/>,   label:"コイン",     dest:"coinshop"},
+                {ico:<HoIcon name="cog" size={18}/>,    label:"設定",       dest:"admin"},
               ].map(item=>(
                 <button key={item.dest} onClick={()=>{nav(item.dest);setShowHamMenu(false);}}
                   style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",background:"transparent",border:"none",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"#fff",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
-                  <span style={{fontSize:18,width:24,textAlign:"center"}}>{item.icon}</span>
+                  <span style={{width:24,display:"inline-flex",alignItems:"center",justifyContent:"center",color:G.muted}}>{item.ico}</span>
                   {item.label}
                 </button>
               ))}
             </div>
             <button onClick={()=>{setShowLandingOverride(true);setShowHamMenu(false);}}
               style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",background:"transparent",border:"none",borderTop:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.45)",fontSize:13,textAlign:"left",width:"100%"}}>
-              <span style={{fontSize:18,width:24,textAlign:"center"}}>🏠</span>
+              <HoIcon name="home" size={18} style={{color:"rgba(255,255,255,0.45)"}}/>
               ホーム画面
             </button>
           </div>
