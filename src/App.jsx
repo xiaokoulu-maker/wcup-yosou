@@ -5300,68 +5300,55 @@ function PgBracket({nav,tourn}){
   };
 
   return(
-    <div style={{paddingBottom:40}}>
-      {/* ヘッダー */}
-      <div style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 100%)",padding:"36px 20px 20px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
-        <Back onClick={()=>nav(tourn?"tournament":"home")}/>
-        <div style={{color:G.gold,fontSize:22,fontWeight:900}}>🏆 トーナメント表</div>
-        <div style={{color:G.muted,fontSize:12,marginTop:4,lineHeight:1.7}}>
-          自分と友達がどの国を予想しているか一目で確認。<br/>
-          <span style={{color:G.muted,fontSize:10}}>※ 開幕後に実際の組み合わせに更新されます</span>
-        </div>
-        {participants.length>0&&<div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,background:"rgba(0,104,183,0.07)",borderRadius:20,padding:"4px 12px"}}>
-          <span style={{color:G.gold,fontSize:11,fontWeight:700}}>{totalPred}人が優勝予想済み</span>
-        </div>}
+    <div className="screen">
+      <div style={{textAlign:"center",padding:"8px 18px 0"}}><DsBackRow onClick={()=>nav(tourn?"tournament":"home")}/></div>
+      <div style={{textAlign:"center",padding:"4px 18px 0"}}>
+        <h1 style={{fontSize:22,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          <DsIcon name="trophy" size={20} style={{color:"var(--gold)"}}/> トーナメント表
+        </h1>
+        <p style={{fontSize:12,color:"var(--muted)",marginTop:8,lineHeight:1.6}}>
+          自分と友達が予想している国をカードで確認。<br/>
+          {participants.length>0&&<span style={{color:"var(--gold)",fontFamily:"Roboto Mono",fontSize:11}}>{totalPred}人が優勝予想済み</span>}
+        </p>
       </div>
 
-      {/* タブ */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:4,padding:"12px 14px 0"}}>
-        {[["bracket","🏆 表"],["pred","📊 集計"],["mine","👤 自分"],["friends","👥 友達"]].map(([v,lb])=>(
-          <button key={v} onClick={()=>setTab(v)} style={{background:tab===v?G.gold:G.card,color:tab===v?"#111":"#ccc",border:"none",borderRadius:10,padding:"9px 4px",fontSize:11,cursor:"pointer",fontWeight:tab===v?800:400}}>{lb}</button>
-        ))}
+      <div className="wrap section tight">
+        <DsTabs gold value={tab} onChange={setTab} items={[
+          {key:"bracket",label:"表"},
+          {key:"pred",   label:"集計"},
+          {key:"mine",   label:"自分"},
+          {key:"friends",label:"友達"},
+        ]}/>
       </div>
 
-      <div style={{padding:"12px 14px 0"}}>
-        {/* 凡例 */}
-        {tab==="bracket"&&participants.length>0&&(
-          <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-            <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(14,165,233,0.1)",borderRadius:8,padding:"3px 8px"}}>
-              <span style={{width:6,height:6,borderRadius:"50%",background:"#0EA5E9",display:"inline-block"}}/>
-              <span style={{color:"#7DD3FC",fontSize:10}}>予想あり</span>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:4,background:`${G.gold}11`,borderRadius:8,padding:"3px 8px"}}>
-              <span style={{width:6,height:6,borderRadius:"50%",background:G.gold,display:"inline-block"}}/>
-              <span style={{color:G.gold,fontSize:10}}>勝者（確定済み）</span>
-            </div>
-          </div>
-        )}
-
+      <div className="wrap section">
         {tab==="bracket"&&(
           <>
-            <BracketView/>
-            <div style={{background:G.dark,borderRadius:10,padding:"10px 14px",marginTop:10}}>
-              <div style={{color:G.muted,fontSize:10,lineHeight:1.8}}>
-                ※ 現在は仮の組み合わせです。開幕後に実際の組み合わせに更新されます。<br/>
-                ※ 青いカードは大会参加者が優勝予想している国です。
-              </div>
+            <div className="bracket-scroll">
+              <BracketView/>
+            </div>
+            <div className="note-card" style={{marginTop:10}}>
+              ※ 現在は仮の組み合わせです。開幕後に実際の組み合わせに更新されます。<br/>
+              ※ 青いカードは大会参加者が優勝予想している国です。
             </div>
           </>
         )}
         {tab==="pred"&&<PredView/>}
         {tab==="mine"&&(
           <>
-            <div style={{color:G.muted,fontSize:12,marginBottom:10}}>大会参加者全員の予想一覧です</div>
+            <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>大会参加者全員の予想一覧です</div>
             <PersonView filterFn={p=>!!p.predictions} empty="まだ予想がありません"/>
           </>
         )}
         {tab==="friends"&&(
           <>
-            <div style={{color:G.muted,fontSize:12,marginBottom:10}}>友達の優勝予想と詳細を確認できます</div>
+            <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>友達の優勝予想と詳細を確認できます</div>
             <PersonView filterFn={p=>!!p.predictions?.winner} empty="まだ優勝予想が入力されていません"/>
           </>
         )}
-
-        <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+        <button className="btn btn-dark md" onClick={()=>nav("tournament")} style={{marginTop:12}}>
+          <DsIcon name="back" size={17} stroke={2.2}/> 大会ページへ戻る
+        </button>
       </div>
     </div>
   );

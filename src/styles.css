@@ -325,6 +325,17 @@ textarea:focus{border-color:#005BAC !important;box-shadow:0 0 0 3px rgba(0,91,17
 .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:24px;font-weight:600}
 .foot b{color:#ff5a60}
 .foot a{color:#9fb4f0;text-decoration:none;font-weight:700}
+/* bracket */
+.note-card{background:rgba(62,123,255,.07);border:1px solid rgba(62,123,255,.2);border-radius:13px;padding:11px 14px;font-size:11px;color:#9fb4d8;font-weight:500;line-height:1.6}
+.bracket-scroll{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+.bracket{display:flex;gap:16px;min-width:max-content;padding:2px}
+.round{display:flex;flex-direction:column;gap:10px;min-width:128px}
+.round .rt{font-family:"Roboto Mono";font-size:10px;letter-spacing:.12em;color:var(--gold);font-weight:700;text-align:center;margin-bottom:2px}
+.slot{background:linear-gradient(180deg,rgba(19,28,58,.7),rgba(13,19,40,.7));border:1px solid var(--line-soft);border-radius:11px;padding:8px 10px;display:flex;flex-direction:column;gap:7px;justify-content:center}
+.slot .tm{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.slot .tm .dotf{width:18px;height:13px;border-radius:3px;background:rgba(255,255,255,.07);border:1px dashed var(--line)}
+.slot.filled .tm{color:#eef1f9}
+.slot .vs-s{font-family:"Roboto Mono";font-size:8.5px;color:var(--faint);text-align:center}
 /* mypage */
 .profile{display:flex;align-items:center;gap:14px}
 .profile .av{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:26px;font-weight:900;color:#fff;background:linear-gradient(160deg,#ff4147,#c41420);box-shadow:0 10px 26px var(--red-glow);flex:none}
