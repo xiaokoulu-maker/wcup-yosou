@@ -3048,88 +3048,98 @@ ${url}`);
   const isPaid=t.plan&&t.plan!=="free";
   const deadlinePassed=isDeadlinePassed(t.deadline);
   return(
-    <div style={{paddingBottom:40}}>
-      <div style={{padding:"14px 18px 0"}}><Back onClick={()=>{window.location.hash="";nav("home");}}/></div>
-      <div style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 100%)",padding:"16px 20px 26px",textAlign:"center",position:"relative",overflow:"hidden",borderBottom:"1px solid rgba(255,255,255,0.08)"}}><div style={{position:"absolute",top:-40,left:"50%",transform:"translateX(-50%)",width:300,height:200,background:"radial-gradient(ellipse,rgba(0,104,183,0.07) 0%,transparent 65%)",pointerEvents:"none"}}/>
-        <img src={LOGO_IMG} alt="ロゴ" style={{width:52,height:52,borderRadius:"50%",objectFit:"cover",marginBottom:6,boxShadow:"0 0 0 3px rgba(0,104,183,0.2),0 4px 16px rgba(0,91,172,0.15)"}}/>
-        <div style={{color:G.gold,fontSize:19,fontWeight:900}}>{t.name}</div>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:6,background:isPaid?"rgba(0,104,183,0.08)":"rgba(0,0,0,0.03)",border:`1px solid ${isPaid?"rgba(0,104,183,0.25)":"#D9E8FF"}`,borderRadius:20,padding:"3px 12px"}}>
-          <span style={{color:isPaid?G.gold:G.muted,fontSize:11,fontWeight:700}}>{isPaid?`★ ${STRIPE[t.plan]?.label}プラン`:"無料プラン"}</span>
-          <span style={{color:"#D9E8FF",fontSize:10}}>|</span>
-          <span style={{color:t.participants.length>=t.maxParticipants?"#E60033":"#16A34A",fontSize:11,fontWeight:700}}>{t.participants.length} / {t.maxParticipants}人</span>
-        </div>
-        {t.deadline&&<div style={{marginTop:6,display:"inline-block",background:deadlinePassed?"rgba(230,0,51,0.08)":"rgba(22,163,74,0.08)",borderRadius:8,padding:"4px 12px"}}>
-          <span style={{color:deadlinePassed?"#E60033":"#16A34A",fontSize:12,fontWeight:700}}>{deadlinePassed?"⛔ 予想締め切り済み":"⏰ 締め切り: "+fmtDeadline(t.deadline)}</span>
-        </div>}
-        <div style={{display:"flex",justifyContent:"center",gap:12,marginTop:14}}>
-          <div style={{background:"rgba(0,104,183,0.07)",border:"1px solid rgba(0,104,183,0.2)",borderRadius:14,padding:"10px 20px",textAlign:"center",minWidth:80}}>
-            <div style={{color:G.gold,fontWeight:900,fontSize:36,lineHeight:1}}>{t.participants.length}</div>
-            <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1,marginTop:3}}>PLAYERS</div>
+    <div className="screen">
+      <DsBackRow onClick={()=>{window.location.hash="";nav("home");}}/>
+
+      {/* 大会ヘッダーカード */}
+      <div className="wrap section tight">
+        <div className="card lg" style={{textAlign:"center"}}>
+          <img src={LOGO_IMG} alt="ロゴ" style={{width:52,height:52,borderRadius:"50%",objectFit:"cover",marginBottom:8,boxShadow:"0 0 0 3px rgba(62,123,255,.2),0 4px 16px rgba(30,70,200,.15)"}}/>
+          <div style={{color:"var(--gold)",fontSize:20,fontWeight:900,marginBottom:6}}>{t.name}</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
+            <span className={"chip"+(isPaid?" gold":" dim")}>{isPaid?`★ ${STRIPE[t.plan]?.label}プラン`:"無料プラン"}</span>
+            <span className={"chip"+(full?" red":" dim")}>{t.participants.length} / {t.maxParticipants}人</span>
           </div>
-          <div style={{display:"flex",alignItems:"center",color:"#C9DDF5",fontSize:24}}>/</div>
-          <div style={{background:"rgba(0,104,183,0.04)",border:"1px solid #D9E8FF",borderRadius:14,padding:"10px 20px",textAlign:"center",minWidth:80}}>
-            <div style={{color:"#5B6B7A",fontWeight:700,fontSize:28,lineHeight:1}}>{t.maxParticipants}</div>
-            <div style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1,marginTop:3}}>MAX</div>
+          {t.deadline&&(
+            <div style={{marginTop:8}}>
+              <span className={"chip"+(deadlinePassed?" red":" dim")}>{deadlinePassed?"⛔ 締め切り済み":"⏰ 締め切り: "+fmtDeadline(t.deadline)}</span>
+            </div>
+          )}
+          <div className="grid2" style={{marginTop:14,gap:8}}>
+            <div className="stat">
+              <div className="lbl">PLAYERS</div>
+              <div className="num gold">{t.participants.length}</div>
+            </div>
+            <div className="stat">
+              <div className="lbl">MAX</div>
+              <div className="num">{t.maxParticipants}</div>
+            </div>
           </div>
-        </div>
-        <div style={{marginTop:10,display:"inline-flex",alignItems:"center",gap:5,background:"rgba(22,163,74,0.08)",borderRadius:20,padding:"4px 12px"}}>
-          <span style={{width:6,height:6,borderRadius:"50%",background:"#22C55E",display:"inline-block",animation:"pulseDot 1.5s ease-in-out infinite"}}/>
-          <span style={{color:"#16A34A",fontSize:10,fontWeight:700}}>リアルタイム更新中</span>
+          <div className="live" style={{justifyContent:"center",marginTop:10}}>
+            <span className="blip"/> リアルタイム更新中
+          </div>
         </div>
       </div>
-      <div style={{padding:"12px 18px 0"}}>
-        <div style={{...crd,border:`1.5px solid ${G.gold}44`}}>
-          <div style={{color:G.gold,fontWeight:700,marginBottom:10,fontSize:13}}>📣 友達を招待しよう！</div>
+
+      {/* 招待カード */}
+      <div className="wrap section">
+        <div className="card lg" style={{borderColor:"rgba(245,180,49,.3)"}}>
+          <div style={{color:"var(--gold)",fontWeight:700,marginBottom:10,fontSize:13}}>📣 友達を招待しよう！</div>
           <div style={{display:"flex",gap:8,marginBottom:10}}>
-            <input readOnly style={{...inp,flex:1,fontSize:11,color:"#888"}} value={url}/>
-            <button onClick={copy} style={{background:G.gold,color:"#FFFFFF",border:"none",borderRadius:10,padding:"0 14px",fontWeight:700,cursor:"pointer",flexShrink:0,fontSize:12}}>{copied?"✓ OK":"コピー"}</button>
+            <input readOnly className="tinput" style={{flex:1,fontSize:11}} value={url}/>
+            <button onClick={copy} className="btn btn-gold sm" style={{width:72,flexShrink:0}}>{copied?"✓ OK":"コピー"}</button>
           </div>
-          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer" style={{display:"block",background:"linear-gradient(135deg,#06C755,#049A43)",color:"#fff",borderRadius:14,padding:14,textAlign:"center",fontWeight:800,textDecoration:"none",fontSize:15,boxShadow:"0 4px 20px rgba(6,199,85,0.35)",letterSpacing:0.3}}>📱 LINEで友達に送る</a>
-          <div style={{marginTop:10,textAlign:"center"}}><div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.04)",border:"1px solid #D9E8FF",borderRadius:12,padding:"6px 16px"}}><span style={{color:G.muted,fontSize:10,fontWeight:700,letterSpacing:1}}>大会ID</span><strong style={{color:G.gold,letterSpacing:3,fontSize:13}}>{t.id}</strong></div></div>
+          <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer" className="btn btn-line lg" style={{textDecoration:"none"}}>
+            <span className="lk">L</span> LINEで友達に送る
+          </a>
+          <div style={{marginTop:10,textAlign:"center"}}>
+            <span className="chip dim"><span style={{letterSpacing:1,fontSize:10}}>大会ID</span> <strong style={{color:"var(--gold)",letterSpacing:3}}>{t.id}</strong></span>
+          </div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {deadlinePassed
-            ?<div style={{background:"rgba(255,60,60,0.1)",color:"#f88",borderRadius:12,padding:14,textAlign:"center",fontSize:13}}>⛔ 予想の締め切りが終了しました</div>
-            :full
-              ?<div style={{background:"rgba(255,60,60,0.1)",color:"#f88",borderRadius:12,padding:14,textAlign:"center",fontSize:13}}>参加上限に達しました</div>
-              :<button style={btnG} onClick={()=>nav("join")}>✋ 参加する</button>}
-          <button style={{...btnG,background:"linear-gradient(135deg,#E60033 0%,#AA0025 100%)",boxShadow:"0 8px 24px rgba(230,0,51,0.28)"}} onClick={()=>nav("matches")}>⚽ 試合予想・ライブランキング</button>
-          <button style={btnO} onClick={()=>nav("predictions")}>👥 みんなの予想を見る</button>
-          <button style={btnO} onClick={()=>nav("ranking")}>🏆 ランキングを見る</button>
-          <button style={btnO} onClick={()=>nav("stats")}>📊 詳細統計を見る</button>
-          <button style={btnO} onClick={()=>nav("bracket")}>🏆 トーナメント表・予想マップ</button>
-          <button style={{...btnO,borderColor:"#F9731688",color:"#FB923C"}} onClick={()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}}>🔥 予想生存チェック</button>
-          <button style={btnO} onClick={()=>nav("groups")}>🗂️ グループ表・FIFAランキング</button>
-          <button style={btnGr} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
-          {(()=>{
-            const remaining=t.maxParticipants-t.participants.length;
-            const isPaidPlan=t.plan&&t.plan!=="free";
-            if(full)return(
-              <div style={{background:"rgba(14,165,233,0.07)",border:"1px solid rgba(14,165,233,0.25)",borderRadius:12,padding:"12px 14px"}}>
-                <div style={{color:G.muted,fontSize:12,marginBottom:8}}>👥 参加上限に達しました。人数を増やすにはアップグレードが必要です。</div>
-                <button style={{...btnG,padding:"11px",fontSize:13}} onClick={()=>nav("upgrade")}>⬆️ 人数を増やす</button>
-              </div>
-            );
-            if(!isPaidPlan&&remaining<=1)return(
-              <div style={{background:"rgba(0,91,172,0.06)",border:"1px solid rgba(0,91,172,0.2)",borderRadius:12,padding:"10px 14px"}}>
-                <div style={{color:G.gold,fontSize:12,marginBottom:6}}>⚡ もうすぐ参加上限です。人数を増やすならアップグレードできます。</div>
-                <button style={{...btnGr,color:G.gold,borderColor:G.gold+"55",padding:"9px"}} onClick={()=>nav("upgrade")}>アップグレードを見る</button>
-              </div>
-            );
-            if(!isPaidPlan)return(
-              <button style={{...btnGr,color:G.muted,borderColor:"#C9DDF5",fontSize:12}} onClick={()=>nav("upgrade")}>
-                5人まで無料。友達が増えたらアップグレードできます →
-              </button>
-            );
-            return null;
-          })()}
-        </div>
-        <div style={{marginTop:4}}>
-          <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={280}/>
-        </div>
-        <CoffeeSupport compact={true}/>
-        <AffiliateBlock title="🏟️ みんなで観戦する準備" keys={["pizza","drink","projector","streaming"]} compact={true}/>
       </div>
+
+      {/* アクションボタン */}
+      <div className="wrap section" style={{display:"flex",flexDirection:"column",gap:10}}>
+        {deadlinePassed
+          ?<div className="banner blue" style={{borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>⛔ 予想の締め切りが終了しました</div>
+          :full
+            ?<div className="banner blue" style={{borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>参加上限に達しました</div>
+            :<button className="btn btn-dark md" onClick={()=>nav("join")}>✋ 参加する</button>}
+        <button className="btn btn-red lg" onClick={()=>nav("matches")}><DsIcon name="whistle" size={20}/> 試合予想・ライブランキング</button>
+        <button className="btn btn-dark md" onClick={()=>nav("predictions")}><DsIcon name="users" size={17}/> みんなの予想を見る</button>
+        <button className="btn btn-dark md" onClick={()=>nav("ranking")}><DsIcon name="trophy" size={17}/> ランキングを見る</button>
+        <button className="btn btn-dark md" onClick={()=>nav("stats")}><DsIcon name="chart" size={17}/> 詳細統計を見る</button>
+        <button className="btn btn-dark md" onClick={()=>nav("bracket")}><DsIcon name="bracket" size={17}/> トーナメント表・予想マップ</button>
+        <button className="btn btn-dark md" style={{color:"#FB923C",borderColor:"rgba(249,115,22,.4)"}} onClick={()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}}>🔥 予想生存チェック</button>
+        <button className="btn btn-dark md" onClick={()=>nav("groups")}><DsIcon name="grid" size={17}/> グループ表・FIFAランキング</button>
+        <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
+        {(()=>{
+          const remaining=t.maxParticipants-t.participants.length;
+          const isPaidPlan=t.plan&&t.plan!=="free";
+          if(full)return(
+            <div className="card" style={{padding:"12px 14px"}}>
+              <div style={{color:"var(--muted)",fontSize:12,marginBottom:8}}>👥 参加上限に達しました。人数を増やすにはアップグレードが必要です。</div>
+              <button className="btn btn-red sm" onClick={()=>nav("upgrade")}>⬆️ 人数を増やす</button>
+            </div>
+          );
+          if(!isPaidPlan&&remaining<=1)return(
+            <div className="banner gold">
+              <div>⚡ もうすぐ参加上限です。<button className="btn btn-gold sm" style={{marginTop:6}} onClick={()=>nav("upgrade")}>アップグレードを見る</button></div>
+            </div>
+          );
+          if(!isPaidPlan)return(
+            <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("upgrade")}>
+              5人まで無料。友達が増えたらアップグレードできます →
+            </button>
+          );
+          return null;
+        })()}
+      </div>
+      <div className="wrap section tight">
+        <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={280}/>
+      </div>
+      <CoffeeSupport compact={true}/>
+      <AffiliateBlock title="🏟️ みんなで観戦する準備" keys={["pizza","drink","projector","streaming"]} compact={true}/>
     </div>
   );
 }
