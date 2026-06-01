@@ -325,6 +325,20 @@ textarea:focus{border-color:#005BAC !important;box-shadow:0 0 0 3px rgba(0,91,17
 .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:24px;font-weight:600}
 .foot b{color:#ff5a60}
 .foot a{color:#9fb4f0;text-decoration:none;font-weight:700}
+/* ranking podium */
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:10px;margin-top:8px}
+.pod{display:flex;flex-direction:column;align-items:center}
+.pod .av{border-radius:50%;display:grid;place-items:center;color:#cfd6ea;background:rgba(255,255,255,.05);position:relative}
+.pod .av .crown{position:absolute;top:-22px;color:var(--gold)}
+.pod.first .av{width:84px;height:84px;border:2px solid var(--gold);box-shadow:0 0 26px rgba(245,180,49,.4)}
+.pod:not(.first) .av{width:64px;height:64px;border:2px solid var(--line-strong)}
+.pod .nm{font-size:13px;font-weight:800;margin-top:10px;display:flex;align-items:center;gap:5px}
+.pod .nm .you{font-family:"Roboto Mono";font-size:9px;color:#ff6066}
+.pod .pt{font-family:"Roboto Mono";font-size:11px;color:var(--muted);margin-top:2px}
+.pod .block{width:100%;border-radius:13px 13px 0 0;display:grid;place-items:center;font-family:"Roboto Mono";font-weight:700;margin-top:13px;background:linear-gradient(180deg,rgba(40,52,96,.6),rgba(20,28,56,.4));border:1px solid var(--line-soft);border-bottom:none}
+.pod.first .block{height:120px;font-size:34px;color:var(--gold);background:linear-gradient(180deg,rgba(80,62,20,.5),rgba(30,28,56,.3));border-color:rgba(245,180,49,.3)}
+.pod.second .block{height:88px;font-size:26px;color:#c8cee0}
+.pod.third .block{height:66px;font-size:24px;color:#c8a06a}
 /* home dashboard */
 .next-card{position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:18px 17px;
   background:linear-gradient(150deg,rgba(30,60,150,.5),rgba(13,22,52,.92));

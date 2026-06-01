@@ -3642,43 +3642,33 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
   };
   // 表彰台スロット（共通）
   const PodiumSlot=({rank,p,unitLabel})=>{
-    if(!p) return <div className={rank===1?"h-32":"h-24"}/>;
+    if(!p) return <div style={{minHeight:rank===1?120:88}}/>;
     const isMe=p.id===myId;
-    const ringCls=rank===1?"ring-4 shadow-cta-gold"
-      :rank===2?"ring-4 ring-gray-300":rank===2?"ring-4 ring-gray-300":"ring-4";
-    const ringColor=rank===1?"#F4B400":rank===2?"#C0C0C0":"#A0522D";
-    const crownEmoji=rank===1?"👑":rank===2?"🥈":"🥉";
-    const baseH=rank===1?"h-32":"h-24";
-    const avSize=rank===1?"w-20 h-20":"w-16 h-16";
+    const cls=rank===1?"first":rank===2?"second":"third";
     return(
-      <div className="flex flex-col items-center">
-        {rank===1&&<div className="text-2xl mb-1">{crownEmoji}</div>}
-        <div className={`${avSize} rounded-full flex items-center justify-center text-3xl border-4 shadow-lg${isMe?" border-hinomaru":" border-transparent"}`}
-          style={{outline:`3px solid ${ringColor}`,outlineOffset:1,background:"rgba(255,255,255,0.12)"}}>
+      <div className={`pod ${cls}`}>
+        <div className="av" style={{fontSize:rank===1?34:26}}>
+          {rank===1&&<span className="crown"><DsIcon name="crown" size={22}/></span>}
           {p.icon||"⚽"}
         </div>
-        <div className={`mt-1 text-center leading-tight${rank===1?" text-base font-black":" text-sm font-bold"} text-white`}>
-          {rank!==1&&<span className="mr-1">{crownEmoji}</span>}{p.nickname}
-          {isMe&&<span className="block text-hinomaru text-[10px] font-black">YOU</span>}
-        </div>
-        <div className="text-text-on-navy-dim text-xs tabular-nums">{(p.pts||0).toLocaleString()} {unitLabel}</div>
-        <div className={`mt-2 w-full ${baseH} rounded-t-card border-t border-white/20 flex items-start justify-center pt-2`}
-          style={{background:"linear-gradient(to bottom,rgba(255,255,255,0.12),rgba(255,255,255,0.05))"}}>
-          <div className={`${rank===1?"text-3xl":"text-xl"} font-black text-gold tabular-nums`}>{rank}</div>
-        </div>
+        <div className="nm">{p.nickname}{isMe&&<span className="you">YOU</span>}</div>
+        <div className="pt">{(p.pts||0).toLocaleString()} {unitLabel}</div>
+        <div className="block">{rank}</div>
       </div>
     );
   };
   // 表彰台（上位3人）
   const Podium=({list,unitLabel})=>{
     const [first,second,third]=[list[0],list[1],list[2]];
-    if(!first) return <div className="text-text-on-navy-dim text-center py-8 text-sm">まだ参加者がいません</div>;
+    if(!first) return <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0",fontSize:13}}>まだ参加者がいません</div>;
     return(
-      <div className="px-5 mt-4 mb-2">
-        <div className="grid grid-cols-3 items-end gap-2">
-          <PodiumSlot rank={2} p={second} unitLabel={unitLabel}/>
-          <PodiumSlot rank={1} p={first}  unitLabel={unitLabel}/>
-          <PodiumSlot rank={3} p={third}  unitLabel={unitLabel}/>
+      <div className="wrap section">
+        <div className="card lg">
+          <div className="podium">
+            <PodiumSlot rank={2} p={second} unitLabel={unitLabel}/>
+            <PodiumSlot rank={1} p={first}  unitLabel={unitLabel}/>
+            <PodiumSlot rank={3} p={third}  unitLabel={unitLabel}/>
+          </div>
         </div>
       </div>
     );
@@ -3687,18 +3677,15 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
   const RankRow=({rank,p,unitLabel,unitValue})=>{
     const isMe=p.id===myId;
     return(
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-card mb-2${isMe?" bg-white text-text-on-white shadow-data-card border-l-4 border-hinomaru":" bg-white/5 border border-white/10 text-text-on-navy"}`}>
-        <div className={`w-8 text-center font-black tabular-nums text-sm${isMe?" text-hinomaru":" text-text-on-navy-dim"}`}>{rank}</div>
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl${isMe?" bg-hinomaru/10":" bg-white/10"}`}>{p.icon||"⚽"}</div>
-        <div className="flex-1 min-w-0">
-          <div className={`font-bold text-sm truncate${isMe?" text-text-on-white":" text-white"}`}>
-            {p.nickname}
-            {isMe&&<span className="ml-1.5 text-[10px] bg-hinomaru text-white rounded-full px-2 py-0.5 font-black">YOU</span>}
-          </div>
-          {(p.streak?.current||0)>=3&&<span className="text-xs text-gold">🔥 {p.streak.current}</span>}
+      <div className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
+        <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{rank}</div>
+        <div style={{width:40,height:40,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:20,background:"rgba(255,255,255,.08)",flexShrink:0}}>{p.icon||"⚽"}</div>
+        <div className="tx">
+          <div className="t">{p.nickname}{isMe&&<span style={{marginLeft:8,fontFamily:"'Roboto Mono',monospace",fontSize:9,color:"#ff6066",fontWeight:900}}>YOU</span>}</div>
+          {(p.streak?.current||0)>=3&&<div className="s">🔥 {p.streak.current}連続</div>}
         </div>
-        <div className={`font-black tabular-nums text-sm${isMe?" text-text-on-white":" text-white"}`}>
-          {(unitValue??p.pts??0).toLocaleString()} <span className={`text-xs font-normal${isMe?" text-text-on-white-gray":" text-text-on-navy-dim"}`}>{unitLabel}</span>
+        <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:isMe?"var(--gold)":"var(--txt)",flexShrink:0}}>
+          {(unitValue??p.pts??0).toLocaleString()}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>{unitLabel}</span>
         </div>
       </div>
     );
@@ -3708,25 +3695,15 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
   const coinRanked=[...t.participants].map(p=>({...p,coinBal:getCoins(p).balance})).sort((a,b)=>b.coinBal-a.coinBal);
 
   return(
-    <div className="bg-navy-base min-h-screen pb-12 text-text-on-navy" style={{maxWidth:480,margin:"0 auto"}}>
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between px-5 pt-10 pb-4">
-        <button onClick={()=>nav("tournament")} className="text-text-on-navy-dim text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none">←</button>
-        <div className="text-center">
-          <div className="text-white font-black text-lg">ランキング</div>
-          <div className="text-text-on-navy-dim text-xs">{t.name}</div>
-        </div>
-        <div className="w-8"/>
-      </div>
-
-      {/* タブバー（横スクロール） */}
-      <div className="px-5 flex gap-2 overflow-x-auto pb-1" style={{scrollbarWidth:"none"}}>
-        {[["match","⚽ 試合予想"],["tournament","🏆 大会予想"],["coin","🪙 コインリッチ"],["global","🌐 全国"]].map(([v,lb])=>(
-          <button key={v} onClick={()=>setRankTab(v)}
-            className={`whitespace-nowrap text-xs font-bold px-4 py-2 rounded-full border-0 cursor-pointer flex-shrink-0 transition-colors${rankTab===v?" bg-white text-navy-base":" bg-transparent text-text-on-navy-dim border border-white/15"}`}>
-            {lb}
-          </button>
-        ))}
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("tournament")} eyebrow={t.name} title="ランキング" icon="chart"/>
+      <div className="wrap section tight">
+        <DsTabs value={rankTab} onChange={setRankTab} items={[
+          {key:"match",     label:"試合予想"},
+          {key:"tournament",label:"大会予想"},
+          {key:"coin",      label:"コイン"},
+          {key:"global",    label:"全国"},
+        ]}/>
       </div>
 
       {/* ===== 試合予想 / 大会予想 ===== */}
@@ -3737,27 +3714,33 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
         const unitLabel="pt";
         return(
           <div>
-            {rankTab==="match"&&<div className="mx-5 mt-3 mb-0"><ScoringRulesCard compact={true}/></div>}
+            <div className="wrap section tight">
+              <DsBanner tone="gold" icon="target">
+                採点ルール：勝敗的中 <span className="pts">+{SCORING.outcome}pt</span>　スコア完全的中 <span className="pts">+{SCORING.exact+SCORING.outcome}pt</span>
+              </DsBanner>
+            </div>
             {rankTab==="tournament"&&hasRes&&(
-              <div className="mx-5 mt-3 bg-white/5 border border-white/10 rounded-card p-3">
-                <div className="text-gold font-bold text-xs mb-2">📊 確定結果</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Badge label="優勝" val={t.results.winner}/>
-                  <Badge label="準優勝" val={t.results.runnerUp}/>
-                  {t.results.topScorer&&<Badge label="得点王" val={t.results.topScorer}/>}
-                  <Badge label="日本代表" val={t.results.japanResult}/>
+              <div className="wrap section tight">
+                <div className="card" style={{padding:"12px 14px"}}>
+                  <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,marginBottom:8}}>📊 確定結果</div>
+                  <div className="grid2" style={{gap:8}}>
+                    <Badge label="優勝" val={t.results.winner}/>
+                    <Badge label="準優勝" val={t.results.runnerUp}/>
+                    {t.results.topScorer&&<Badge label="得点王" val={t.results.topScorer}/>}
+                    <Badge label="日本代表" val={t.results.japanResult}/>
+                  </div>
                 </div>
               </div>
             )}
             {rankTab==="tournament"&&!hasRes&&(
-              <div className="mx-5 mt-3 bg-white/5 border border-white/10 rounded-card p-3 text-text-on-navy-dim text-xs">
-                管理者が結果を入力するとポイントが反映されます
+              <div className="wrap section tight">
+                <div className="banner blue">管理者が結果を入力するとポイントが反映されます</div>
               </div>
             )}
             {list.length===0
-              ?<div className="text-text-on-navy-dim text-center py-12 text-sm">まだ参加者がいません</div>
+              ?<div className="wrap section"><div className="card" style={{textAlign:"center",padding:"40px",color:"var(--muted)",fontSize:13}}>まだ参加者がいません</div></div>
               :<><Podium list={top3} unitLabel={unitLabel}/>
-                <div className="px-5 mt-2">
+                <div className="wrap section tight">
                   {rest.map((p,i)=><RankRow key={p.id} rank={i+4} p={p} unitLabel={unitLabel}/>)}
                 </div>
               </>
@@ -3773,18 +3756,16 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
         const rest=coinList.slice(3);
         return(
           <div>
-            <div className="mx-5 mt-3 bg-white/5 border border-white/10 rounded-card p-3 text-xs">
-              <div className="text-gold font-bold mb-1">🪙 コインリッチランキング</div>
-              <div className="text-text-on-navy-dim">ゲーム内コインの残高ランキングです</div>
-              <div className="text-hinomaru mt-1 text-[10px]">⚖️ このコインは現実のお金・賞品と一切交換できません</div>
+            <div className="wrap section tight">
+              <div className="banner gold">
+                🪙 コインリッチランキング — ゲーム内コイン残高（現実のお金と一切無関係）
+              </div>
             </div>
             {coinList.length===0
-              ?<div className="text-text-on-navy-dim text-center py-12 text-sm">まだ参加者がいません</div>
+              ?<div className="wrap section"><div className="card" style={{textAlign:"center",padding:"40px",color:"var(--muted)",fontSize:13}}>まだ参加者がいません</div></div>
               :<><Podium list={top3} unitLabel="🪙"/>
-                <div className="px-5 mt-2">
-                  {rest.map((p,i)=>(
-                    <RankRow key={p.id} rank={i+4} p={p} unitLabel="🪙" unitValue={p.coinBal}/>
-                  ))}
+                <div className="wrap section tight">
+                  {rest.map((p,i)=>(<RankRow key={p.id} rank={i+4} p={p} unitLabel="🪙" unitValue={p.coinBal}/>))}
                 </div>
               </>
             }
@@ -3805,105 +3786,77 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
         const top100=list.slice(0,100);
         return(
           <div>
-            {/* 自分の全国順位カード */}
-            <div className="mx-5 mt-4">
-              {myPts>0?(
-                <div className="rounded-xl border border-white/10 p-5 text-center" style={{background:"#12244f"}}>
-                  <div className="text-[10px] text-text-on-navy-dim tracking-widest font-bold uppercase">YOUR GLOBAL RANK</div>
-                  {myRank?(
-                    <>
-                      <div className="flex items-baseline justify-center gap-1 mt-2">
-                        <span className="text-5xl font-black tabular-nums text-gold">#{myRank}</span>
-                        <span className="text-text-on-navy-dim text-sm">位</span>
-                      </div>
-                      <div className="text-text-on-navy-dim text-sm mt-1">/ {total.toLocaleString()} 人中</div>
-                    </>
-                  ):(
-                    <div className="text-text-on-navy-dim text-sm mt-2">圏外（TOP200外）</div>
-                  )}
-                  <div className="border-t border-white/10 mt-3 pt-3 text-text-on-navy-dim text-sm">
-                    累計 <span className="text-white font-black text-xl">{myPts}</span> pt
-                  </div>
-                </div>
-              ):(
-                <div className="rounded-xl border border-white/10 p-5 text-center" style={{background:"#12244f"}}>
-                  <div className="text-text-on-navy-dim text-sm">あなたはまだランクインしていません</div>
-                  <button onClick={()=>nav("matches")}
-                    className="mt-3 bg-hinomaru text-white font-bold text-xs px-4 py-2 rounded-full border-0 cursor-pointer">
-                    ⚽ 予想して全国ランキングに登場！
-                  </button>
-                </div>
-              )}
+            <div className="wrap section tight">
+              <div className="card lg" style={{textAlign:"center"}}>
+                <div className="eyebrow" style={{justifyContent:"center",marginBottom:8}}>YOUR GLOBAL RANK</div>
+                {myPts>0?(
+                  <>
+                    {myRank
+                      ?<><div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:900,fontSize:48,color:"var(--gold)",lineHeight:1}}>#{myRank}</div><div style={{color:"var(--muted)",fontSize:13,marginTop:4}}>/ {total.toLocaleString()} 人中</div></>
+                      :<div style={{color:"var(--muted)",fontSize:14,marginTop:4}}>圏外（TOP200外）</div>
+                    }
+                    <div className="hairline"/>
+                    <div style={{color:"var(--muted)",fontSize:13}}>累計 <span style={{color:"var(--txt)",fontWeight:900,fontSize:20}}>{myPts}</span> pt</div>
+                  </>
+                ):(
+                  <>
+                    <div style={{color:"var(--muted)",fontSize:13,marginBottom:12}}>あなたはまだランクインしていません</div>
+                    <button onClick={()=>nav("matches")} className="btn btn-red sm" style={{width:"auto",padding:"8px 18px",display:"inline-flex"}}>⚽ 予想して登場！</button>
+                  </>
+                )}
+              </div>
             </div>
-            {/* ローディング / エラー */}
-            {globalLoading&&<div className="text-text-on-navy-dim text-center py-8">🌐 読み込み中...</div>}
+            {globalLoading&&<div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>🌐 読み込み中...</div>}
             {globalErr&&!globalLoading&&(
-              <div className="mx-5 mt-3 bg-hinomaru/10 border border-hinomaru/30 rounded-card p-3">
-                <div className="text-hinomaru-light text-xs mb-2">{globalErr}</div>
-                <button onClick={()=>loadGlobalRanking(true)} className="bg-white/10 border border-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full cursor-pointer">再試行</button>
+              <div className="wrap section tight">
+                <div className="banner blue" style={{flexDirection:"column",gap:8}}>
+                  <span>{globalErr}</span>
+                  <button onClick={()=>loadGlobalRanking(true)} className="btn btn-dark sm" style={{width:"auto",padding:"6px 14px"}}>再試行</button>
+                </div>
               </div>
             )}
             {!globalLoading&&!globalErr&&list.length===0&&(
-              <div className="text-text-on-navy-dim text-center py-8 text-sm">W杯開幕後にランキング開始！</div>
+              <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0",fontSize:13}}>W杯開幕後にランキング開始！</div>
             )}
             {!globalLoading&&list.length>0&&(
-              <div className="px-5 mt-4">
-                <div className="text-gold font-bold text-sm mb-2">🏆 TOP {Math.min(100,list.length)}</div>
+              <div className="wrap section tight">
+                <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,marginBottom:8}}>🏆 TOP {Math.min(100,list.length)}</div>
                 {top100.map(r=>{
                   const isMe=r.id===myId;
                   const medal=r.rank===1?"👑":r.rank===2?"🥈":r.rank===3?"🥉":null;
                   return(
-                    <div key={r.id+"_"+r.rank}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-card mb-2${isMe?" bg-white text-text-on-white shadow-data-card border-l-4 border-hinomaru":" bg-white/5 border border-white/10"}`}>
-                      <div className={`w-8 text-center font-black text-sm${r.rank<=3?" text-gold":isMe?" text-hinomaru":" text-text-on-navy-dim"}`}>
-                        {medal||r.rank}
-                      </div>
-                      <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lg">{r.icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-bold text-sm truncate${isMe?" text-text-on-white":" text-white"}`}>
-                          {isMe&&"★ "}{r.nickname}
-                          {isMe&&<span className="ml-1.5 text-[10px] bg-hinomaru text-white rounded-full px-1.5 py-0.5 font-black">YOU</span>}
-                        </div>
-                      </div>
-                      <div className={`font-black tabular-nums text-sm${isMe?" text-text-on-white":" text-white"}`}>{r.points}<span className="text-xs font-normal opacity-60 ml-0.5">pt</span></div>
+                    <div key={r.id+"_"+r.rank} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
+                      <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:r.rank<=3?"var(--gold)":isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{medal||r.rank}</div>
+                      <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
+                      <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}{isMe&&<span style={{marginLeft:8,fontFamily:"'Roboto Mono',monospace",fontSize:9,color:"#ff6066",fontWeight:900}}>YOU</span>}</div></div>
+                      <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
                     </div>
                   );
                 })}
                 {!inTop100&&nearby.length>0&&(
                   <>
-                    <div className="text-gold font-bold text-sm mt-4 mb-2">📍 あなたの周辺</div>
+                    <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,margin:"16px 0 8px"}}>📍 あなたの周辺</div>
                     {nearby.map(r=>{
                       const isMe=r.id===myId;
                       return(
-                        <div key={r.id+"_nb"}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-card mb-2${isMe?" bg-white text-text-on-white shadow-data-card border-l-4 border-hinomaru":" bg-white/5 border border-white/10"}`}>
-                          <div className={`w-8 text-center font-bold text-xs${isMe?" text-hinomaru":" text-text-on-navy-dim"}`}>{r.rank}</div>
-                          <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lg">{r.icon}</div>
-                          <div className={`flex-1 text-sm font-bold truncate${isMe?" text-text-on-white":" text-white"}`}>
-                            {isMe&&"★ "}{r.nickname}
-                            {isMe&&<span className="ml-1.5 text-[10px] bg-hinomaru text-white rounded-full px-1.5 py-0.5 font-black">YOU</span>}
-                          </div>
-                          <div className={`font-black tabular-nums text-sm${isMe?" text-text-on-white":" text-white"}`}>{r.points}<span className="text-xs font-normal opacity-60 ml-0.5">pt</span></div>
+                        <div key={r.id+"_nb"} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
+                          <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:12,color:isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{r.rank}</div>
+                          <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
+                          <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}</div></div>
+                          <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
                         </div>
                       );
                     })}
                   </>
                 )}
-                <div className="flex gap-2 mt-4">
-                  <button onClick={()=>loadGlobalRanking(true)}
-                    className="flex-1 bg-white/10 border border-white/20 text-white text-xs font-bold py-2.5 rounded-card cursor-pointer">
-                    🔄 更新
+                <div style={{display:"flex",gap:9,marginTop:16}}>
+                  <button onClick={()=>loadGlobalRanking(true)} className="btn btn-dark sm" style={{flex:1}}>
+                    <DsIcon name="refresh" size={16}/> 更新
                   </button>
                   {myRank&&myPts>0&&(
-                    <button onClick={async()=>{
-                      if(sharingGlobal)return;
-                      setSharingGlobal(true);
-                      const me2=t.participants.find(p=>p.id===myId);
-                      await doShareImage(<ShareCardGlobalRank rank={myRank} total={total} pts={myPts} nickname={me2?.nickname||""} icon={me2?.icon||"⚽"}/>,"wcup-global.png","全国ランキング入りしました！ #W杯予想メーカー");
-                      setSharingGlobal(false);
-                    }} disabled={sharingGlobal}
-                      className={`flex-1 bg-hinomaru text-white text-xs font-bold py-2.5 rounded-card shadow-cta-red cursor-pointer border-0${sharingGlobal?" opacity-70":""}`}>
-                      {sharingGlobal?"🔄 生成中":"📷 順位をシェア"}
+                    <button onClick={async()=>{if(sharingGlobal)return;setSharingGlobal(true);const me2=t.participants.find(p=>p.id===myId);await doShareImage(<ShareCardGlobalRank rank={myRank} total={total} pts={myPts} nickname={me2?.nickname||""} icon={me2?.icon||"⚽"}/>,"wcup-global.png","全国ランキング入りしました！ #W杯予想メーカー");setSharingGlobal(false);}}
+                      disabled={sharingGlobal} className="btn btn-red sm" style={{flex:1,opacity:sharingGlobal?0.7:1}}>
+                      <DsIcon name="camera" size={16}/>{sharingGlobal?"生成中":"順位をシェア"}
                     </button>
                   )}
                 </div>
@@ -3914,16 +3867,14 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
       })()}
 
       {/* シェア + 戻るボタン */}
-      <div className="px-5 mt-6 flex flex-col gap-2">
+      <div className="wrap section">
         {(rankTab==="match"||rankTab==="tournament")&&myMatchEntry&&(
-          <button onClick={doShareStats} disabled={sharingStats}
-            className={`w-full bg-hinomaru text-white font-bold rounded-card-lg shadow-cta-red py-3.5 border-0 cursor-pointer${sharingStats?" opacity-70":""}`}>
-            {sharingStats?"🔄 画像生成中...":"📷 成績を画像でシェア"}
+          <button onClick={doShareStats} disabled={sharingStats} className="btn btn-red lg" style={{marginBottom:9,opacity:sharingStats?0.7:1}}>
+            <DsIcon name="camera" size={20}/>{sharingStats?"画像生成中...":"成績を画像でシェア"}
           </button>
         )}
-        <button onClick={()=>nav("tournament")}
-          className="w-full bg-white/10 border border-white/20 text-white text-sm font-bold py-3 rounded-card cursor-pointer">
-          ← 大会ページへ戻る
+        <button onClick={()=>nav("tournament")} className="btn btn-dark md">
+          <DsIcon name="back" size={17} stroke={2.2}/> 大会ページへ戻る
         </button>
       </div>
     </div>
