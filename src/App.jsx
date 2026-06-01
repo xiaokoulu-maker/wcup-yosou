@@ -1823,6 +1823,26 @@ function App(){
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update}/>}
       {page==="mypage"&&<PgMyPage nav={nav} tourn={tourn} myId={myId} update={update}/>}
+      {/* 固定プロフィールボタン — home 以外のページでログイン中に右下に常時表示 */}
+      {tourn&&myId&&page!=="home"&&(
+        <button
+          onClick={()=>nav("mypage")}
+          title="マイページ"
+          style={{
+            position:"fixed",bottom:20,right:16,
+            width:44,height:44,borderRadius:"50%",
+            background:"rgba(10,31,76,0.88)",
+            border:"1.5px solid rgba(255,255,255,0.22)",
+            boxShadow:"0 4px 14px rgba(0,0,0,0.35)",
+            cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+            color:"#fff",zIndex:50,
+          }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+            <circle cx="12" cy="7.5" r="4.5"/>
+            <path d="M3 21c0-4.97 4.03-9 9-9s9 4.03 9 9H3z"/>
+          </svg>
+        </button>
+      )}
     </div>
     </ErrorBoundary>
   );
@@ -2151,6 +2171,7 @@ function PgHome({nav,goT,tourn,myId}){
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
   const [showLandingOverride,setShowLandingOverride]=useState(false);
+  const [showHamMenu,setShowHamMenu]=useState(false);
   const [myTournaments,setMyTournaments]=useState([]);
   const [championVotes,setChampionVotes]=useState(null);
   const me=tourn?.participants?.find(p=>p.id===myId);
@@ -2290,11 +2311,16 @@ function PgHome({nav,goT,tourn,myId}){
             {isNotificationSupported()&&!notifEnabled&&(
               <button onClick={async()=>{const ok=await requestNotificationPermission();setNotifEnabled(ok);}} className="text-2xl" title="通知をオン">🔔</button>
             )}
-            <button onClick={()=>nav("mypage")} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl border-0 cursor-pointer active:scale-95 transition-transform">{me.icon||"👤"}</button>
-            <button onClick={()=>setShowLandingOverride(true)}
+            <button onClick={()=>nav("mypage")} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border-0 cursor-pointer active:scale-95 transition-transform" title="マイページ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                <circle cx="12" cy="7.5" r="4.5"/>
+                <path d="M3 21c0-4.97 4.03-9 9-9s9 4.03 9 9H3z"/>
+              </svg>
+            </button>
+            <button onClick={()=>setShowHamMenu(v=>!v)}
               className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-sm border-0 cursor-pointer active:scale-95 transition-transform"
-              title="トップ画面へ">
-              ☰
+              title="メニュー">
+              {showHamMenu?"✕":"☰"}
             </button>
           </div>
         </div>
@@ -2382,6 +2408,44 @@ function PgHome({nav,goT,tourn,myId}){
         </div>
       </div>
       {japanCelebration&&<JapanCelebrationModal data={japanCelebration} onClose={()=>{localStorage.setItem(japanCelebration.key,"1");setJapanCelebration(null);}}/>}
+      {/* ── ハンバーガーナビメニュー ── */}
+      {showHamMenu&&(
+        <>
+          {/* バックドロップ（外側タップで閉じる） */}
+          <div onClick={()=>setShowHamMenu(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:80}}/>
+          {/* スライドインパネル */}
+          <div style={{position:"fixed",top:0,right:0,bottom:0,width:240,background:"#0e1942",zIndex:90,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.5)"}}>
+            <div style={{padding:"56px 20px 12px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase"}}>メニュー</div>
+            </div>
+            <div style={{flex:1,overflowY:"auto"}}>
+              {[
+                {icon:"⚽",label:"試合を予想",dest:"matches"},
+                {icon:"🏆",label:"優勝予想",dest:"predict"},
+                {icon:"📊",label:"ランキング",dest:"ranking"},
+                {icon:"🗂️",label:"グループ表",dest:"groups"},
+                {icon:"🇯🇵",label:"日本代表",dest:"japan"},
+                {icon:"🏆",label:"決勝T",dest:"bracket"},
+                {icon:"💬",label:"チャット",dest:"tournament"},
+                {icon:"🏅",label:"バッジ",dest:"badges"},
+                {icon:"🪙",label:"コイン",dest:"coinshop"},
+                {icon:"⚙️",label:"設定",dest:"admin"},
+              ].map(item=>(
+                <button key={item.dest} onClick={()=>{nav(item.dest);setShowHamMenu(false);}}
+                  style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",background:"transparent",border:"none",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",color:"#fff",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
+                  <span style={{fontSize:18,width:24,textAlign:"center"}}>{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={()=>{setShowLandingOverride(true);setShowHamMenu(false);}}
+              style={{display:"flex",alignItems:"center",gap:14,padding:"14px 20px",background:"transparent",border:"none",borderTop:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.45)",fontSize:13,textAlign:"left",width:"100%"}}>
+              <span style={{fontSize:18,width:24,textAlign:"center"}}>🏠</span>
+              ホーム画面
+            </button>
+          </div>
+        </>
+      )}
       </>
     );
   }
