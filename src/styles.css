@@ -325,6 +325,19 @@ textarea:focus{border-color:#005BAC !important;box-shadow:0 0 0 3px rgba(0,91,17
 .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:24px;font-weight:600}
 .foot b{color:#ff5a60}
 .foot a{color:#9fb4f0;text-decoration:none;font-weight:700}
+/* mypage */
+.profile{display:flex;align-items:center;gap:14px}
+.profile .av{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:26px;font-weight:900;color:#fff;background:linear-gradient(160deg,#ff4147,#c41420);box-shadow:0 10px 26px var(--red-glow);flex:none}
+.profile .nm{font-size:20px;font-weight:900}
+.profile .edit{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#ff6066;margin-top:5px;cursor:pointer;background:none;border:none;padding:0}
+.pred-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line-soft)}
+.pred-row:last-child{border-bottom:none}
+.pred-row .mid{flex:1;min-width:0}
+.pred-row .mt{font-size:12px;color:var(--muted);font-weight:600}
+.pred-row .pk{font-size:14px;font-weight:800;margin-top:3px;display:flex;align-items:center;gap:6px}
+.pred-row .pk .ar{color:var(--gold)}
+.pred-row .dt{font-size:10.5px;color:var(--dim);margin-top:3px;font-family:"Roboto Mono"}
+.pred-row .st{font-family:"Roboto Mono";font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--line-soft);padding:4px 8px;border-radius:7px;white-space:nowrap}
 /* samurai / japan */
 .jp-hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:20px 18px;
   background:linear-gradient(155deg,rgba(60,20,30,.55),rgba(13,17,38,.94));

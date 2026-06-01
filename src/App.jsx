@@ -6860,134 +6860,119 @@ function PgMyPage({nav,tourn,myId,update}){
 
   if(!me){
     return(
-      <div className="bg-navy-base text-text-on-navy min-h-screen pb-10">
-        <div className="bg-navy-hero px-5 pt-4 pb-4 flex items-center gap-3">
-          <button onClick={()=>nav("home")} className="text-white text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none active:scale-90">←</button>
-          <div className="flex-1 text-center"><div className="text-white font-black text-lg">👤 マイページ</div></div>
-          <div className="w-8"/>
+      <div className="screen">
+        <DsPageHead onBack={()=>nav("home")} title="マイページ" icon="person"/>
+        <div className="wrap section">
+          <div className="card lg" style={{textAlign:"center",padding:"32px"}}>
+            <DsIcon name="person" size={40} style={{color:"var(--faint)"}}/>
+            <div style={{color:"var(--muted)",fontSize:14,marginTop:12,marginBottom:16}}>大会に参加するとマイページが使えるようになります</div>
+            <button onClick={()=>nav("home")} className="btn btn-red sm" style={{width:"auto",display:"inline-flex",padding:"8px 20px"}}>🏆 大会を探す</button>
+          </div>
         </div>
-        <EmptyState icon="👤" title="大会に参加していません" description={"大会に参加すると\nマイページが使えるようになります"} cta="🏆 大会を探す" onCtaClick={()=>nav("home")}/>
       </div>
     );
   }
 
   return(
-    <div className="bg-navy-base text-text-on-navy min-h-screen pb-10">
-      {/* ── ヘッダー ── */}
-      <div className="bg-navy-hero px-5 pt-4 pb-4 flex items-center gap-3">
-        <button onClick={()=>nav("home")} className="text-white text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none z-10 active:scale-90 transition-transform">←</button>
-        <div className="flex-1 text-center z-10"><div className="text-white font-black text-lg">👤 マイページ</div></div>
-        <div className="w-8 z-10"/>
-      </div>
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("home")} title="マイページ" icon="person"/>
 
-      {/* ── プロフィールカード ── */}
-      <div className="bg-white text-text-on-white rounded-card-lg shadow-data-card p-5 mx-5 mt-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-navy-base flex items-center justify-center text-2xl flex-shrink-0">{icon}</div>
-          <div className="flex-1 min-w-0">
-            <div className="text-lg font-black truncate">{nickname}</div>
-            <div className="text-xs text-text-on-white-gray mt-1 truncate">{tourn?.name}</div>
-            <button onClick={()=>{setEditNickVal(nickname);setEditIcon(icon);setEditNick(true);}}
-              className="text-xs text-hinomaru font-bold mt-1.5 bg-transparent border-0 cursor-pointer p-0 active:opacity-70">
-              ✏️ プロフィール編集
-            </button>
+      <div className="wrap section tight">
+        <div className="card lg">
+          <div className="profile">
+            <div className="av">{icon}</div>
+            <div>
+              <div className="nm">{nickname}</div>
+              <button className="edit" onClick={()=>{setEditNickVal(nickname);setEditIcon(icon);setEditNick(true);}}>
+                <DsIcon name="edit" size={13}/> プロフィールを編集
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── 統計グリッド ── */}
-      <div className="grid grid-cols-2 gap-3 mx-5 mt-4">
-        {[
-          {label:"累計ポイント",value:totalPoints,unit:"pt",color:"text-hinomaru"},
-          {label:"的中率",value:hitRate!==null?`${hitRate}%`:"-",sub:hitRate!==null?`${hits}/${finishedPreds.length}試合`:null,color:"text-success"},
-          {label:"🔥 連続的中",value:streak.current,sub:`自己ベスト ${streak.best}`,color:"text-gold"},
-          {label:"🏆 大会内順位",value:myRankStr,sub:`/ ${sortedP.length}人中`,color:"text-navy-base"},
-        ].map((s,i)=>(
-          <div key={i} className="rounded-xl border border-white/10 p-4 text-center" style={{background:"#12244f"}}>
-            <div className="text-[10px] text-text-on-navy-dim">{s.label}</div>
-            <div className={`text-2xl font-black tabular-nums mt-1 ${s.color}`}>
-              {s.value}{s.unit&&<span className="text-sm ml-1 text-text-on-navy-dim">{s.unit}</span>}
-            </div>
-            {s.sub&&<div className="text-[10px] text-text-on-navy-dim mt-0.5">{s.sub}</div>}
-          </div>
-        ))}
+      <div className="wrap section">
+        <div className="grid2">
+          <DsStat icon="coin" label="累計ポイント" value={totalPoints} unit="pt" color="gold"/>
+          <DsStat icon="target" label="的中率" value={hitRate!==null?`${hitRate}%`:"—"} sub={hitRate!==null?`${hits}/${finishedPreds.length}試合`:null}/>
+          <DsStat icon="flame" label="連続的中" value={streak.current} unit="連続" color="red" sub={`自己ベスト ${streak.best}`}/>
+          <DsStat icon="chart" label="大会内順位" value={myRankStr} sub={`/ ${sortedP.length}人中`}/>
+        </div>
       </div>
 
-      {/* ── 参加中の大会 ── */}
       {tourn&&(
-        <>
-          <div className="text-sm font-extrabold mx-5 mt-6 mb-2 text-text-on-navy">参加中の大会</div>
-          <div className="rounded-xl border border-white/10 p-4 mx-5 flex items-center justify-between" style={{background:"#12244f"}}>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-white truncate">{tourn.name}</div>
-              <div className="text-xs text-text-on-navy-dim mt-1">{myRankStr} · {sortedP.length}人中 · {totalPoints}pt</div>
-            </div>
-            <button onClick={()=>nav("tournament")} className="text-gold text-sm font-bold bg-transparent border-0 cursor-pointer ml-3 flex-shrink-0 active:opacity-70">開く →</button>
+        <div className="wrap section">
+          <DsSectionHead title="参加中の大会"/>
+          <div className="rowcard" onClick={()=>nav("tournament")} style={{cursor:"pointer"}}>
+            <div className="ico" style={{color:"#fff",background:"linear-gradient(160deg,#ff4147,#c41420)",border:"none"}}>{tourn.name?.[0]||"?"}</div>
+            <div className="tx"><div className="t">{tourn.name}</div><div className="s">{myRankStr} · {sortedP.length}人中 · {totalPoints}pt</div></div>
+            <div className="end" style={{color:"#ff6066"}}>開く</div>
+            <DsIcon name="chevron" size={17} stroke={2} style={{color:"var(--faint)"}}/>
           </div>
-        </>
+        </div>
       )}
 
-      {/* ── 最近の予想 ── */}
-      <div className="text-sm font-extrabold mx-5 mt-6 mb-2 text-text-on-navy">最近の予想</div>
-      {recentPreds.length===0?(
-        <div className="bg-white/5 border border-white/15 rounded-card p-6 mx-5 text-center text-text-on-navy-dim text-sm">まだ予想を入れていません</div>
-      ):recentPreds.map((p,i)=>{
-        const m=p.match;
-        const pickLabel=p.pick==="home"?`${m.home} 勝ち`:p.pick==="away"?`${m.away} 勝ち`:"引き分け";
-        const resultText=p.points==null?"未確定":p.points>0?`+${p.points}pt 的中`:"0pt 外れ";
-        const resultColor=p.points==null?"text-text-on-navy-dim":p.points>0?"text-success":"text-text-on-navy-weak";
-        return(
-          <div key={i} className="bg-white/5 border border-white/15 rounded-card p-3 mx-5 mt-2">
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-xs text-text-on-navy-dim truncate flex-1">{m.home} vs {m.away}</div>
-              <div className={`text-xs font-bold ml-2 flex-shrink-0 ${resultColor}`}>{resultText}</div>
-            </div>
-            <div className="text-sm font-bold text-text-on-navy">→ {pickLabel}</div>
-            <div className="text-[10px] text-text-on-navy-weak mt-1">{fmtKO(m.kickoff)}</div>
+      <div className="wrap section">
+        <DsSectionHead title="最近の予想"/>
+        {recentPreds.length===0?(
+          <div className="card" style={{textAlign:"center",padding:"32px",color:"var(--muted)",fontSize:13}}>まだ予想を入れていません</div>
+        ):(
+          <div className="card">
+            {recentPreds.map((p,i)=>{
+              const m=p.match;
+              const pickLabel=p.pick==="home"?`${m.home} 勝ち`:p.pick==="away"?`${m.away} 勝ち`:"引き分け";
+              const resultText=p.points==null?"未確定":p.points>0?`+${p.points}pt 的中`:"0pt 外れ";
+              const resultColor=p.points==null?"var(--muted)":p.points>0?"#37d67a":"var(--dim)";
+              return(
+                <div key={i} className="pred-row">
+                  <DsIcon name="whistle" size={18} style={{color:"var(--faint)",flex:"none"}}/>
+                  <div className="mid">
+                    <div className="mt">{m.home} vs {m.away}</div>
+                    <div className="pk"><span className="ar"><DsIcon name="arrowRight" size={13} stroke={2.4}/></span>{pickLabel}</div>
+                    <div className="dt">{fmtKO(m.kickoff)}</div>
+                  </div>
+                  <div className="st" style={{color:resultColor,borderColor:p.points>0?"rgba(55,214,122,.3)":"",background:p.points>0?"rgba(55,214,122,.06)":""}}>{resultText}</div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-
-      {/* ── ショートカット ── */}
-      <div className="text-sm font-extrabold mx-5 mt-6 mb-2 text-text-on-navy">その他</div>
-      <div className="grid grid-cols-3 gap-3 mx-5">
-        {[
-          {icon:"🪙",label:"コインショップ",action:()=>nav("coinshop")},
-          {icon:"🏅",label:"バッジ",action:()=>nav("badges")},
-          {icon:"🌐",label:"全国ランキング",action:()=>nav("ranking")},
-        ].map((s,i)=>(
-          <button key={i} onClick={s.action}
-            className="rounded-xl p-3 text-center active:scale-[.98] transition border-0 cursor-pointer"
-            style={{background:"#12244f",border:"1px solid rgba(255,255,255,0.1)"}}>
-            <div className="text-2xl mb-1">{s.icon}</div>
-            <div className="text-[10px] font-bold text-text-on-navy-dim">{s.label}</div>
-          </button>
-        ))}
+        )}
       </div>
 
-      {/* ── プロフィール編集モーダル ── */}
+      <div className="wrap section">
+        <DsSectionHead title="その他"/>
+        <div className="grid3">
+        {[
+          {ic:"shop",  label:"コインショップ", action:()=>nav("coinshop")},
+          {ic:"medal", label:"バッジ",         action:()=>nav("badges")},
+          {ic:"globe", label:"全国ランキング", action:()=>nav("ranking")},
+        ].map((s,i)=>(
+          <button key={i} onClick={s.action} className="feat" style={{border:"none",cursor:"pointer"}}>
+            <div className="fi"><DsIcon name={s.ic} size={20}/></div>
+            <div className="ft">{s.label}</div>
+          </button>
+        ))}
+        </div>
+      </div>
+
+      {/* プロフィール編集モーダル */}
       {editNick&&(
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-5" style={{background:"rgba(6,21,51,0.92)",backdropFilter:"blur(4px)"}}>
-          <div className="w-full max-w-sm bg-white rounded-card-lg p-6 shadow-hero">
-            <div className="text-text-on-white font-black text-lg mb-4">✏️ プロフィール編集</div>
-            <div className="mb-3">
-              <label className="text-text-on-white-gray text-xs font-bold block mb-1">ニックネーム</label>
-              <input value={editNickVal} onChange={e=>setEditNickVal(e.target.value)} maxLength={20}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-text-on-white outline-none focus:border-hinomaru"/>
+        <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 18px",background:"rgba(5,6,15,0.9)",backdropFilter:"blur(4px)"}}>
+          <div className="card lg" style={{width:"100%",maxWidth:360}}>
+            <div style={{color:"var(--txt)",fontWeight:900,fontSize:18,marginBottom:16}}>✏️ プロフィール編集</div>
+            <label className="field-lbl">ニックネーム</label>
+            <input className="tinput" value={editNickVal} onChange={e=>setEditNickVal(e.target.value)} maxLength={20} style={{marginBottom:16}}/>
+            <label className="field-lbl" style={{marginTop:4}}>アイコン</label>
+            <div className="icon-grid">
+              {ICONS.map(ic=>(
+                <div key={ic} className={"icpick"+(editIcon===ic?" on":"")} onClick={()=>setEditIcon(ic)}>
+                  <span style={{fontSize:20}}>{ic}</span>
+                </div>
+              ))}
             </div>
-            <div className="mb-5">
-              <label className="text-text-on-white-gray text-xs font-bold block mb-2">アイコン</label>
-              <div className="grid grid-cols-5 gap-2">
-                {ICONS.map(ic=>(
-                  <button key={ic} onClick={()=>setEditIcon(ic)}
-                    className={`text-2xl py-1.5 rounded-xl border-2 cursor-pointer bg-transparent transition${editIcon===ic?" border-hinomaru bg-red-50":" border-transparent"}`}>{ic}</button>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={()=>setEditNick(false)} className="flex-1 py-3 border border-gray-200 rounded-card-lg text-text-on-white-gray font-bold text-sm bg-transparent cursor-pointer">キャンセル</button>
-              <button onClick={saveNick} disabled={saving||!editNickVal.trim()}
-                className="flex-1 py-3 bg-hinomaru text-white rounded-card-lg font-bold text-sm border-0 cursor-pointer disabled:opacity-50 shadow-cta-red">
+            <div style={{display:"flex",gap:9,marginTop:18}}>
+              <button onClick={()=>setEditNick(false)} className="btn btn-dark md" style={{flex:1}}>キャンセル</button>
+              <button onClick={saveNick} disabled={saving||!editNickVal.trim()} className="btn btn-red md" style={{flex:1,opacity:saving||!editNickVal.trim()?0.5:1}}>
                 {saving?"保存中...":"保存"}
               </button>
             </div>
