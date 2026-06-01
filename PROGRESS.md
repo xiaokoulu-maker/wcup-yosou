@@ -47,18 +47,64 @@
 
 ## Phase 2: 画面ごとの進捗
 
-### 優先順 (見本あり): join → predict(my-prediction) → home(HomeB) → matches(predict) → ranking → badges → japan(samurai) → mypage → bracket → globalchat → tournament(room)
+### 実施順とコミット
 
 | # | 画面 | 状態 | スクショ | コミット |
 |---|------|------|---------|---------|
-| 1 | PgJoin | 未着手 | — | — |
-| 2 | PgPredict (優勝予想) | 未着手 | — | — |
-| 3 | PgHome HomeB | 未着手 | — | — |
-| 4 | PgMatches (試合予想) | 未着手 | — | — |
-| 5 | PgRanking | 未着手 | — | — |
-| 6 | PgBadges | 未着手 | — | — |
-| 7 | PgJapanMode | 未着手 | — | — |
-| 8 | PgMyPage | 未着手 | — | — |
-| 9 | PgBracket | 未着手 | — | — |
-| 10 | PgGlobalChat | 未着手 | — | — |
-| 11 | PgTournament (room) | 未着手 | — | — |
+| 1 | PgJoin | ✅ 完了 | ライブデータ必要・撮影不可 | e6afb51 |
+| 2 | PgPredict + ShareBox | ✅ 完了 | ライブデータ必要・撮影不可 | ac3148f |
+| 3 | PgHome HomeB (ダッシュボード) | ✅ 完了 | ライブデータ必要・撮影不可 | b5bd1eb |
+| 4 | PgMatches (試合予想) | ✅ 完了 | ライブデータ必要・撮影不可 | 7954507 |
+| 5 | PgRanking | ✅ 完了 | ライブデータ必要・撮影不可 | 5ec2bd5 |
+| 6 | PgBadges | ✅ 完了 | ライブデータ必要・撮影不可 | ab24c98 |
+| 7 | PgJapanMode (samurai) | ✅ 完了 | ライブデータ必要・撮影不可 | 655bc9d |
+| 8 | PgMyPage | ✅ 完了 | ライブデータ必要・撮影不可 | 03a3107 |
+| 9 | PgBracket | ✅ 完了 | ライブデータ必要・撮影不可 | 95ce8fa |
+| 10 | PgGlobalChat | ✅ 完了 | ライブデータ必要・撮影不可 | 33d04d3 |
+| 11 | PgTournament (room) | ✅ 完了 | ライブデータ必要・撮影不可 | 97adcd8 |
+
+---
+
+## 最終サマリー
+
+**完了日**: 2026-06-02（無人自走）  
+**ブランチ**: `redesign-wip`（本番未反映 — npm run deploy / git push は一切実行していない）
+
+### 変更ファイル
+| ファイル | 内容 |
+|---------|------|
+| `src/App.jsx` | 11画面のJSX構造をリデザイン（ロジック・calcPts・Supabase・Stripe・trackEvent・nav は変更なし） |
+| `src/styles.css` | デザインシステムCSS追加（~19KB）: :root トークン、全共通クラス、画面固有CSS |
+| `src/ds-icons.jsx` | 新規: icons.jsx ES module変換 |
+| `src/ds-ui.jsx` | 新規: ui.jsx ES module変換（Flag/Stat/Tabs/Banner/PageHead/SectionHead等） |
+| `PROGRESS.md` | 本ファイル |
+| `redesign-screenshots/home-a.png` | HomeA 起動スクショ（390x844）|
+
+### コミット一覧（redesign-wip）
+```
+122c46d feat(design-system): Phase 1 — デザインシステム土台
+2ee0bfc chore: add PROGRESS.md and redesign-screenshots dir
+e6afb51 feat(join): PgJoin redesign
+ac3148f feat(predict): PgPredict+ShareBox redesign
+b5bd1eb feat(home-b): HomeB redesign
+7954507 feat(matches): PgMatches redesign
+5ec2bd5 feat(ranking): PgRanking redesign
+ab24c98 feat(badges): PgBadges redesign
+655bc9d feat(japan): PgJapanMode redesign
+03a3107 feat(mypage): PgMyPage redesign
+95ce8fa feat(bracket): PgBracket redesign
+33d04d3 feat(chat+bracket): PgGlobalChat/PgBracket redesign
+97adcd8 feat(tournament): PgTournament redesign
+```
+
+### 見本なし・未リデザイン画面（ベストエフォートまたは未変更）
+PgCreate, PgUpgrade, PgStats, PgAdmin, PgGroups, PgSchedule, PgCountry, PgBest11, PgBest16, PgWorldMode, PgSurvival, PgSinglePred, PgGlobalStats, PgMoreMenu, PgSoloPredict, PgCoinShop
+
+### スクショ
+- `redesign-screenshots/home-a.png` — HomeA (Samurai Blue ランディング) 390x844
+
+### 注意点
+- 全 `npm run build` 緑確認済み
+- `npm run deploy` / `git push origin` は実行していない
+- HomeA (Samurai Blue) は基準画面として変更なし
+- ライブ状態を要する画面（大会参加後のHomeB/Matches等）はスクショ撮影不可
