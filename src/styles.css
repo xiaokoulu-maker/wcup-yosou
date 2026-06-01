@@ -325,3 +325,12 @@ textarea:focus{border-color:#005BAC !important;box-shadow:0 0 0 3px rgba(0,91,17
 .foot{text-align:center;font-size:11px;color:var(--dim);margin-top:24px;font-weight:600}
 .foot b{color:#ff5a60}
 .foot a{color:#9fb4f0;text-decoration:none;font-weight:700}
+/* join / form */
+.field-lbl{font-family:"Roboto Mono";font-size:10.5px;letter-spacing:.14em;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:9px;display:block}
+.tinput{width:100%;height:52px;border-radius:13px;background:#0a1024;border:1px solid var(--line);color:#fff;padding:0 16px;font-family:inherit;font-size:15px;font-weight:600;outline:none}
+.tinput:focus{border-color:rgba(132,152,214,.4)}
+.tinput::placeholder{color:#525c7c;font-weight:500}
+.icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px}
+.icpick{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;cursor:pointer;color:#aeb6cf;background:linear-gradient(180deg,rgba(19,28,58,.7),rgba(13,19,40,.7));border:1px solid var(--line-soft);transition:.14s}
+.icpick:hover{border-color:var(--line-strong)}
+.icpick.on{color:var(--gold);border-color:rgba(245,180,49,.55);box-shadow:0 0 0 1px rgba(245,180,49,.2),0 8px 20px rgba(200,120,20,.18);background:linear-gradient(180deg,rgba(50,40,20,.5),rgba(20,20,40,.8))}

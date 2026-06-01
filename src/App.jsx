@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo, Component } f
 import ReactDOM from 'react-dom/client'
 import { LayoutGrid, Trophy, Users, MessageCircle, Calendar, Globe, ChevronRight, Zap, Medal, Target, Star, BarChart2, Clock, CheckCircle, XCircle, Flame } from 'lucide-react'
 import { HoIcon, HoAvatar, HoScreenHeader } from './ds-components'
+import { Icon as DsIcon } from './ds-icons'
+import { Flag, TEAMS, Tabs as DsTabs, Stat as DsStat, Banner as DsBanner, PageHead as DsPageHead, SectionHead as DsSectionHead, MatchCard as DsMatchCard, useToast as useDsToast, BackRow as DsBackRow } from './ds-ui'
 
 // true にすれば「ベスト11」ボタンが復活し、「ベスト16予想」ボタンが非表示になる
 const SHOW_BEST11 = false;
@@ -3227,48 +3229,75 @@ if(cur.participants.length>=getPlanLimit(cur.plan)){
     trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);nav("home");setLoading(false);
   };
   if(deadlinePassed)return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{background:"rgba(255,60,60,0.1)",borderRadius:14,padding:24,textAlign:"center",marginTop:20}}>
-        <div style={{fontSize:40,marginBottom:12}}>⛔</div>
-        <div style={{color:"#f88",fontWeight:700,fontSize:16,marginBottom:8}}>予想の締め切りが終了しました</div>
-        <div style={{color:G.muted,fontSize:13}}>締め切り: {fmtDeadline(t.deadline)}</div>
+    <div className="screen">
+      <DsBackRow onClick={()=>nav("tournament")}/>
+      <div className="wrap section">
+        <div className="card lg" style={{textAlign:"center",padding:"32px 20px"}}>
+          <div style={{fontSize:40,marginBottom:12}}>⛔</div>
+          <div style={{color:"#ff6066",fontWeight:800,fontSize:16,marginBottom:8}}>予想の締め切りが終了しました</div>
+          <div style={{color:"var(--muted)",fontSize:13}}>締め切り: {fmtDeadline(t.deadline)}</div>
+        </div>
       </div>
     </div>
   );
   return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>参加する</div>
-      <div style={{color:G.muted,fontSize:13,marginBottom:20}}>{t.name}</div>
-      {t.deadline&&<div style={{background:"rgba(0,104,183,0.06)",borderRadius:10,padding:"8px 14px",marginBottom:14}}><div style={{color:G.gold,fontSize:12}}>⏰ 締め切り: {fmtDeadline(t.deadline)}</div></div>}
-      <div style={crd}>
-        <FInput label="ニックネーム ＊" placeholder="例: サッカー太郎" value={nick} onChange={setNick}/>
-        <div><label style={lbl}>アイコンを選ぶ</label><div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginTop:6}}>{ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{fontSize:26,background:icon===ic?`${G.gold}22`:"transparent",border:`2px solid ${icon===ic?G.gold:"transparent"}`,borderRadius:12,padding:"8px 0",cursor:"pointer"}}>{ic}</button>)}</div></div>
-        <div style={{marginTop:16,background:G.dark,borderRadius:12,padding:16,textAlign:"center"}}><div style={{fontSize:36}}>{icon}</div><div style={{color:G.navy,fontSize:14,fontWeight:700,marginTop:6}}>{nick||"（名前未入力）"}</div></div>
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("tournament")} eyebrow="JOIN TOURNAMENT" title="参加する"/>
+      <div className="wrap section tight">
+        {t.deadline&&(
+          <div className="banner blue" style={{marginBottom:14}}>
+            <DsIcon name="clock" size={15}/> ⏰ 締め切り: {fmtDeadline(t.deadline)}
+          </div>
+        )}
+        <div className="card lg">
+          <label className="field-lbl">ニックネーム</label>
+          <input className="tinput" placeholder="例：サッカー太郎" value={nick} onChange={e=>setNick(e.target.value)} maxLength={20}/>
+          <label className="field-lbl" style={{marginTop:22}}>アイコンを選ぶ</label>
+          <div className="icon-grid">
+            {ICONS.map(ic=>(
+              <div key={ic} className={"icpick"+(icon===ic?" on":"")} onClick={()=>setIcon(ic)}>
+                <span style={{fontSize:20}}>{ic}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:16,textAlign:"center",padding:"14px",background:"rgba(255,255,255,0.03)",borderRadius:13,border:"1px solid var(--line)"}}>
+            <div style={{fontSize:32}}>{icon}</div>
+            <div style={{color:"var(--txt)",fontSize:14,fontWeight:700,marginTop:6}}>{nick||"（名前未入力）"}</div>
+          </div>
+        </div>
       </div>
       {showUpgrade?(
-        <div style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:14,padding:"16px",marginBottom:12}}>
-          <div style={{color:"#FCA5A5",fontWeight:800,fontSize:14,marginBottom:4}}>⚠️ 参加上限に達しています</div>
-          <div style={{color:G.muted,fontSize:12,marginBottom:14}}>この大会は現在のプランの参加上限に達しました。大会作成者がプランをアップグレードすると参加できます。</div>
-          {[
-            {key:"standard",label:"スタンダード",people:STRIPE.standard.people,price:STRIPE.standard.price,url:STRIPE.standard.url,color:"#0068B7"},
-            {key:"premium", label:"プレミアム",  people:STRIPE.premium.people, price:STRIPE.premium.price, url:STRIPE.premium.url, color:"#D4AF37"},
-            {key:"group",   label:"グループ",    people:STRIPE.group.people,   price:STRIPE.group.price,   url:STRIPE.group.url,   color:"#005BAC"},
-          ].map(plan=>(
-            <div key={plan.key} style={{background:"rgba(0,104,183,0.03)",border:`1.5px solid ${plan.color}44`,borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
-              <div>
-                <div style={{color:plan.color,fontWeight:800,fontSize:13}}>{plan.label}プラン</div>
-                <div style={{color:"#102A43",fontSize:12,marginTop:2}}>{plan.people}人まで参加可能</div>
-                <div style={{color:G.gold,fontSize:15,fontWeight:900,marginTop:2}}>¥{plan.price.toLocaleString()}</div>
-                <div style={{color:G.muted,fontSize:10,marginTop:4}}>カード / Apple Pay / Google Pay</div>
-                <div style={{color:G.muted,fontSize:9,marginTop:1}}>対応端末ではウォレット決済が使えます</div>
+        <div className="wrap section">
+          <div className="card">
+            <div style={{color:"#ff6066",fontWeight:800,fontSize:14,marginBottom:4}}>⚠️ 参加上限に達しています</div>
+            <div style={{color:"var(--muted)",fontSize:12,marginBottom:14}}>この大会は現在のプランの参加上限に達しました。大会作成者がプランをアップグレードすると参加できます。</div>
+            {[
+              {key:"standard",label:"スタンダード",people:STRIPE.standard.people,price:STRIPE.standard.price,url:STRIPE.standard.url,color:"#0068B7"},
+              {key:"premium", label:"プレミアム",  people:STRIPE.premium.people, price:STRIPE.premium.price, url:STRIPE.premium.url, color:"#D4AF37"},
+              {key:"group",   label:"グループ",    people:STRIPE.group.people,   price:STRIPE.group.price,   url:STRIPE.group.url,   color:"#005BAC"},
+            ].map(plan=>(
+              <div key={plan.key} style={{background:"rgba(255,255,255,0.03)",border:`1.5px solid ${plan.color}44`,borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+                <div>
+                  <div style={{color:plan.color,fontWeight:800,fontSize:13}}>{plan.label}プラン</div>
+                  <div style={{color:"var(--muted)",fontSize:12,marginTop:2}}>{plan.people}人まで参加可能</div>
+                  <div style={{color:"var(--gold)",fontSize:15,fontWeight:900,marginTop:2}}>¥{plan.price.toLocaleString()}</div>
+                  <div style={{color:"var(--dim)",fontSize:10,marginTop:4}}>カード / Apple Pay / Google Pay</div>
+                  <div style={{color:"var(--dim)",fontSize:9,marginTop:1}}>対応端末ではウォレット決済が使えます</div>
+                </div>
+                <a href={plan.url} target="_blank" rel="noopener noreferrer" style={{background:plan.color,color:plan.key==="premium"?"#0A1400":"#fff",borderRadius:10,padding:"9px 14px",fontWeight:800,fontSize:12,textDecoration:"none",whiteSpace:"nowrap",flexShrink:0,textAlign:"center"}}>かんたん<br/>決済へ進む</a>
               </div>
-              <a href={plan.url} target="_blank" rel="noopener noreferrer" style={{background:plan.color,color:plan.key==="premium"?"#0A1400":"#fff",borderRadius:10,padding:"9px 14px",fontWeight:800,fontSize:12,textDecoration:"none",whiteSpace:"nowrap",flexShrink:0,textAlign:"center"}}>かんたん<br/>決済へ進む</a>
-            </div>
-          ))}
-          <button onClick={()=>setShowUpgrade(false)} style={{...btnGr,padding:"9px",fontSize:12,marginTop:4}}>← 戻る</button>
+            ))}
+            <button onClick={()=>setShowUpgrade(false)} className="btn btn-dark sm" style={{marginTop:4}}>← 戻る</button>
+          </div>
         </div>
       ):(
-        <><Err msg={err}/><button style={btnG} onClick={join} disabled={loading}>{loading?"参加中...":"参加して予想を入力する →"}</button></>
+        <div className="wrap section">
+          {err&&<div className="banner blue" style={{marginBottom:12,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080"}}>⚠️ {err}</div>}
+          <button className="btn btn-red lg" onClick={join} disabled={loading}>
+            {loading?"参加中...":"参加して予想を入力する"}<DsIcon name="arrowRight" size={20} stroke={2.2}/>
+          </button>
+          <div className="foot" style={{marginTop:14}}>あとからプロフィールで変更できます</div>
+        </div>
       )}
     </div>
   );
