@@ -1698,7 +1698,8 @@ function App(){
               const mid=localStorage.getItem("wcup_myid_"+t.id);
               if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);
             }catch{}
-            setPage("tournament");
+            // 起動時HomeA固定：#t-IDハッシュがあっても着地はHomeA（開催後の挙動は別途検討）
+            // アプリ内goT（大会選択・参加後）は従来どおりtournamentへ遷移する
           }
         }
       }catch(e){
@@ -2171,7 +2172,7 @@ function PgHome({nav,goT,tourn,myId}){
   const [notifEnabled,setNotifEnabled]=useState(isNotificationEnabled());
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
-  const [showLandingOverride,setShowLandingOverride]=useState(false);
+  const [showLandingOverride,setShowLandingOverride]=useState(true); // 起動時HomeA固定
   const [showHamMenu,setShowHamMenu]=useState(false);
   const [myTournaments,setMyTournaments]=useState([]);
   const [championVotes,setChampionVotes]=useState(null);
@@ -2534,7 +2535,7 @@ function PgHome({nav,goT,tourn,myId}){
     <div className="sb-app">
       {/* top bar */}
       <div className="sb-topbar">
-        <div className="sb-wc-mark">
+        <div className="sb-wc-mark" onClick={()=>nav("home")} style={{cursor:"pointer"}}>
           <span className="sb-fifa">FIFA WORLD CUP</span>
           <span className="sb-yr">2026</span>
         </div>
