@@ -6396,98 +6396,80 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
     const deadlineStr=isScheduled&&diffMs>0?(diffH>0?`あと ${diffH}h ${diffM}m`:`あと ${diffM}m`):null;
     const isLocked=m.status==="locked";
     return(
-      <div key={m.id} className={`bg-white rounded-card shadow-data-card mb-3 overflow-hidden${isLocked?" opacity-60":""}`}>
+      <div key={m.id} className="match" style={{marginBottom:13,opacity:isLocked?0.6:1}}>
         {/* 試合ヘッダー */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <span className="text-text-on-white-gray text-xs font-bold">{stageLbl(m.stage,m.group)}</span>
-          <div className="flex items-center gap-2">
-            {deadlineStr&&<span className="text-hinomaru text-xs font-bold">{deadlineStr}</span>}
-            <span className="text-text-on-white-gray text-xs">{ko}</span>
+        <div className="top">
+          <div className="grp"><span className="tag">{stageLbl(m.stage,m.group)}</span></div>
+          <div className="when">
+            {deadlineStr&&<span className="cd">{deadlineStr}</span>}
+            <span className="dt">{ko}</span>
           </div>
         </div>
         {/* 対戦表示 */}
-        <div className="grid grid-cols-3 items-center gap-2 px-4 pb-3">
-          <div className="flex flex-col items-center gap-1">
-            <FlagImg country={m.home} size={28}/>
-            <span className="text-text-on-white font-black text-sm text-center leading-tight">{m.home}</span>
+        <div className="teams">
+          <div className="team"><Flag name={m.home} lg/><span className="nm">{m.home}</span></div>
+          <div className="vs">
+            {isFinished
+              ?<span style={{fontFamily:"'Roboto Mono',monospace",fontSize:16,fontWeight:700,color:"var(--gold)"}}>{m.homeScore} - {m.awayScore}</span>
+              :"VS"
+            }
+            <span className="ko">{koDate.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}</span>
           </div>
-          <div className="text-center">
-            {isFinished?(
-              <div className="bg-navy-base rounded-lg px-3 py-1 inline-block">
-                <span className="text-gold font-black text-xl tabular-nums">{m.homeScore}</span>
-                <span className="text-text-on-navy-weak text-sm mx-1">-</span>
-                <span className="text-gold font-black text-xl tabular-nums">{m.awayScore}</span>
-              </div>
-            ):(
-              <div>
-                <div className="text-text-on-white-gray font-black text-xl">VS</div>
-                <div className="text-text-on-white-gray text-xs mt-0.5">{koDate.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}</div>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <FlagImg country={m.away} size={28}/>
-            <span className="text-text-on-white font-black text-sm text-center leading-tight">{m.away}</span>
-          </div>
+          <div className="team"><Flag name={m.away} lg/><span className="nm">{m.away}</span></div>
         </div>
-        {/* 予想状態表示 */}
-        <div className="px-4 pb-3">
+        {/* 予想状態 */}
+        <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
           {myPred?.pick&&(
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-bold px-3 py-1 rounded-full ${myPred.pick==="home"?"bg-navy-base/10 text-navy-base":myPred.pick==="away"?"bg-hinomaru/10 text-hinomaru":"bg-gray-100 text-text-on-white-gray"}`}>
+            <>
+              <span className={`chip${myPred.pick==="home"?" blue":myPred.pick==="away"?" red":" dim"}`} style={myPred.pick!=="home"&&myPred.pick!=="away"?{}:{}}>
                 {myPred.pick==="home"?m.home+" 勝ち":myPred.pick==="away"?m.away+" 勝ち":"引き分け"}
               </span>
-              {pts!==null&&(
-                pts>0
-                  ?<span className="text-success text-xs font-bold px-3 py-1 rounded-full bg-success/10 border border-success/30">+{pts}pt 的中！</span>
-                  :<span className="text-text-on-white-gray text-xs px-3 py-1 rounded-full bg-gray-50">0pt</span>
+              {pts!==null&&(pts>0
+                ?<span className="chip gold">+{pts}pt 的中！</span>
+                :<span className="chip dim">0pt</span>
               )}
-              {isScheduled&&<button onClick={()=>setExpandedId(isExpanded?null:m.id)} className="text-text-on-white-gray text-xs cursor-pointer bg-transparent border-0">変更</button>}
-            </div>
+              {isScheduled&&<button onClick={()=>setExpandedId(isExpanded?null:m.id)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:12,fontWeight:700}}>変更</button>}
+            </>
           )}
           {!myPred&&isScheduled&&myId&&(
-            <button onClick={()=>setExpandedId(isExpanded?null:m.id)}
-              className="w-full bg-navy-base text-white font-bold text-sm rounded-card py-2.5 border-0 cursor-pointer">
-              ⚽ 予想する
+            <button onClick={()=>setExpandedId(isExpanded?null:m.id)} className="btn btn-dark sm" style={{marginTop:0,fontSize:12}}>
+              <DsIcon name="whistle" size={15}/> 予想する
             </button>
           )}
           {!myPred&&isScheduled&&!myId&&(
-            <div className="text-text-on-white-gray text-xs text-center py-2">参加後に予想できます</div>
+            <div style={{color:"var(--muted)",fontSize:12,textAlign:"center",width:"100%",paddingTop:4}}>参加後に予想できます</div>
           )}
           {!myPred&&isFinished&&(
-            <div className="text-text-on-white-gray text-xs text-center py-2">予想なし</div>
+            <div style={{color:"var(--muted)",fontSize:12,textAlign:"center",width:"100%",paddingTop:4}}>予想なし</div>
           )}
         </div>
-        {/* 展開パネル: 3択ボタン + 得点者 + コイン */}
+        {/* 展開パネル */}
         {isExpanded&&isScheduled&&(
-          <div className="border-t border-gray-100 px-4 py-3 flex flex-col gap-3">
-            {/* 3択ボタン */}
-            <div className="grid grid-cols-3 gap-2">
+          <div style={{borderTop:"1px solid var(--line)",marginTop:12,paddingTop:12,display:"flex",flexDirection:"column",gap:12}}>
+            {/* 3択 */}
+            <div className="odds">
               {[["home",m.home],["draw","引き分け"],["away",m.away]].map(([pick,lb])=>{
                 const sel=myPred?.pick===pick;
                 const oddsVal=calculateOdds(t.participants,m.id,pick);
                 return(
-                  <button key={pick} onClick={()=>savePick(m.id,pick)} disabled={isSaving}
-                    className={`py-3 px-1 rounded-card font-bold text-xs leading-tight text-center transition-transform active:scale-[.97] border-0 cursor-pointer${isSaving?" opacity-50":""}${sel?" bg-hinomaru text-white shadow-cta-red":" bg-gray-50 text-text-on-white border border-gray-200"}`}>
-                    <div>{lb}</div>
-                    <div className={`text-[10px] mt-0.5 ${sel?"text-white/80":"text-text-on-white-gray"}`}>{oddsVal.toFixed(1)}倍</div>
-                  </button>
+                  <div key={pick} className={"odd"+(sel?" fav":"")} onClick={()=>!isSaving&&savePick(m.id,pick)} style={{opacity:isSaving?0.5:1,cursor:"pointer"}}>
+                    <div className="o-l">{lb}</div>
+                    <div className="o-v">{oddsVal.toFixed(1)}倍</div>
+                  </div>
                 );
               })}
             </div>
-            <div className="text-center text-text-on-white-gray text-xs">
-              {myPred?.pick?<span>選択中: <strong className="text-navy-base">+{SCORING.outcome}pt</strong> 期待</span>:<span>当たれば <strong className="text-navy-base">+{SCORING.outcome}pt</strong></span>}
-            </div>
-            {/* 日本戦: 得点者予想 */}
+            <div className="reward">当たれば <b>+{SCORING.outcome}pt</b></div>
+            {/* 日本戦得点者 */}
             {(m.home==="日本"||m.away==="日本")&&myPred?.pick&&(
-              <div className="border-t border-gray-100 pt-3">
-                <div className="text-hinomaru text-xs font-bold mb-2">🇯🇵 日本の得点者を予想（任意・+{SCORER_BONUS}pt）</div>
-                <div className="flex flex-wrap gap-1.5">
+              <div style={{borderTop:"1px solid var(--line-soft)",paddingTop:10}}>
+                <div style={{color:"#ff6066",fontSize:11,fontWeight:700,marginBottom:8}}>🇯🇵 得点者予想（任意・+{SCORER_BONUS}pt）</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                   {JAPAN_SQUAD.map(s=>{
                     const sel=myPred.japanScorer===s.id;
                     return(
                       <button key={s.id} onClick={()=>saveScorer(m.id,s.id)} disabled={!!savingId}
-                        className={`text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer border transition-all${savingId?" opacity-60":""}${sel?" bg-hinomaru text-white border-hinomaru":" bg-hinomaru/5 text-hinomaru border-hinomaru/30"}`}>
+                        className={sel?"chip red":"chip dim"} style={{border:"none",cursor:"pointer",opacity:savingId?0.6:1}}>
                         {s.name}
                       </button>
                     );
@@ -6495,58 +6477,42 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
                 </div>
               </div>
             )}
-            {/* コイン賭けセクション */}
+            {/* コイン賭け */}
             {myPred?.pick&&!(myPred.betAmount>0)&&(()=>{
-              const coins=getCoins(me);
-              const balance=coins.balance;
-              const maxBet=Math.max(10,balance);
-              const clampedBet=Math.min(betInput,maxBet);
-              const odds=calculateOdds(t.participants,m.id,myPred.pick);
-              const est=Math.floor(clampedBet*odds);
+              const coins=getCoins(me);const balance=coins.balance;
+              const maxBet=Math.max(10,balance);const clampedBet=Math.min(betInput,maxBet);
+              const odds=calculateOdds(t.participants,m.id,myPred.pick);const est=Math.floor(clampedBet*odds);
               return(
-                <div className="bg-white/5 border border-white/10 rounded-card p-4 bg-navy-base/5 border-navy-700/20">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-text-on-white-gray font-bold">🪙 コインを賭ける（任意）</span>
-                    <span className="text-xs text-text-on-white-gray">残高 {balance.toLocaleString()}🪙</span>
+                <div className="card" style={{padding:"12px 14px"}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                    <span style={{color:"var(--muted)",fontSize:11,fontWeight:700}}>🪙 コインを賭ける（任意）</span>
+                    <span style={{color:"var(--dim)",fontSize:11}}>残高 {balance.toLocaleString()}🪙</span>
                   </div>
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-3xl font-black tabular-nums text-text-on-white">{clampedBet.toLocaleString()}</span>
-                    <span className="text-sm text-text-on-white-gray">🪙 × {odds.toFixed(2)}倍</span>
+                  <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:8}}>
+                    <span style={{fontFamily:"'Roboto Mono',monospace",fontSize:28,fontWeight:900,color:"var(--gold)"}}>{clampedBet.toLocaleString()}</span>
+                    <span style={{fontSize:12,color:"var(--muted)"}}>🪙 × {odds.toFixed(2)}倍</span>
                   </div>
-                  <input type="range" min={10} max={maxBet} step={10} value={clampedBet}
-                    onChange={e=>setBetInput(parseInt(e.target.value))}
-                    className="w-full accent-hinomaru mb-2"/>
-                  <div className="text-xs text-text-on-white-gray mb-3">
-                    {clampedBet>0?<>的中で <span className="text-gold font-bold">+{est.toLocaleString()}🪙</span></>:"賭けないで予想する"}
-                  </div>
-                  {balance>=10?(
-                    <button onClick={()=>submitBet(m.id,clampedBet)} disabled={submittingBet||clampedBet>balance}
-                      className={`w-full bg-gold text-navy-base font-bold text-sm rounded-card py-2.5 border-0 cursor-pointer shadow-cta-gold transition-opacity${submittingBet?" opacity-70":""}`}>
-                      {submittingBet?"賭け中...":"🪙 "+clampedBet.toLocaleString()+" コインで賭ける"}
-                    </button>
-                  ):(
-                    <div className="text-text-on-white-gray text-xs text-center">コインが不足しています</div>
-                  )}
+                  <input type="range" min={10} max={maxBet} step={10} value={clampedBet} onChange={e=>setBetInput(parseInt(e.target.value))} style={{width:"100%",marginBottom:8,accentColor:"var(--gold)"}}/>
+                  <div style={{fontSize:11,color:"var(--muted)",marginBottom:10}}>{clampedBet>0?<>的中で <span style={{color:"var(--gold)",fontWeight:700}}>+{est.toLocaleString()}🪙</span></>:"賭けないで予想する"}</div>
+                  {balance>=10
+                    ?<button onClick={()=>submitBet(m.id,clampedBet)} disabled={submittingBet||clampedBet>balance} className="btn btn-gold sm" style={{opacity:submittingBet?0.7:1}}>{submittingBet?"賭け中...":"🪙 "+clampedBet.toLocaleString()+" コインで賭ける"}</button>
+                    :<div style={{color:"var(--muted)",fontSize:11,textAlign:"center"}}>コインが不足しています</div>
+                  }
                 </div>
               );
             })()}
             {myPred?.betAmount>0&&(()=>{
-              const odds=myPred.odds||2.0;
-              const est=Math.floor(myPred.betAmount*odds);
-              const settled=myPred.payout!=null;
+              const odds=myPred.odds||2.0;const est=Math.floor(myPred.betAmount*odds);const settled=myPred.payout!=null;
               return(
-                <div className="rounded-card p-3 border" style={{background:"rgba(245,158,11,0.08)",borderColor:"rgba(245,158,11,0.3)"}}>
-                  <div className="text-xs font-bold mb-1" style={{color:"#D97706"}}>🪙 賭け済み</div>
-                  <div className="text-xs text-text-on-white">{myPred.betAmount.toLocaleString()} × {odds.toFixed(2)} = {est.toLocaleString()}🪙 期待</div>
-                  {settled&&<div className={`text-xs font-bold mt-1 ${myPred.payout>0?"text-success":"text-text-on-white-gray"}`}>{myPred.payout>0?`+${myPred.payout.toLocaleString()}🪙 獲得！`:"没収"}</div>}
+                <div className="banner gold">
+                  <span>🪙 賭け済み: {myPred.betAmount.toLocaleString()} × {odds.toFixed(2)} = {est.toLocaleString()}🪙 期待</span>
+                  {settled&&<span style={{color:myPred.payout>0?"#37d67a":"var(--muted)",fontWeight:700}}>{myPred.payout>0?` +${myPred.payout.toLocaleString()}🪙 獲得！`:" 没収"}</span>}
                 </div>
               );
             })()}
-            {/* この予想で決定ボタン */}
             {myPred?.pick&&(
-              <button onClick={()=>savePick(m.id,myPred.pick)} disabled={isSaving}
-                className={`w-full bg-hinomaru text-white font-bold text-base rounded-card-lg shadow-cta-red py-3.5 border-0 cursor-pointer transition-transform active:scale-[.98]${isSaving?" opacity-60":""}`}>
-                {isSaving?"保存中...":"この予想で決定する →"}
+              <button onClick={()=>savePick(m.id,myPred.pick)} disabled={isSaving} className="btn btn-red md" style={{opacity:isSaving?0.6:1}}>
+                <DsIcon name="check" size={18}/>{isSaving?"保存中...":"この予想で決定する"}
               </button>
             )}
           </div>
@@ -6559,103 +6525,79 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
   const correctCount=finishedPreds.filter(p=>p.points>0).length;
   const accuracyPct=finishedPreds.length>0?Math.round(correctCount/finishedPreds.length*100):0;
   return(
-    <div className="bg-navy-base min-h-screen pb-12 text-text-on-navy" style={{maxWidth:480,margin:"0 auto"}}>
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between px-5 pt-10 pb-4">
-        <button onClick={()=>nav("tournament")} className="text-text-on-navy-dim text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none">←</button>
-        <div className="text-center">
-          <div className="text-white font-black text-lg">試合を予想</div>
-          <div className="text-text-on-navy-dim text-xs">{t.name}</div>
-        </div>
-        <div className="bg-hinomaru/20 text-hinomaru-light text-xs font-bold px-3 py-1 rounded-full">+{SCORING.outcome}pt</div>
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("tournament")} eyebrow={t.name} title="試合を予想"
+        right={<span className="chip red">+{SCORING.outcome}pt</span>}/>
+      <div className="wrap section tight">
+        <DsBanner tone="gold" icon="target">
+          採点ルール：勝敗的中 <span className="pts">+{SCORING.outcome}pt</span>　スコア完全的中 <span className="pts">+{SCORING.exact+SCORING.outcome}pt</span>
+        </DsBanner>
       </div>
-      {/* 採点ルール（折りたたみ） */}
-      <div className="px-5 mb-3">
-        <ScoringRulesCard compact={true}/>
-      </div>
-      {/* 自分のスタッツ */}
       {me&&(
-        <div className="px-5 mb-3">
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {[[me.totalMatchPoints||0,"累計PT"],[correctCount,"的中数"],[accuracyPct+"%","的中率"]].map(([v,l])=>(
-              <div key={l} className="bg-white/5 border border-white/10 rounded-card py-2">
-                <div className="text-gold font-black text-xl tabular-nums">{v}</div>
-                <div className="text-text-on-navy-weak text-xs mt-0.5">{l}</div>
-              </div>
-            ))}
+        <div className="wrap section">
+          <div className="grid3">
+            <DsStat label="累計PT" value={me.totalMatchPoints||0}/>
+            <DsStat label="的中数" value={correctCount}/>
+            <DsStat label="的中率" value={accuracyPct} unit="%" color="gold"/>
           </div>
         </div>
       )}
-      {/* タブ */}
-      <div className="grid grid-cols-3 gap-2 px-5 mb-3">
-        {[["upcoming","受付中",upcoming.length],["locked","締切済",locked.length],["finished","確定",finished.length]].map(([v,lb,cnt])=>(
-          <button key={v} onClick={()=>setTab(v)}
-            className={`py-2 rounded-card font-bold text-xs border-0 cursor-pointer${tab===v?" bg-hinomaru text-white shadow-cta-red":" bg-white/5 text-text-on-navy-dim"}`}>
-            {lb}<br/><span className="font-normal opacity-80">{cnt}試合</span>
-          </button>
-        ))}
+      <div className="wrap section">
+        <DsTabs value={tab} onChange={setTab} items={[
+          {key:"upcoming",label:"受付中",count:upcoming.length},
+          {key:"locked",  label:"締切済",count:locked.length},
+          {key:"finished",label:"確定",  count:finished.length},
+        ]}/>
       </div>
-      {/* 試合リスト */}
-      <div className="px-5">
+      <div className="wrap section" style={{display:"flex",flexDirection:"column",gap:13}}>
         {!myId&&tab==="upcoming"&&(
-          <div className="bg-hinomaru/10 border border-hinomaru/30 rounded-card p-4 mb-3">
-            <div className="text-hinomaru-light text-sm font-bold mb-2">⚠️ まず大会に参加してから予想できます</div>
-            <button onClick={()=>nav("join")} className="bg-white/10 border border-white/20 rounded-card text-white text-xs font-bold px-4 py-2 cursor-pointer">✋ 参加する →</button>
+          <div className="banner blue" style={{flexDirection:"column",alignItems:"flex-start",gap:8}}>
+            <span style={{fontWeight:700}}>⚠️ まず大会に参加してから予想できます</span>
+            <button onClick={()=>nav("join")} className="btn btn-dark sm" style={{width:"auto",padding:"6px 14px"}}>✋ 参加する →</button>
           </div>
         )}
-        {saveErr&&<div className="bg-hinomaru/10 border border-hinomaru/30 rounded-card p-3 mb-3 text-hinomaru-light text-sm font-bold">{saveErr}</div>}
+        {saveErr&&<div className="banner blue" style={{borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080"}}>⚠️ {saveErr}</div>}
         {tabData[tab].length===0?(
-          <div className="bg-white/5 border border-white/10 rounded-card text-center py-8 text-text-on-navy-dim text-sm">
-            {tab==="upcoming"?"受付中の試合はありません":tab==="locked"?"締切済みの試合はありません":"確定した試合はありません"}
+          <div className="card" style={{textAlign:"center",padding:"40px 18px"}}>
+            <DsIcon name="whistle" size={30} style={{color:"var(--faint)"}}/>
+            <div style={{marginTop:12,fontSize:13,fontWeight:700,color:"var(--muted)"}}>
+              {tab==="upcoming"?"受付中の試合はありません":tab==="locked"?"締切済みの試合はありません":"確定した試合はありません"}
+            </div>
           </div>
         ):tabData[tab].map(renderMatch)}
       </div>
-      {/* 完了モーダル（新デザイン） */}
+      {/* 完了モーダル */}
       {showDoneModal&&(
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center" onClick={()=>setShowDoneModal(null)}>
-          <div onClick={e=>e.stopPropagation()}
-            className="bg-navy-base text-text-on-navy w-full rounded-t-sheet shadow-hero p-6 pb-10 animate-wc-sheet"
-            style={{maxWidth:480}}>
-            <div className="text-center mb-5">
-              <div className="text-4xl mb-2">⚽</div>
-              <div className="text-white font-extrabold text-xl">予想を決定しました！</div>
-              <div className="text-text-on-navy-dim text-sm mt-1">結果が出たら自動で採点されます</div>
+        <div style={{position:"fixed",inset:0,zIndex:50,background:"rgba(0,0,0,0.65)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={()=>setShowDoneModal(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--panel)",width:"100%",maxWidth:480,borderRadius:"22px 22px 0 0",padding:"24px 18px 40px",boxShadow:"0 -8px 40px rgba(0,0,0,0.6)",border:"1px solid var(--line)"}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:40,marginBottom:8}}>⚽</div>
+              <div style={{color:"var(--txt)",fontWeight:900,fontSize:20}}>予想を決定しました！</div>
+              <div style={{color:"var(--muted)",fontSize:13,marginTop:4}}>結果が出たら自動で採点されます</div>
             </div>
-            <div className="flex flex-col gap-2.5">
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <button onClick={async()=>{if(sharingMatch)return;setSharingMatch(true);await doShareImage(<ShareCardMatchPrediction matchId={showDoneModal.matchId} pick={showDoneModal.pick} tournName={t?.name||""}/>,"wcup-match.png","試合予想をシェア！ #W杯予想メーカー");setSharingMatch(false);}}
-                disabled={sharingMatch}
-                className={`w-full bg-hinomaru text-white font-bold rounded-card-lg shadow-cta-red py-3.5 border-0 cursor-pointer${sharingMatch?" opacity-70":""}`}>
-                {sharingMatch?"🔄 画像生成中...":"📷 予想を画像で投稿"}
+                disabled={sharingMatch} className="btn btn-red lg" style={{opacity:sharingMatch?0.7:1}}>
+                <DsIcon name="camera" size={18}/>{sharingMatch?"画像生成中...":"予想を画像で投稿"}
               </button>
               <button onClick={async()=>{
                 if(postingCard||cardPosted)return;
-                const m2=MATCHES.find(x=>x.id===showDoneModal.matchId);
-                if(!m2)return;
-                const pick=showDoneModal.pick;
-                const pickText=pick==="home"?`${m2.home} 勝ち`:pick==="away"?`${m2.away} 勝ち`:"引き分け";
+                const m2=MATCHES.find(x=>x.id===showDoneModal.matchId);if(!m2)return;
+                const pick=showDoneModal.pick;const pickText=pick==="home"?`${m2.home} 勝ち`:pick==="away"?`${m2.away} 勝ち`:"引き分け";
                 const ko=new Date(m2.kickoff).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
                 const body=`${me?.icon||"⚽"} ${me?.nickname||"?"}さんの予想:\n${m2.home} vs ${m2.away} → ${pickText}！ (+${SCORING.outcome}pt 期待)\n${ko} キックオフ`;
-                setPostingCard(true);
-                await sendMessage(t.id,me?.nickname||"?",me?.icon||"⚽",body,{type:"prediction_card"});
+                setPostingCard(true);await sendMessage(t.id,me?.nickname||"?",me?.icon||"⚽",body,{type:"prediction_card"});
                 setPostingCard(false);setCardPosted(true);
               }} disabled={postingCard||cardPosted}
-                className={`w-full font-bold rounded-card-lg py-3.5 border-0 cursor-pointer${cardPosted?" bg-success/20 text-success border border-success/30":" bg-gold text-navy-base shadow-cta-gold"}${postingCard?" opacity-70":""}`}>
-                {postingCard?"🔄 投稿中...":cardPosted?"✅ チャットに投稿しました":"📣 みんなにこの予想を見せる"}
+                className="btn btn-gold md" style={{opacity:postingCard?0.7:1,color:cardPosted?"#37d67a":"#3a2606"}}>
+                <DsIcon name="send" size={17}/>{postingCard?"投稿中...":cardPosted?"チャットに投稿しました":"みんなにこの予想を見せる"}
               </button>
-              <button onClick={()=>setShowDoneModal(null)}
-                className="w-full bg-white/10 border border-white/20 text-white font-bold rounded-card-lg py-3 border-0 cursor-pointer">
-                ⚽ もう1試合予想する
-              </button>
+              <button onClick={()=>setShowDoneModal(null)} className="btn btn-dark md">⚽ もう1試合予想する</button>
               <a href={`https://line.me/R/msg/text/?${encodeURIComponent(`【W杯予想大会】${t.name}\n一緒に予想しよう！\n${window.location.origin}${window.location.pathname}#t-${t.id}`)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="block text-center font-bold rounded-card-lg py-3 text-white no-underline"
-                style={{background:"rgba(6,199,85,0.2)",border:"1px solid rgba(6,199,85,0.4)"}}>
-                📱 友達を招待する
+                target="_blank" rel="noopener noreferrer" className="btn btn-line md" style={{textDecoration:"none"}}>
+                <span className="lk">L</span> 友達を招待する
               </a>
-              <button onClick={()=>setShowDoneModal(null)}
-                className="w-full text-text-on-navy-dim py-2 text-sm bg-transparent border-0 cursor-pointer">
-                閉じる
-              </button>
+              <button onClick={()=>setShowDoneModal(null)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:13,padding:"8px"}}>閉じる</button>
             </div>
           </div>
         </div>
