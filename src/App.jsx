@@ -6690,6 +6690,7 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
       )}
       {/* MoMモーダル */}
       {showMomModal&&(()=>{
+        if(!t?.participants)return null;
         const mm=MATCHES.find(x=>x.id===showMomModal);
         if(!mm)return null;
         const myMomPred=me?.matchPredictions?.[showMomModal]?.mom;
@@ -6699,9 +6700,9 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
         const diffH=Math.floor(diffMs/3600000);
         const diffMin=Math.floor((diffMs%3600000)/60000);
         const deadlineStr=diffMs>0?(diffH>0?`あと ${diffH}h ${diffMin}m`:`あと ${diffMin}m`):null;
-        const isMatchScheduled=enriched.find(x=>x.id===showMomModal)?.status==="scheduled";
+        const isMatchScheduled=mm?new Date(mm.kickoff)>now:false;
         const momCounts={};let momTotal=0;
-        (t.participants||[]).forEach(p=>{const pr=(p.matchPredictions||{})[showMomModal];if(pr?.mom){momCounts[pr.mom]=(momCounts[pr.mom]||0)+1;momTotal++;}});
+        (t?.participants||[]).forEach(p=>{const pr=(p.matchPredictions||{})[showMomModal];if(pr?.mom){momCounts[pr.mom]=(momCounts[pr.mom]||0)+1;momTotal++;}});
         const momSorted=Object.entries(momCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
         const showResult=momView==="result"&&!!myMomPred;
         return(
@@ -6710,9 +6711,9 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
               <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14}}>
                 <div style={{flex:1,marginRight:10}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:5}}>
-                    <span className="chip blue" style={{fontSize:11,padding:"3px 8px"}}>{mm.home}</span>
+                    <span className="chip dim" style={{fontSize:11,padding:"3px 8px"}}>{mm.home}</span>
                     <span style={{color:"var(--muted)",fontSize:12,fontWeight:700}}>VS</span>
-                    <span className="chip red" style={{fontSize:11,padding:"3px 8px"}}>{mm.away}</span>
+                    <span className="chip dim" style={{fontSize:11,padding:"3px 8px"}}>{mm.away}</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                     <span style={{color:"var(--muted)",fontSize:11}}>{ko}</span>

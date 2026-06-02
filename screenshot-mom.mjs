@@ -248,6 +248,34 @@ try {
   await snap('mom_05_distribution_modal_fallback');
 }
 
+// Screenshot 6: Empty distribution — me has mom saved but no one else does
+const MOCK_TOURN_SOLO_MOM = {
+  ...MOCK_TOURN,
+  participants: [
+    { ...MOCK_TOURN.participants[0], matchPredictions: { 'gA-1': { pick: 'home', mom: 'エムバペ' } } },
+    { ...MOCK_TOURN.participants[1], matchPredictions: {} },
+    { ...MOCK_TOURN.participants[2], matchPredictions: {} },
+    { ...MOCK_TOURN.participants[3], matchPredictions: {} },
+  ],
+};
+await pg.keyboard.press('Escape');
+await pg.waitForTimeout(600);
+await setAppState('matches', MOCK_TOURN_SOLO_MOM, MY_ID);
+await pg.waitForTimeout(1000);
+try {
+  await pg.evaluate(() => window.scrollTo(0, 200));
+  await pg.waitForTimeout(400);
+  const momBtn3 = pg.locator('button').filter({ hasText: /✓/ }).first();
+  await momBtn3.waitFor({ state: 'visible', timeout: 6000 });
+  await momBtn3.scrollIntoViewIfNeeded();
+  await momBtn3.click({ force: true, timeout: 3000 });
+  await pg.waitForTimeout(1000);
+  await snap('mom_06_distribution_empty');
+} catch(e) {
+  console.warn('  Could not click solo MoM button:', e.message);
+  await snap('mom_06_distribution_empty_fallback');
+}
+
 await browser.close();
 devServer.kill('SIGTERM');
 console.log('\nAll done — MoM screenshots saved to redesign-screenshots/');
