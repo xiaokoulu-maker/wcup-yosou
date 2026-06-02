@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>みんなの全体チャット — W杯予想メーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+.cmsg{display:flex;gap:10px;align-items:flex-end;margin-bottom:13px}
+.cmsg .av{width:32px;height:32px;border-radius:10px;flex:none;display:grid;place-items:center;color:#cfd6ea;background:rgba(255,255,255,.05);border:1px solid var(--line-soft)}
+.cmsg .av.crown{color:var(--gold);background:rgba(245,180,49,.12);border-color:rgba(245,180,49,.3)}
+.cmsg .col{min-width:0}
+.cmsg .nm{font-size:10.5px;color:var(--dim);font-weight:700;margin:0 0 4px 2px;display:flex;align-items:center;gap:5px}
+.cmsg .nm .badge{font-family:"Roboto Mono";font-size:8.5px;color:var(--gold);background:rgba(245,180,49,.12);border:1px solid rgba(245,180,49,.3);padding:1px 5px;border-radius:5px}
+.cmsg .bbl{background:#16203f;border:1px solid var(--line-soft);border-radius:14px;border-bottom-left-radius:5px;padding:9px 13px;font-size:13.5px;color:#e6eaf5;line-height:1.5}
+.cmsg .meta{font-family:"Roboto Mono";font-size:9.5px;color:var(--faint);margin:5px 0 0 2px;display:flex;gap:9px}
+.cmsg .meta .rep{color:#7ea2ff;cursor:pointer}
+.composer{display:flex;gap:8px;align-items:center}
+.composer input{flex:1;height:48px;border-radius:13px;background:#0a1024;border:1px solid var(--line-soft);color:#fff;padding:0 15px;font-family:inherit;font-size:13.5px;outline:none}
+.composer input:focus{border-color:rgba(132,152,214,.32)}
+.composer input::placeholder{color:#525c7c}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="global-chat.jsx"></script>
+</body>
+</html>

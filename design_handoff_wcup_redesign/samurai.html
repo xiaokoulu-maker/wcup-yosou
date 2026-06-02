@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>日本代表モード — W杯予想メーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+.jp-hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:20px 18px;
+  background:linear-gradient(155deg, rgba(60,20,30,.55), rgba(13,17,38,.94));
+  border:1px solid rgba(214,40,60,.3);box-shadow:0 16px 42px rgba(120,20,40,.26), inset 0 1px 0 rgba(255,255,255,.05)}
+.jp-hero .glow{position:absolute;top:-56px;right:-46px;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle at 42% 40%, rgba(255,70,80,.55), transparent 62%);pointer-events:none}
+.jp-hero .lbl{font-size:11.5px;font-weight:700;color:var(--gold-soft)}
+.jp-hero .vs{display:flex;align-items:center;gap:10px;margin-top:9px}
+.jp-hero .vs .jp{font-family:"Roboto Mono";font-size:10px;font-weight:700;letter-spacing:.1em;background:rgba(214,40,60,.25);padding:3px 7px;border-radius:6px;color:#ffc2c8}
+.jp-hero .vs .nm{font-size:18px;font-weight:900}.jp-hero .vs .nm .x{color:#e08a90;font-size:13px;margin:0 8px}
+.jp-hero .big{margin-top:16px;display:flex;align-items:baseline;gap:4px;font-family:"Roboto Mono";font-weight:700;color:var(--gold)}
+.jp-hero .big .n{font-size:40px;line-height:1}.jp-hero .big .u{font-size:15px;margin-right:10px;color:var(--gold-soft)}
+.jp-hero .ko{font-size:11.5px;color:var(--muted);margin-top:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+
+.players{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.player{background:linear-gradient(180deg,var(--card-a),var(--card-b));border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:14px 14px;cursor:pointer;transition:.14s;text-align:left}
+.player:hover{border-color:var(--line-strong)}
+.player.on{border-color:rgba(245,180,49,.5);box-shadow:0 0 0 1px rgba(245,180,49,.18), 0 10px 24px rgba(200,120,20,.16);
+  background:linear-gradient(180deg,rgba(50,40,20,.6),rgba(20,20,40,.8))}
+.player .pos{font-family:"Roboto Mono";font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.player.on .pos{color:var(--gold)}
+.player .nm{font-size:16px;font-weight:900;margin-top:7px}
+.player .chk{float:right;color:var(--faint)}.player.on .chk{color:var(--gold)}
+
+.rank-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line-soft)}
+.rank-row:last-child{border-bottom:none}
+.rank-row .nm{flex:1;font-size:14px;font-weight:800}
+.rank-row.me{color:#ff7a7e}
+.rank-row .fifa{font-family:"Roboto Mono";font-size:11.5px;color:var(--muted);font-weight:600}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="samurai.jsx"></script>
+</body>
+</html>

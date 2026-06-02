@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>参加する — W杯予想メーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+.field-lbl{font-family:"Roboto Mono";font-size:10.5px;letter-spacing:.14em;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:9px;display:block}
+.tinput{width:100%;height:52px;border-radius:13px;background:#0a1024;border:1px solid var(--line);color:#fff;padding:0 16px;font-family:inherit;font-size:15px;font-weight:600;outline:none}
+.tinput:focus{border-color:rgba(132,152,214,.4)}
+.tinput::placeholder{color:#525c7c;font-weight:500}
+.icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.icpick{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;cursor:pointer;color:#aeb6cf;background:linear-gradient(180deg,rgba(19,28,58,.7),rgba(13,19,40,.7));border:1px solid var(--line-soft);transition:.14s}
+.icpick:hover{border-color:var(--line-strong)}
+.icpick.on{color:var(--gold);border-color:rgba(245,180,49,.55);box-shadow:0 0 0 1px rgba(245,180,49,.2),0 8px 20px rgba(200,120,20,.18);background:linear-gradient(180deg,rgba(50,40,20,.5),rgba(20,20,40,.8))}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="join.jsx"></script>
+</body>
+</html>

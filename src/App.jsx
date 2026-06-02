@@ -3166,7 +3166,7 @@ if(cur.participants.length>=getPlanLimit(cur.plan)){
     const updated={...cur,participants:[...cur.participants,p]};
     saveMyJoined(cur.id);
     try{localStorage.setItem("wcup_myid_"+cur.id,p.id);}catch{}
-    trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);nav("home");setLoading(false);
+    trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);nav("tournament");setLoading(false);
   };
   if(deadlinePassed)return(
     <div className="screen">

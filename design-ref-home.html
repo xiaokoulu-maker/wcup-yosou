@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W杯予想メーカー — ホーム画面 リデザイン参照</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Saira:wght@500;700;800;900&family=Saira+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+
+/* bake Tweak defaults that the mockup's JS used to inject */
+:root{ --accent-hero:#ff2247; --hero-size:30px; }
+
+/* ============================================================
+   W杯予想アプリ — Samurai Blue Design System
+   ネイビー × 日の丸レッド × トロフィーゴールド
+   ============================================================ */
+/* cyrillic */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* cyrillic */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* cyrillic */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* cyrillic */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+/* vietnamese */
+/* latin-ext */
+/* latin */
+:root {
+  /* surfaces */
+  --bg:         #05091c;
+  --bg-2:       #0a1230;
+  --surface:    #0e1942;
+  --surface-2:  #16245c;
+  --surface-3:  #1d2f6e;
+  --line:       rgba(255,255,255,0.08);
+  --line-strong:rgba(255,255,255,0.16);
+  /* brand */
+  --blue:        #1f3aa6;
+  --blue-bright: #3f6bff;
+  --blue-glow:   #2b4fd6;
+  --red:         #e4002b;
+  --red-deep:    #b00020;
+  --red-bright:  #ff2247;
+  --gold:        #e7c873;
+  --gold-deep:   #c39a3c;
+  --line-green:  #06c755;
+  /* text */
+  --text:       #eef2ff;
+  --text-dim:   rgba(214,224,255,0.62);
+  --text-faint: rgba(214,224,255,0.38);
+  --jp: 'Noto Sans JP', sans-serif;
+  --cond: 'Saira Condensed', 'Noto Sans JP', sans-serif;
+  --num: 'Saira', 'Saira Condensed', sans-serif;
+}
+* { box-sizing: border-box; }
+.app {
+  position: absolute;
+  inset: 0;
+  font-family: var(--jp);
+  color: var(--text);
+  background:
+    radial-gradient(120% 60% at 50% -8%, rgba(43,79,214,0.30), transparent 60%),
+    radial-gradient(90% 50% at 50% 0%, rgba(228,0,43,0.14), transparent 55%),
+    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 38%);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+}
+.app::-webkit-scrollbar { width: 0; }
+/* faint uniform pinstripe texture overlay */
+.stripe-field {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255,255,255,0.035) 0 2px,
+    transparent 2px 13px
+  );
+}
+/* mowed-pitch turf stripes (very subtle green) */
+.pitch-field {
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(34,120,70,0.10) 0 22px,
+      rgba(20,80,46,0.05) 22px 44px);
+}
+/* ============================ TOP BAR ============================ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 18px 10px;
+}
+.topbar .wc-mark {
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.topbar .wc-mark .fifa {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  line-height: 1;
+}
+.topbar .wc-mark .yr {
+  font-family: var(--num);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+.topbar .app-name {
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  white-space: nowrap; flex-shrink: 0;
+}
+/* back row */
+.backrow {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 16px 8px;
+}
+.backbtn {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-dim);
+  font-family: var(--jp); font-weight: 700; font-size: 14px;
+  padding: 6px 4px;
+}
+.backbtn:active { opacity: .6; }
+/* ============================ HERO ============================ */
+.hero {
+  position: relative;
+  padding: 14px 20px 22px;
+  overflow: hidden;
+}
+.hero .hinomaru {
+  position: absolute;
+  top: -54px; right: -46px;
+  width: 188px; height: 188px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 36%, var(--red-bright), var(--red) 46%, var(--red-deep) 100%);
+  filter: blur(0.3px);
+  opacity: 0.92;
+  box-shadow: 0 0 60px rgba(228,0,43,0.45);
+}
+.hero .hinomaru::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: inset 0 0 0 7px rgba(255,255,255,0.06);
+}
+.kicker {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--cond);
+  font-weight: 700; font-size: 12.5px; letter-spacing: 2px;
+  color: var(--gold);
+  margin-bottom: 14px;
+  position: relative; z-index: 2;
+}
+.kicker .bar { width: 22px; height: 2px; background: var(--gold); }
+.hero h1 {
+  position: relative; z-index: 2;
+  margin: 0;
+  font-weight: 900;
+  font-size: var(--hero-size, 30px);
+  line-height: 1.24;
+  letter-spacing: -0.5px;
+  text-wrap: balance;
+}
+.hero h1 .accent { color: var(--accent-hero, var(--red-bright)); }
+.hero .lead {
+  position: relative; z-index: 2;
+  margin: 12px 0 0;
+  max-width: 92%;
+  font-size: 13.5px; font-weight: 500;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+/* ============================ COUNTDOWN ============================ */
+.countdown {
+  margin: 18px 16px 6px;
+  position: relative;
+  border-radius: 18px;
+  padding: 16px 14px 15px;
+  background:
+    linear-gradient(180deg, rgba(31,58,166,0.30), rgba(10,18,48,0.65));
+  border: 1px solid var(--line-strong);
+  overflow: hidden;
+}
+.countdown .cd-label {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--cond); font-weight: 700;
+  font-size: 12px; letter-spacing: 1.5px; color: var(--gold);
+  margin-bottom: 12px; white-space: nowrap;
+}
+.countdown .cd-label .dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--red-bright);
+  box-shadow: 0 0 8px var(--red-bright);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+.cd-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.cd-cell {
+  text-align: center;
+  background: rgba(5,9,28,0.55);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 4px 8px;
+}
+.cd-cell .num {
+  font-family: var(--num); font-weight: 800;
+  font-size: 34px; line-height: 1; color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+.cd-cell .unit {
+  margin-top: 5px;
+  font-family: var(--cond); font-weight: 600;
+  font-size: 10px; letter-spacing: 1.5px; color: var(--text-faint);
+}
+/* ============================ BUTTONS ============================ */
+.btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  border: none; cursor: pointer; white-space: nowrap;
+  font-family: var(--jp); font-weight: 900;
+  font-size: 15.5px; letter-spacing: 0.3px;
+  border-radius: 14px;
+  padding: 16px 16px;
+  color: #fff;
+  transition: transform .12s ease, filter .12s ease;
+}
+.btn:active { transform: scale(0.985); filter: brightness(1.05); }
+.btn-primary {
+  background: linear-gradient(180deg, var(--red-bright), var(--red) 55%, var(--red-deep));
+  box-shadow: 0 8px 22px rgba(228,0,43,0.34), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.btn-blue {
+  background: linear-gradient(180deg, var(--blue-bright), var(--blue) 70%);
+  box-shadow: 0 8px 22px rgba(43,79,214,0.34), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.btn-ghost {
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--line-strong);
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: none;
+}
+.btn-line {
+  background: var(--line-green);
+  box-shadow: 0 8px 20px rgba(6,199,85,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn-sm { padding: 13px 14px; font-size: 14px; border-radius: 12px; }
+.btn-hint {
+  text-align: center; font-size: 11px; color: var(--text-faint);
+  margin: 8px 0 0; font-weight: 500;
+}
+/* ============================ SECTIONS ============================ */
+.section { padding: 22px 16px 4px; }
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 14px; padding: 0 2px;
+}
+.section-head .t {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 900; font-size: 17px; letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+.section-head .t .tick { width: 4px; height: 17px; border-radius: 2px; background: var(--red); }
+.section-head .t .tick.gold { background: var(--gold); }
+.section-head .t .tick.blue { background: var(--blue-bright); }
+.section-head .meta { font-family: var(--cond); font-weight: 600; font-size: 12px; color: var(--text-faint); letter-spacing: 1px; }
+.card {
+  background: linear-gradient(180deg, rgba(22,34,92,0.55), rgba(14,25,66,0.55));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+/* ============================ WINNER PREDICTION ============================ */
+.predict { padding: 6px 14px 12px; }
+.pred-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 4px;
+  position: relative;
+}
+.pred-row + .pred-row { border-top: 1px solid var(--line); }
+.flag {
+  width: 30px; height: 21px; border-radius: 3px; flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  overflow: hidden; position: relative;
+}
+.rank-no {
+  font-family: var(--num); font-weight: 800; font-size: 14px;
+  color: var(--text-faint); width: 16px; text-align: center; flex-shrink: 0;
+}
+.rank-no.r1 { color: var(--gold); }
+.pred-body { flex: 1; min-width: 0; }
+.pred-body .nm { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 7px; }
+.pred-body .nm .crown { color: var(--gold); }
+.pred-track {
+  margin-top: 6px; height: 6px; border-radius: 4px;
+  background: rgba(255,255,255,0.07); overflow: hidden;
+}
+.pred-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--blue-bright), var(--blue));
+  transition: width 1s cubic-bezier(.2,.7,.2,1);
+}
+.pred-fill.lead { background: linear-gradient(90deg, var(--gold), var(--gold-deep)); }
+.pred-pct {
+  font-family: var(--num); font-weight: 800; font-size: 16px;
+  flex-shrink: 0; width: 56px; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pred-pct.lead { color: var(--gold); }
+.morelink {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; background: none; border: none; cursor: pointer;
+  color: var(--text-dim); font-family: var(--jp); font-weight: 700;
+  font-size: 12.5px; padding: 12px; border-top: 1px solid var(--line);
+}
+/* ============================ TOURNAMENT (your leagues) ============================ */
+.league {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 15px;
+  text-decoration: none; color: inherit;
+}
+.league + .league { border-top: 1px solid var(--line); }
+.league .badge {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--num); font-weight: 800; font-size: 17px; color: #fff;
+}
+.league .info { flex: 1; min-width: 0; }
+.league .info .ln { font-weight: 700; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.league .info .sub { margin-top: 3px; font-size: 11.5px; color: var(--text-faint); display: flex; gap: 8px; align-items: center; }
+.league .info .sub .pos { font-family: var(--num); font-weight: 800; color: var(--gold); }
+.chev { color: var(--text-faint); flex-shrink: 0; }
+/* ============================ CHAT CTA ============================ */
+.chat-cta {
+  display: flex; align-items: center; gap: 13px;
+  padding: 15px 16px;
+}
+.chat-cta .ic {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(63,107,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-cta .tx { flex: 1; }
+.chat-cta .tx .a { font-weight: 800; font-size: 14px; }
+.chat-cta .tx .b { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+.tag-code {
+  font-family: var(--num); font-weight: 800; font-size: 11px;
+  color: var(--gold); border: 1px solid var(--gold-deep);
+  border-radius: 6px; padding: 4px 8px; letter-spacing: 1px;
+}
+/* ============================ FEATURE GRID ============================ */
+.feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 2px; }
+.feat {
+  background: linear-gradient(180deg, rgba(22,34,92,0.5), rgba(14,25,66,0.5));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 14px;
+  text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.feat:active { transform: scale(0.98); }
+.feat .ic {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.feat .lbl { font-weight: 800; font-size: 13.5px; }
+.feat .desc { font-size: 10.5px; color: var(--text-faint); margin-top: -7px; }
+/* ============================ GROUP DETAIL ============================ */
+.crest-wrap { display: flex; flex-direction: column; align-items: center; padding: 6px 16px 4px; position: relative; }
+.crest {
+  width: 76px; height: 76px; border-radius: 22px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, var(--blue), #0b1640);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+.plan-pill {
+  margin-top: 12px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--cond); font-weight: 700; font-size: 12px; letter-spacing: 1px;
+  color: var(--gold);
+  background: rgba(231,200,115,0.10);
+  border: 1px solid rgba(231,200,115,0.32);
+  border-radius: 999px; padding: 6px 14px;
+}
+.players-stat {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin: 14px 0 2px;
+}
+.players-stat .big {
+  font-family: var(--num); font-weight: 800; font-size: 48px; line-height: 1;
+  color: var(--text); font-variant-numeric: tabular-nums;
+}
+.players-stat .slash { font-family: var(--num); font-weight: 700; font-size: 30px; color: var(--text-faint); }
+.players-stat .col .k { font-family: var(--cond); font-weight: 700; font-size: 11px; letter-spacing: 2px; color: var(--text-faint); }
+.players-stat .max .big { color: var(--text-faint); font-size: 30px; }
+.players-stat .col { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+/* invite */
+.invite-field {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(5,9,28,0.6);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px; padding: 6px 6px 6px 13px;
+}
+.invite-field input {
+  flex: 1; min-width: 0; background: none; border: none; outline: none;
+  color: var(--text-dim); font-family: var(--num); font-size: 12.5px;
+}
+.copybtn {
+  flex-shrink: 0; background: var(--gold); color: #2a1d00;
+  border: none; cursor: pointer; font-family: var(--jp); font-weight: 900;
+  font-size: 12.5px; border-radius: 9px; padding: 9px 14px;
+}
+.copybtn.done { background: var(--line-green); color: #fff; }
+.invite-code {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 12px;
+}
+.invite-code .k { font-size: 11px; color: var(--text-faint); font-weight: 700; white-space: nowrap; }
+.invite-code .v {
+  font-family: var(--num); font-weight: 800; font-size: 20px; letter-spacing: 4px;
+  color: var(--gold);
+}
+/* menu list (group actions) */
+.menu { display: flex; flex-direction: column; gap: 9px; }
+.menu-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 13px;
+  background: linear-gradient(180deg, rgba(22,34,92,0.5), rgba(14,25,66,0.5));
+  border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 15px; cursor: pointer;
+  text-align: left; color: var(--text);
+  transition: transform .1s ease, border-color .15s ease;
+}
+.menu-item:active { transform: scale(0.99); }
+.menu-item.hot {
+  border-color: rgba(231,200,115,0.5);
+  background: linear-gradient(180deg, rgba(231,200,115,0.13), rgba(195,154,60,0.05));
+}
+.menu-item .ic {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(63,107,255,0.16);
+}
+.menu-item.hot .ic { background: rgba(231,200,115,0.18); }
+.menu-item .ml { flex: 1; }
+.menu-item .ml .a { font-weight: 800; font-size: 14.5px; }
+.menu-item .ml .b { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+.menu-item .pill-new {
+  font-family: var(--cond); font-weight: 800; font-size: 10px; letter-spacing: 1px;
+  background: var(--red); color: #fff; border-radius: 6px; padding: 3px 7px;
+}
+.upgrade-note {
+  text-align: center; font-size: 11.5px; color: var(--text-faint);
+  padding: 14px 24px 4px; line-height: 1.6;
+}
+.upgrade-note b { color: var(--gold); }
+/* chat block */
+.chat-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 4px 12px;
+}
+.chat-head .l { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; }
+.chat-head .l .live { width: 8px; height: 8px; border-radius: 50%; background: var(--line-green); box-shadow: 0 0 8px var(--line-green); }
+.chat-head .r { font-size: 11px; color: var(--text-faint); }
+.bubble-row { display: flex; gap: 9px; margin-bottom: 12px; align-items: flex-end; }
+.bubble-row.me { flex-direction: row-reverse; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--num); font-weight: 800; font-size: 12px; color: #fff;
+}
+.bubble {
+  max-width: 74%;
+  padding: 9px 13px; border-radius: 15px;
+  font-size: 13px; line-height: 1.5;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.bubble .who { font-size: 10.5px; font-weight: 800; color: var(--blue-bright); margin-bottom: 2px; }
+.bubble-row.me .bubble { background: linear-gradient(180deg, var(--red), var(--red-deep)); border: none; border-bottom-right-radius: 5px; }
+.bubble-row:not(.me) .bubble { border-bottom-left-radius: 5px; }
+.composer {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 4px 4px;
+}
+.composer input {
+  flex: 1; background: rgba(5,9,28,0.6); border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 12px 16px; color: var(--text);
+  font-family: var(--jp); font-size: 13.5px; outline: none;
+}
+.composer input::placeholder { color: var(--text-faint); }
+.sendbtn {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--blue-bright), var(--blue));
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(43,79,214,0.4);
+}
+/* reward strip */
+.reward {
+  display: flex; align-items: center; gap: 12px;
+  margin: 14px 0 4px;
+  background: linear-gradient(90deg, rgba(231,200,115,0.12), rgba(231,200,115,0.03));
+  border: 1px solid rgba(231,200,115,0.3);
+  border-radius: 14px; padding: 13px 15px;
+}
+.reward .ic { width: 34px; height: 34px; border-radius: 10px; background: rgba(231,200,115,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.reward .tx { flex: 1; }
+.reward .tx .a { font-weight: 800; font-size: 13.5px; }
+.reward .tx .b { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+.reward .pt { font-family: var(--num); font-weight: 800; font-size: 15px; color: var(--gold); flex-shrink: 0; }
+.spacer-bottom { height: 40px; }
+/* tweak toggles */
+.tw-no-hinomaru .hinomaru { display: none; }
+.tw-no-stripe .stripe-field { background-image: none; }
+.tw-no-pitch .pitch-field { background-image: none; }
+/* screen transition — never animates opacity to 0 (resting state always visible) */
+.screen { animation: screenIn .32s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes screenIn {
+  0%   { transform: translateY(10px); filter: brightness(1.5); }
+  100% { transform: none; filter: none; }
+}
+  html, body { margin: 0; height: 100%; }
+  body {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(80% 60% at 50% 0%, #1a2440, #0c1020 70%),
+      #0c1020;
+    padding: 40px 16px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  #root { transform-origin: center; }
+
+
+/* ---- standalone preview shell (NOT part of the real design — phone frame only) ---- */
+html,body{margin:0;padding:0;}
+body{background:#02040f;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;font-family:var(--jp);}
+.phone{position:relative;width:390px;height:844px;max-width:100%;border-radius:46px;overflow:hidden;
+  box-shadow:0 36px 90px rgba(0,0,0,.65), 0 0 0 11px #0a0f22, 0 0 0 12px #1b2340;}
+@media(max-width:430px){ body{padding:0;} .phone{width:100%;height:100vh;border-radius:0;box-shadow:none;} }
+.preview-note{position:fixed;left:12px;bottom:12px;font:12px/1.4 var(--jp);color:#7a86b0;background:rgba(10,16,38,.85);
+  border:1px solid rgba(255,255,255,.08);padding:7px 12px;border-radius:8px;z-index:50;}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="preview-note">プレビュー: ホーム画面（Samurai Blue）／実機枠・Tweaksパネルは除外済み</div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+/* components.jsx — shared UI: icons, flags, buttons */
+const { useState } = React;
+
+/* ---------- line icons (simple UI glyphs) ---------- */
+function Ico({ d, size = 18, sw = 2, stroke = 'currentColor', fill = 'none', vb = 24, children, style }) {
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${vb} ${vb}`} fill={fill} style={style}
+      stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      {d ? <path d={d} /> : children}
+    </svg>
+  );
+}
+const Icon = {
+  plus:    (p) => <Ico {...p} d="M12 5v14M5 12h14" />,
+  user:    (p) => <Ico {...p}><circle cx="12" cy="8" r="3.4" /><path d="M5.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /></Ico>,
+  users:   (p) => <Ico {...p}><circle cx="9" cy="8" r="3" /><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" /><path d="M16 6.2a3 3 0 0 1 0 5.6M21 19c0-2.4-1.4-4.2-3.4-4.8" /></Ico>,
+  back:    (p) => <Ico {...p} d="M15 5l-7 7 7 7" />,
+  chev:    (p) => <Ico {...p} d="M9 6l6 6-6 6" sw={2.2} />,
+  chevDown:(p) => <Ico {...p} d="M6 9l6 6 6-6" />,
+  chart:   (p) => <Ico {...p}><path d="M5 19V11M12 19V5M19 19v-6" /></Ico>,
+  trophy:  (p) => <Ico {...p}><path d="M7 4h10v4a5 5 0 0 1-10 0V4Z" /><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M9 19h6M10 16h4l.5 3h-5l.5-3Z" /></Ico>,
+  list:    (p) => <Ico {...p}><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></Ico>,
+  bracket: (p) => <Ico {...p}><path d="M4 5h5v5H4M4 14h5v5H4M9 7.5h4v9h4M13 16.5h0M17 9v6" /></Ico>,
+  check:   (p) => <Ico {...p}><path d="M4 12.5l5 5 11-11" sw={2.4} /></Ico>,
+  checkCircle:(p) => <Ico {...p}><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.6 2.6L16 9.5" /></Ico>,
+  chat:    (p) => <Ico {...p} d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5V6a1 1 0 0 1 1-1Z" />,
+  calendar:(p) => <Ico {...p}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 9h16M8 3v4M16 3v4" /></Ico>,
+  share:   (p) => <Ico {...p}><circle cx="6" cy="12" r="2.4" /><circle cx="17" cy="6" r="2.4" /><circle cx="17" cy="18" r="2.4" /><path d="M8.1 11l6.8-3.8M8.1 13l6.8 3.8" /></Ico>,
+  copy:    (p) => <Ico {...p}><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M4 16V5a1 1 0 0 1 1-1h11" /></Ico>,
+  send:    (p) => <Ico {...p}><path d="M5 12l15-7-7 15-2.5-5.5L5 12Z" /></Ico>,
+  gear:    (p) => <Ico {...p}><circle cx="12" cy="12" r="3" /><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8" /></Ico>,
+  map:     (p) => <Ico {...p}><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" /><path d="M9 4v14M15 6v14" /></Ico>,
+  refresh: (p) => <Ico {...p}><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4" /></Ico>,
+  star:    (p) => <Ico {...p}><path d="M12 4l2.3 5 5.5.5-4.1 3.6 1.2 5.4L12 15.8 7.1 18.5l1.2-5.4L4.2 9.5 9.7 9 12 4Z" /></Ico>,
+  bolt:    (p) => <Ico {...p} fill="currentColor" stroke="none" d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />,
+  coin:    (p) => <Ico {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v9M9.5 9.8h3.2a1.7 1.7 0 0 1 0 3.4H9.8" /></Ico>,
+};
+
+/* ---------- crest (group emblem) ---------- */
+function Crest({ size = 76 }) {
+  return (
+    <div className="crest" style={{ width: size, height: size }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage:
+        'repeating-linear-gradient(118deg, rgba(255,255,255,0.07) 0 2px, transparent 2px 10px)' }} />
+      <div style={{ width: size*0.42, height: size*0.42, borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 36%, var(--red-bright), var(--red) 50%, var(--red-deep))',
+        boxShadow: '0 0 18px rgba(228,0,43,0.55)', position: 'relative', zIndex: 2 }} />
+    </div>
+  );
+}
+
+/* ---------- flags (CSS, simplified) ---------- */
+function Flag({ code }) {
+  const base = { width: '100%', height: '100%', position: 'absolute', inset: 0 };
+  const flags = {
+    JP: <div style={{ ...base, background: '#fff' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', width: '46%', height: '64%',
+            transform: 'translate(-50%,-50%)', borderRadius: '50%', background: '#bc002d' }} />
+        </div>,
+    BR: <div style={{ ...base, background: '#009b3a' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', width: '64%', height: '88%',
+            transform: 'translate(-50%,-50%) rotate(45deg)', background: '#ffdf00' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', width: '34%', height: '48%',
+            transform: 'translate(-50%,-50%)', borderRadius: '50%', background: '#002776' }} />
+        </div>,
+    FR: <div style={{ ...base, display: 'flex' }}>
+          <div style={{ flex: 1, background: '#0055a4' }} />
+          <div style={{ flex: 1, background: '#fff' }} />
+          <div style={{ flex: 1, background: '#ef4135' }} />
+        </div>,
+    ES: <div style={{ ...base, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, background: '#aa151b' }} />
+          <div style={{ flex: 2, background: '#f1bf00' }} />
+          <div style={{ flex: 1, background: '#aa151b' }} />
+        </div>,
+    AR: <div style={{ ...base, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, background: '#75aadb' }} />
+          <div style={{ flex: 1, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#f6b40e' }} />
+          </div>
+          <div style={{ flex: 1, background: '#75aadb' }} />
+        </div>,
+  };
+  return <div className="flag">{flags[code]}</div>;
+}
+
+Object.assign(window, { Icon, Crest, Flag });
+
+
+/* home.jsx — ホーム画面 */
+function HomeScreen({ cd, onOpenGroup }) {
+  const [showAll, setShowAll] = React.useState(false);
+
+  const preds = [
+    { code: 'JP', nm: '日本',        pct: 47.1, crown: true },
+    { code: 'BR', nm: 'ブラジル',    pct: 17.5 },
+    { code: 'FR', nm: 'フランス',    pct: 11.8 },
+    { code: 'ES', nm: 'スペイン',    pct: 5.9 },
+    { code: 'AR', nm: 'アルゼンチン', pct: 5.9 },
+  ];
+  const max = 47.1;
+
+  const cdCells = [
+    { n: cd.d, u: 'DAYS' }, { n: cd.h, u: 'HOURS' },
+    { n: cd.m, u: 'MIN' }, { n: cd.s, u: 'SEC' },
+  ];
+
+  const leagues = [
+    { ln: 'サムライ予想会', pos: '3', total: '3人', pt: '0', c: 'var(--red)' },
+    { ln: '会社の同期リーグ', pos: '1', total: '3人', pt: '0', c: 'var(--blue-bright)' },
+  ];
+
+  const feats = [
+    { k: 'グループ別',  d: 'A〜L組の順位予想', ic: <Icon.users size={18} stroke="#fff" />,  bg: 'rgba(63,107,255,0.2)' },
+    { k: '決勝T',      d: 'ノックアウト予想',  ic: <Icon.bracket size={18} stroke="#fff" />, bg: 'rgba(228,0,43,0.2)' },
+    { k: 'ベスト16',   d: '勝ち上がりを当てる', ic: <Icon.trophy size={18} stroke="var(--gold)" />, bg: 'rgba(231,200,115,0.18)' },
+    { k: '試合日程',   d: '全104試合カレンダー', ic: <Icon.calendar size={18} stroke="#fff" />, bg: 'rgba(63,107,255,0.2)' },
+  ];
+
+  return (
+    <div className="screen">
+      {/* top bar */}
+      <div className="topbar">
+        <div className="wc-mark">
+          <span className="fifa">FIFA WORLD CUP</span>
+          <span className="yr">2026</span>
+        </div>
+        <div className="app-name">W杯予想メーカー</div>
+      </div>
+
+      {/* hero */}
+      <div className="hero stripe-field">
+        <div className="hinomaru" />
+        <div className="kicker"><span className="bar" />SAMURAI PREDICTION</div>
+        <h1>4年に1度の夏、<br />予想で<span className="accent">最高の景色</span>を。</h1>
+        <p className="lead">仲間と優勝国を予想し、本番104試合をリアルタイムで競い合おう。開幕までもう待てない。</p>
+      </div>
+
+      {/* countdown */}
+      <div className="countdown stripe-field">
+        <div className="cd-label"><span className="dot" />開幕まで &nbsp;KICKOFF: 6.11</div>
+        <div className="cd-grid">
+          {cdCells.map((c, i) => (
+            <div className="cd-cell" key={i}>
+              <div className="num">{String(c.n).padStart(2, '0')}</div>
+              <div className="unit">{c.u}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* primary CTAs */}
+      <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button className="btn btn-primary" onClick={onOpenGroup}>
+          <Icon.users size={19} stroke="#fff" />友達と大会を作る
+        </button>
+        <p className="btn-hint">勝敗予想・ランキングまで全部できる無料登録</p>
+        <button className="btn btn-ghost" onClick={onOpenGroup}>ひとりで予想を始める</button>
+      </div>
+
+      {/* winner prediction */}
+      <div className="section">
+        <div className="section-head">
+          <div className="t"><span className="tick gold" />みんなの優勝予想</div>
+          <div className="meta">17 票</div>
+        </div>
+        <div className="card">
+          <div className="predict pitch-field">
+            {(showAll ? preds.concat([
+              { code: 'FR', nm: 'イングランド', pct: 4.7 },
+              { code: 'BR', nm: 'ドイツ', pct: 3.5 },
+              { code: 'ES', nm: 'ポルトガル', pct: 2.4 },
+            ]) : preds).map((p, i) => (
+              <div className="pred-row" key={i}>
+                <span className={'rank-no' + (i === 0 ? ' r1' : '')}>{i + 1}</span>
+                <Flag code={p.code} />
+                <div className="pred-body">
+                  <div className="nm">
+                    {p.nm}
+                    {p.crown && <Icon.trophy size={13} stroke="var(--gold)" className="crown" />}
+                  </div>
+                  <div className="pred-track">
+                    <div className={'pred-fill' + (i === 0 ? ' lead' : '')}
+                      style={{ width: (p.pct / max * 100) + '%' }} />
+                  </div>
+                </div>
+                <span className={'pred-pct' + (i === 0 ? ' lead' : '')}>{p.pct.toFixed(1)}%</span>
+              </div>
+            ))}
+          </div>
+          <button className="morelink" onClick={() => setShowAll(s => !s)}>
+            {showAll ? '閉じる' : 'もっと見る（残り 12 カ国）'}
+            <Icon.chevDown size={14} style={{ transform: showAll ? 'rotate(180deg)' : 'none', transition: '.2s' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* your leagues */}
+      <div className="section">
+        <div className="section-head">
+          <div className="t"><span className="tick" />あなたの大会</div>
+          <div className="meta">2</div>
+        </div>
+        <div className="card" style={{ overflow: 'hidden' }}>
+          {leagues.map((l, i) => (
+            <a className="league" key={i} onClick={onOpenGroup} style={{ cursor: 'pointer' }}>
+              <div className="badge" style={{ background: `linear-gradient(180deg, ${l.c}, rgba(0,0,0,0.25))` }}>
+                {l.ln.charAt(0)}
+              </div>
+              <div className="info">
+                <div className="ln">{l.ln}</div>
+                <div className="sub"><span className="pos">{l.pos}位</span><span>/ {l.total}</span><span>· {l.pt} pt</span></div>
+              </div>
+              <Icon.chev size={18} className="chev" stroke="var(--text-faint)" />
+            </a>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 12 }}>
+          <button className="btn btn-blue btn-sm" onClick={onOpenGroup}>
+            <Icon.plus size={17} stroke="#fff" />新しい大会を作る
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={onOpenGroup}>招待コードで参加</button>
+        </div>
+      </div>
+
+      {/* chat cta */}
+      <div className="section">
+        <div className="card chat-cta" onClick={onOpenGroup} style={{ cursor: 'pointer' }}>
+          <div className="ic"><Icon.chat size={20} stroke="var(--blue-bright)" /></div>
+          <div className="tx">
+            <div className="a">みんなのチャット</div>
+            <div className="b">W杯について語ろう</div>
+          </div>
+          <Icon.chev size={18} className="chev" stroke="var(--text-faint)" />
+        </div>
+      </div>
+
+      {/* feature grid */}
+      <div className="section">
+        <div className="section-head">
+          <div className="t"><span className="tick blue" />予想メニュー</div>
+        </div>
+        <div className="feat-grid">
+          {feats.map((f, i) => (
+            <button className="feat" key={i} onClick={onOpenGroup}>
+              <div className="ic" style={{ background: f.bg }}>{f.ic}</div>
+              <div>
+                <div className="lbl">{f.k}</div>
+                <div className="desc">{f.d}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="spacer-bottom" />
+    </div>
+  );
+}
+window.HomeScreen = HomeScreen;
+
+
+
+/* ---- standalone root: Home only, no iOS frame, no Tweaks panel ---- */
+function useCountdown(targetIso){
+  const calc=()=>{const diff=Math.max(0,new Date(targetIso)-new Date());const s=Math.floor(diff/1000);
+    return {d:Math.floor(s/86400),h:Math.floor((s%86400)/3600),m:Math.floor((s%3600)/60),s:s%60};};
+  const [cd,setCd]=React.useState(calc);
+  React.useEffect(()=>{const id=setInterval(()=>setCd(calc()),1000);return()=>clearInterval(id);},[]);
+  return cd;
+}
+function PreviewApp(){
+  const cd = useCountdown('2026-06-11T13:00:00');
+  return (
+    <div className="phone">
+      <div className="app" style={{paddingTop:20}}>
+        <HomeScreen cd={cd} onOpenGroup={()=>{}} />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<PreviewApp/>);
+
+</script>
+</body></html>

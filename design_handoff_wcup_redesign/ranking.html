@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ランキング — W杯予想メーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:10px;margin-top:8px}
+.pod{display:flex;flex-direction:column;align-items:center}
+.pod .av{border-radius:50%;display:grid;place-items:center;color:#cfd6ea;background:rgba(255,255,255,.05);position:relative}
+.pod .av .crown{position:absolute;top:-22px;color:var(--gold)}
+.pod.first .av{width:84px;height:84px;border:2px solid var(--gold);box-shadow:0 0 26px rgba(245,180,49,.4)}
+.pod.first{margin-bottom:0}
+.pod:not(.first) .av{width:64px;height:64px;border:2px solid var(--line-strong)}
+.pod .nm{font-size:13px;font-weight:800;margin-top:10px;display:flex;align-items:center;gap:5px}
+.pod .nm .you{font-family:"Roboto Mono";font-size:9px;color:#ff6066}
+.pod .pt{font-family:"Roboto Mono";font-size:11px;color:var(--muted);margin-top:2px}
+.pod .block{width:100%;border-radius:13px 13px 0 0;display:grid;place-items:center;font-family:"Roboto Mono";font-weight:700;margin-top:13px;background:linear-gradient(180deg,rgba(40,52,96,.6),rgba(20,28,56,.4));border:1px solid var(--line-soft);border-bottom:none}
+.pod.first .block{height:120px;font-size:34px;color:var(--gold);background:linear-gradient(180deg,rgba(80,62,20,.5),rgba(30,28,56,.3));border-color:rgba(245,180,49,.3)}
+.pod.second .block{height:88px;font-size:26px;color:#c8cee0}
+.pod.third .block{height:66px;font-size:24px;color:#c8a06a}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="ranking.jsx"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>マイ・バッジ — W杯予想メーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+.bprog{display:flex;align-items:center;gap:16px}
+.bprog .ring{width:66px;height:66px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:"Roboto Mono";font-size:22px;font-weight:700;color:var(--gold);background:conic-gradient(var(--gold) 0deg 45deg, rgba(255,255,255,.07) 45deg 360deg);position:relative}
+.bprog .ring::after{content:"";position:absolute;inset:5px;border-radius:50%;background:#0d1430}
+.bprog .ring span{position:relative;z-index:1}
+.bprog .t{font-size:18px;font-weight:900}
+.bprog .s{font-size:12px;color:var(--muted);margin-top:3px;font-weight:500}
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bcell{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px;border-radius:14px;text-align:center;background:linear-gradient(180deg,rgba(19,28,58,.7),rgba(13,19,40,.7));border:1px solid var(--line-soft)}
+.bcell .bi{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--faint);background:rgba(255,255,255,.04);border:1px solid var(--line-soft)}
+.bcell.got .bi{color:var(--gold);background:rgba(245,180,49,.12);border-color:rgba(245,180,49,.34);box-shadow:0 6px 16px rgba(200,140,20,.2)}
+.bcell.near .bi{color:#7ea2ff;background:rgba(62,123,255,.1);border-color:rgba(62,123,255,.28)}
+.bcell .bn{font-size:10.5px;font-weight:700;color:#cfd6ea;line-height:1.25}
+.bcell .bp{font-family:"Roboto Mono";font-size:9px;color:var(--dim)}
+.blist-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line-soft)}
+.blist-row:last-child{border-bottom:none}
+.blist-row .bi{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;color:var(--faint);background:rgba(255,255,255,.04);border:1px solid var(--line-soft)}
+.blist-row.got .bi{color:var(--gold);background:rgba(245,180,49,.12);border-color:rgba(245,180,49,.3)}
+.blist-row .mid{flex:1;min-width:0}
+.blist-row .bn{font-size:13px;font-weight:800}
+.blist-row .bd{font-size:10.5px;color:var(--dim);margin-top:2px}
+.blist-row .chk{color:var(--gold)}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="badges.jsx"></script>
+</body>
+</html>

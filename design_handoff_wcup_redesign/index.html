@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>W杯予想メーカー — 画面一覧</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+.hub-hero{position:relative;overflow:hidden;padding:30px 20px 22px}
+.hub-hero .orb{position:absolute;top:-70px;right:-60px;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle at 36% 32%, #ff5258, #d81626 44%, #7d0c16);opacity:.9;
+  box-shadow:0 24px 80px rgba(214,20,38,.5)}
+.hub-hero h1{font-size:30px;font-weight:900;line-height:1.1;margin-top:14px;position:relative}
+.hub-hero h1 .hl{color:#ff4148}
+.hub-hero p{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6;max-width:330px;font-weight:500;position:relative}
+.plist{display:flex;flex-direction:column;gap:9px}
+.pcard{display:flex;align-items:center;gap:13px;background:linear-gradient(180deg,var(--card-a),var(--card-b));
+  border:1px solid var(--line);border-radius:15px;padding:14px 15px;text-decoration:none;color:inherit;transition:.14s}
+a.pcard:hover{border-color:var(--line-strong);transform:translateX(3px)}
+.pcard .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;color:#aeb6cf;
+  background:rgba(255,255,255,.04);border:1px solid var(--line-soft)}
+.pcard .tx{flex:1;min-width:0}
+.pcard .tx .t{font-size:14.5px;font-weight:800}
+.pcard .tx .s{font-size:11px;color:var(--dim);margin-top:2px;font-weight:500}
+.pcard .st{font-family:"Roboto Mono";font-size:9.5px;font-weight:700;letter-spacing:.08em;padding:4px 8px;border-radius:7px}
+.st.done{background:rgba(55,214,122,.12);border:1px solid rgba(55,214,122,.3);color:#4fdc8a}
+.st.ref{background:rgba(245,180,49,.12);border:1px solid rgba(245,180,49,.3);color:var(--gold)}
+.st.todo{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--dim)}
+.grp-lbl{font-family:"Roboto Mono";font-size:10.5px;letter-spacing:.2em;color:var(--dim);font-weight:700;
+  text-transform:uppercase;margin:22px 0 11px;display:flex;align-items:center;gap:9px}
+.grp-lbl::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="hub-hero">
+    <div class="orb"></div>
+    <div class="eyebrow">W-Cup Prediction Maker</div>
+    <h1>全画面、<span class="hl">同じ世界観</span>へ。</h1>
+    <p>トップページの上質なトーンに統一して各画面をブラッシュアップ。下のカードから各画面を確認できます。</p>
+  </div>
+
+  <div class="wrap">
+    <div class="grp-lbl">完成・更新済み（11画面）</div>
+    <div class="plist">
+      <a class="pcard" href="home.html"><div class="ic" data-ic="ball"></div><div class="tx"><div class="t">大会ホーム</div><div class="s">ダッシュボード・次の試合・スタッツ</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="room.html"><div class="ic" data-ic="users"></div><div class="tx"><div class="t">大会ルーム</div><div class="s">招待・メニュー・チャット</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="predict.html"><div class="ic" data-ic="whistle"></div><div class="tx"><div class="t">試合を予想</div><div class="s">オッズ・フィルタ・予想入力</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="samurai.html"><div class="ic" data-ic="flag"></div><div class="tx"><div class="t">日本代表モード</div><div class="s">カウントダウン・得点者予想</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="mypage.html"><div class="ic" data-ic="person"></div><div class="tx"><div class="t">マイページ</div><div class="s">プロフィール・最近の予想</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="badges.html"><div class="ic" data-ic="medal"></div><div class="tx"><div class="t">マイ・バッジ</div><div class="s">獲得状況・バッジ一覧</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="join.html"><div class="ic" data-ic="plus"></div><div class="tx"><div class="t">参加する</div><div class="s">ニックネーム・アイコン選択</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="my-prediction.html"><div class="ic" data-ic="trophy"></div><div class="tx"><div class="t">私のW杯予想</div><div class="s">優勝予想・シェア</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="global-chat.html"><div class="ic" data-ic="chatBig"></div><div class="tx"><div class="t">みんなの全体チャット</div><div class="s">グローバルチャット</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="bracket.html"><div class="ic" data-ic="bracket"></div><div class="tx"><div class="t">トーナメント表</div><div class="s">ブラケット・予想マップ</div></div><span class="st done">更新済</span></a>
+      <a class="pcard" href="ranking.html"><div class="ic" data-ic="chart"></div><div class="tx"><div class="t">ランキング</div><div class="s">表彰台・成績シェア</div></div><span class="st done">更新済</span></a>
+    </div>
+
+    <div class="grp-lbl">基準デザイン</div>
+    <div class="plist">
+      <div class="pcard" style="cursor:default"><div class="ic" data-ic="star"></div><div class="tx"><div class="t">トップページ</div><div class="s">「4年に1度の夏」— 統一の基準</div></div><span class="st ref">基準</span></div>
+    </div>
+  </div>
+
+  <div class="foot">全画面、トップページの世界観に統一完了</div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel">
+document.querySelectorAll('[data-ic]').forEach((el) => {
+  const root = ReactDOM.createRoot(el);
+  root.render(<Icon name={el.dataset.ic} size={21} />);
+});
+</script>
+</body>
+</html>
