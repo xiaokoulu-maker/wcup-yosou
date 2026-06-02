@@ -74,7 +74,7 @@ async function doShareImage(cardJsx,fileName,text){
     const blob=await generateShareImage(cardJsx);
     const file=new File([blob],fileName,{type:"image/png"});
     if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],text,url:"https://xiaokoulu-maker.github.io/wcup-yosou/"});
+      await navigator.share({files:[file],text,url:"https://wc-yosou.com/"});
     }else{
       const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=fileName;a.click();URL.revokeObjectURL(u);
       alert("画像を保存しました。LINEやXに添付して共有してください！");
@@ -1584,7 +1584,7 @@ function scheduleNotifications(myMatchPredictions={}){
       // 10分以上ズレたら見送り（スリープ後の大幅ズレ対策）
       if(Math.abs(Date.now()-reminderTime)>10*60*1000)return;
       if(!isNotificationEnabled())return;
-      try{new Notification(title,{body,icon:"/wcup-yosou/icon-192.png",badge:"/wcup-yosou/icon-192.png",tag:`match-${m.id}`,data:{url:"/wcup-yosou/"}});}catch{}
+      try{new Notification(title,{body,icon:"/favicon-192x192.png",badge:"/favicon-192x192.png",tag:`match-${m.id}`,data:{url:"/"}});}catch{}
     },delay);
   });
 }
@@ -1597,7 +1597,7 @@ function fireResultNotification(matchId,pred,homeScore,awayScore){
     const correct=pred.pick===actual;
     const title=correct?"✅ 予想的中！ +3pt":"⚽ 試合結果が確定しました";
     const body=`${m.home} ${homeScore}-${awayScore} ${m.away}｜${correct?"的中🎉":"外れ😢"}`;
-    new Notification(title,{body,icon:"/wcup-yosou/icon-192.png",tag:`result-${matchId}`});
+    new Notification(title,{body,icon:"/favicon-192x192.png",tag:`result-${matchId}`});
   }catch{}
 }
 
@@ -1772,7 +1772,7 @@ function App(){
     window.gtag('event','page_view',{
       page_path:     '/wcup-yosou'+info.path,
       page_title:    info.title,
-      page_location: 'https://xiaokoulu-maker.github.io/wcup-yosou'+info.path,
+      page_location: 'https://wc-yosou.com'+info.path,
     });
   },[page]);
 
@@ -3296,7 +3296,7 @@ function ShareCardMatchPrediction({matchId,pick,tournName}){
         </div>
         <div style={{textAlign:"center",paddingTop:20,borderTop:"1.5px solid #C9D6EC"}}>
           <div style={{fontSize:18,fontWeight:900,color:"#0a1f4c"}}>W杯 2026 予想メーカー</div>
-          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>xiaokoulu-maker.github.io/wcup-yosou</div>
+          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>wc-yosou.com</div>
         </div>
       </div>
     </div>
@@ -3341,7 +3341,7 @@ function ShareCardChampion({pred,tournName}){
         </div>
         <div style={{textAlign:"center",paddingTop:20,borderTop:"1.5px solid #C9D6EC"}}>
           <div style={{fontSize:18,fontWeight:900,color:"#0a1f4c"}}>W杯 2026 予想メーカー</div>
-          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>xiaokoulu-maker.github.io/wcup-yosou</div>
+          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>wc-yosou.com</div>
         </div>
       </div>
     </div>
@@ -3378,7 +3378,7 @@ function ShareCardStats({rank,total,pts,nickname}){
         </div>
         <div style={{textAlign:"center",paddingTop:20,borderTop:"1.5px solid #C9D6EC"}}>
           <div style={{fontSize:18,fontWeight:900,color:"#0a1f4c"}}>W杯 2026 予想メーカー</div>
-          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>xiaokoulu-maker.github.io/wcup-yosou</div>
+          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>wc-yosou.com</div>
         </div>
       </div>
     </div>
@@ -3417,7 +3417,7 @@ function ShareCardGlobalRank({rank,total,pts,nickname,icon}){
         </div>
         <div style={{textAlign:"center",paddingTop:20,borderTop:"1.5px solid #C9D6EC"}}>
           <div style={{fontSize:18,fontWeight:900,color:"#0a1f4c"}}>W杯 2026 予想メーカー</div>
-          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>xiaokoulu-maker.github.io/wcup-yosou</div>
+          <div style={{fontSize:12,color:"#5B6B85",marginTop:4}}>wc-yosou.com</div>
         </div>
       </div>
     </div>
@@ -3428,7 +3428,7 @@ function ShareCardGlobalRank({rank,total,pts,nickname,icon}){
 function ShareBox({pred,tournId,nav}){
   const [copied,setCopied]=useState(false);
   const [sharingChamp,setSharingChamp]=useState(false);
-  const BASE="https://xiaokoulu-maker.github.io/wcup-yosou/";
+  const BASE="https://wc-yosou.com/";
   const url=tournId?`${window.location.origin}${window.location.pathname}#t-${tournId}`:BASE;
   const winner=pred?.winner||"？";
   const japanResult=pred?.japanResult||"？";
@@ -6120,7 +6120,7 @@ function PgSoloPredict({nav}){
     setErr("");
     setDone(false);
   };
-  const BASE="https://xiaokoulu-maker.github.io/wcup-yosou/";
+  const BASE="https://wc-yosou.com/";
   const shareText=`私の2026W杯優勝予想は【${pred.winner}】！\n日本代表は【${pred.japanResult}】予想です。${pred.japanPlayer?"\n期待の選手は【"+pred.japanPlayer+"】！":""}\n\nあなたも予想してみて👇\n${BASE}\n\n#W杯予想 #サッカー日本代表 #WorldCup2026`;
   const xUrl=`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
   const lineUrl=`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
