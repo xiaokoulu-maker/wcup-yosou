@@ -1098,9 +1098,12 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
       </div>
       <div className="mb-4">
         <label className="text-text-on-navy-dim text-xs font-bold block mb-2">アイコン</label>
-        <div className="grid grid-cols-4 gap-2">
-          {ICONS.map(ic=><button key={ic} onClick={()=>setIcon(ic)}
-            className={`text-2xl py-1.5 rounded-xl border-2 cursor-pointer bg-transparent${icon===ic?" border-hinomaru bg-hinomaru/10":" border-transparent"}`}>{ic}</button>)}
+        <div className="icon-grid">
+          {ICONS.map(ic=>(
+            <div key={ic} className={"icpick"+(icon===ic?" on":"")} onClick={()=>setIcon(ic)}>
+              <span style={{fontSize:20}}>{ic}</span>
+            </div>
+          ))}
         </div>
       </div>
       <button onClick={saveNick} disabled={!nick.trim()}
@@ -1465,14 +1468,15 @@ function FlagChips({opts,value,onChange}){
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
       {opts.map(c=>(
         <button key={c} onClick={()=>onChange(c)} style={{
-          background:value===c?"linear-gradient(135deg,#005BAC,#003F8C)":"rgba(0,104,183,0.05)",
-          color:value===c?"#fff":G.muted,
-          border:`1.5px solid ${value===c?"#005BAC":"#D9E8FF"}`,
+          background:value===c?"rgba(245,180,49,.12)":"rgba(255,255,255,.04)",
+          border:`1.5px solid ${value===c?"rgba(245,180,49,.55)":"var(--line-soft)"}`,
           borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",
           fontWeight:value===c?700:400,lineHeight:1.3,minHeight:44,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:7,
+          color:value===c?"var(--gold)":"var(--txt)",
+          boxShadow:value===c?"0 0 0 1px rgba(245,180,49,.18)":"none",
         }}>
-          <FlagImg country={c} size={16}/><span>{c}</span>
+          <Flag name={c}/><span>{c}</span>
         </button>
       ))}
     </div>
@@ -3659,6 +3663,8 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
       <div className={`pod ${cls}`}>
         <div className="av" style={{fontSize:rank===1?34:26}}>
           {rank===1&&<span className="crown"><DsIcon name="crown" size={22}/></span>}
+          {rank===2&&<span className="crown" style={{color:"#c8cee0"}}><DsIcon name="trophy" size={18}/></span>}
+          {rank===3&&<span className="crown" style={{color:"#c8a06a"}}><DsIcon name="medal" size={18}/></span>}
           {p.icon||"⚽"}
         </div>
         <div className="nm">{p.nickname}{isMe&&<span className="you">YOU</span>}</div>
@@ -5161,20 +5167,24 @@ function PgBracket({nav,tourn}){
 
   // 試合カードコンポーネント
   const MatchCard=({match,size="normal"})=>{
-    if(!match)return<div style={{height:size==="final"?60:48,background:"rgba(255,255,255,0.02)",borderRadius:8,border:"1px dashed #C9DDF5"}}/>;
+    if(!match)return<div style={{height:size==="final"?60:48,background:"rgba(255,255,255,0.03)",borderRadius:8,border:"1px dashed var(--line)"}}/>;
     const isDone=match.homeScore!==null;
     const homeWon=isDone&&match.winner==="home";
     const awayWon=isDone&&match.winner==="away";
     return(
-      <div style={{background:"#FFFFFF",borderRadius:10,border:`1px solid ${isDone?"rgba(0,104,183,0.25)":"#D9E8FF"}`,overflow:"hidden",marginBottom:2,boxShadow:"0 1px 6px rgba(0,91,172,0.06)"}}>
-        <div style={{padding:"5px 8px",borderBottom:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(0,104,183,0.03)"}}>
-          <span style={{color:G.muted,fontSize:8}}>{match.date||"日程TBD"}</span>
-          {isDone&&<span style={{background:"rgba(0,104,183,0.1)",color:G.gold,fontSize:8,fontWeight:700,padding:"1px 5px",borderRadius:6}}>終了</span>}
+      <div className="slot" style={{marginBottom:2,borderColor:isDone?"rgba(245,180,49,.3)":homeWon||awayWon?"rgba(62,123,255,.3)":""}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+          <span style={{color:"var(--dim)",fontSize:8,fontFamily:"'Roboto Mono',monospace"}}>{match.date||"日程TBD"}</span>
+          {isDone&&<span className="chip dim" style={{fontSize:7,padding:"1px 6px"}}>終了</span>}
         </div>
-        <div style={{padding:"4px 6px",display:"flex",alignItems:"center",gap:4}}>
-          <TeamBox name={match.home} isHome={true} highlight={homeWon} score={isDone?match.homeScore:null}/>
-          <div style={{color:"#334",fontSize:9,flexShrink:0,padding:"0 2px"}}>vs</div>
-          <TeamBox name={match.away} isHome={false} highlight={awayWon} score={isDone?match.awayScore:null}/>
+        <div className="tm">
+          <Flag name={match.home}/><span style={{flex:1,fontSize:11,fontWeight:homeWon?800:500,color:homeWon?"var(--gold)":"var(--txt)"}}>{match.home||"TBD"}</span>
+          {isDone&&<span style={{color:"var(--gold)",fontWeight:800,fontSize:12,marginLeft:4}}>{match.homeScore}</span>}
+        </div>
+        <div className="vs-s">vs</div>
+        <div className="tm">
+          <Flag name={match.away}/><span style={{flex:1,fontSize:11,fontWeight:awayWon?800:500,color:awayWon?"var(--gold)":"var(--txt)"}}>{match.away||"TBD"}</span>
+          {isDone&&<span style={{color:"var(--gold)",fontWeight:800,fontSize:12,marginLeft:4}}>{match.awayScore}</span>}
         </div>
       </div>
     );
