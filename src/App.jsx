@@ -6353,6 +6353,10 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
   const [submittingBet,setSubmittingBet]=useState(false);
   const [showCoinDisclaimer,setShowCoinDisclaimer]=useState(false);
   const [pendingDone,setPendingDone]=useState(null);
+  const [showMomModal,setShowMomModal]=useState(null);
+  const [momInput,setMomInput]=useState("");
+  const [savingMom,setSavingMom]=useState(false);
+  const [momView,setMomView]=useState("input");
   useEffect(()=>{if(!t?.id)return;const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
   useEffect(()=>{setBetInput(10);},[expandedId]);
   // パネルが閉じられたとき（expandedId が変化したとき）に pendingDone があれば完了モーダルを表示
@@ -6392,6 +6396,25 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
       await update(updated);
     }catch(e){console.error("[saveScorer]",e);}
     finally{setSavingId(null);}
+  };
+  const saveMom=async(matchId,playerName)=>{
+    if(!myId||savingMom||!playerName.trim())return;
+    setSavingMom(true);
+    try{
+      const fresh=await loadT(t.id);const cur=fresh||t;
+      const p=cur.participants.find(x=>x.id===myId);if(!p)return;
+      const prev=(p.matchPredictions||{})[matchId]||{};
+      const updated={...cur,participants:cur.participants.map(x=>x.id===myId?{...x,matchPredictions:{...(x.matchPredictions||{}),[matchId]:{...prev,mom:playerName.trim()}}}:x)};
+      await update(updated);
+      setMomView("result");
+    }catch(e){console.error("[saveMom]",e);}
+    finally{setSavingMom(false);}
+  };
+  const openMomModal=(matchId)=>{
+    const ex=me?.matchPredictions?.[matchId]?.mom;
+    setMomInput(ex||"");
+    setMomView(ex?"result":"input");
+    setShowMomModal(matchId);
   };
   useEffect(()=>{if(showDoneModal){setCardPosted(false);setSharingMatch(false);}},[showDoneModal]);
   if(!t)return null;
@@ -6498,6 +6521,14 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
             <div style={{color:"var(--muted)",fontSize:12,textAlign:"center",width:"100%",paddingTop:4}}>予想なし</div>
           )}
         </div>
+        {/* MoM予想ボタン */}
+        {isScheduled&&myId&&(
+          <div style={{marginTop:7,display:"flex",alignItems:"center"}}>
+            <button onClick={()=>openMomModal(m.id)} style={{background:"none",border:myPred?.mom?"1px solid rgba(245,180,49,0.45)":"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:"4px 11px",cursor:"pointer",fontSize:12,fontWeight:700,color:myPred?.mom?"var(--gold)":"var(--muted)",display:"flex",alignItems:"center",gap:5,lineHeight:1.4}}>
+              🏆 {myPred?.mom?`✓ ${myPred.mom}`:"MoM予想"}
+            </button>
+          </div>
+        )}
         {/* 展開パネル */}
         {isExpanded&&isScheduled&&(
           <div style={{borderTop:"1px solid var(--line)",marginTop:12,paddingTop:12,display:"flex",flexDirection:"column",gap:12}}>
@@ -6657,6 +6688,102 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
           </div>
         </div>
       )}
+      {/* MoMモーダル */}
+      {showMomModal&&(()=>{
+        if(!t?.participants)return null;
+        const mm=MATCHES.find(x=>x.id===showMomModal);
+        if(!mm)return null;
+        const myMomPred=me?.matchPredictions?.[showMomModal]?.mom;
+        const koDate=new Date(mm.kickoff);
+        const ko=koDate.toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
+        const diffMs=koDate-now;
+        const diffH=Math.floor(diffMs/3600000);
+        const diffMin=Math.floor((diffMs%3600000)/60000);
+        const deadlineStr=diffMs>0?(diffH>0?`あと ${diffH}h ${diffMin}m`:`あと ${diffMin}m`):null;
+        const isMatchScheduled=mm?new Date(mm.kickoff)>now:false;
+        const momCounts={};let momTotal=0;
+        (t?.participants||[]).forEach(p=>{const pr=(p.matchPredictions||{})[showMomModal];if(pr?.mom){momCounts[pr.mom]=(momCounts[pr.mom]||0)+1;momTotal++;}});
+        const momSorted=Object.entries(momCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        const showResult=momView==="result"&&!!myMomPred;
+        return(
+          <div style={{position:"fixed",inset:0,zIndex:50,background:"rgba(0,0,0,0.65)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={()=>setShowMomModal(null)}>
+            <div onClick={e=>e.stopPropagation()} style={{background:"var(--panel)",width:"100%",maxWidth:480,borderRadius:"22px 22px 0 0",padding:"24px 18px 40px",boxShadow:"0 -8px 40px rgba(0,0,0,0.6)",border:"1px solid var(--line)",maxHeight:"85vh",overflowY:"auto"}}>
+              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14}}>
+                <div style={{flex:1,marginRight:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:5}}>
+                    <span className="chip dim" style={{fontSize:11,padding:"3px 8px"}}>{mm.home}</span>
+                    <span style={{color:"var(--muted)",fontSize:12,fontWeight:700}}>VS</span>
+                    <span className="chip dim" style={{fontSize:11,padding:"3px 8px"}}>{mm.away}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                    <span style={{color:"var(--muted)",fontSize:11}}>{ko}</span>
+                    {deadlineStr&&<span style={{color:"var(--gold)",fontSize:11,fontWeight:700}}>{deadlineStr}</span>}
+                    <span style={{color:"var(--muted)",fontSize:11}}>予想{momTotal}人</span>
+                  </div>
+                </div>
+                <button onClick={()=>setShowMomModal(null)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:22,padding:0,lineHeight:1,marginTop:-2}}>×</button>
+              </div>
+              {showResult?(
+                <>
+                  <div style={{background:"rgba(245,180,49,0.08)",border:"1px solid rgba(245,180,49,0.3)",borderRadius:14,padding:"14px 16px",marginBottom:16}}>
+                    <div style={{color:"var(--gold)",fontWeight:900,fontSize:15,marginBottom:4}}>✓ あなたのMoM予想：{myMomPred}</div>
+                    <div style={{color:"var(--muted)",fontSize:12}}>的中すれば <span style={{color:"var(--gold)",fontWeight:700}}>+30pt</span> · {isMatchScheduled?"締切まで変更OK":"締切済み"}</div>
+                  </div>
+                  <div style={{marginBottom:16}}>
+                    <div style={{color:"var(--txt)",fontWeight:700,fontSize:13,marginBottom:10}}>📊 現在のみんなの予想（{momTotal}人）</div>
+                    {momSorted.length>0?(
+                      <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                        {momSorted.map(([name,cnt],i)=>{
+                          const w=(cnt/momTotal)*100;
+                          const isMine=name===myMomPred;
+                          return(
+                            <div key={name} style={{display:"flex",alignItems:"center",gap:8}}>
+                              <span style={{width:18,color:i===0?"var(--gold)":"var(--muted)",fontSize:11,fontWeight:900,textAlign:"right"}}>{i+1}</span>
+                              <span style={{flex:1,fontSize:13,color:isMine?"var(--gold)":"var(--txt)",fontWeight:isMine?800:400}}>{name}</span>
+                              <div style={{width:80,height:14,background:"rgba(255,255,255,0.05)",borderRadius:4,overflow:"hidden",position:"relative"}}>
+                                <div style={{position:"absolute",top:0,left:0,bottom:0,width:`${w}%`,background:i===0?"var(--gold)":"rgba(100,160,255,0.45)",borderRadius:4}}/>
+                              </div>
+                              <span style={{width:26,fontSize:11,color:"var(--muted)",textAlign:"right",fontFamily:"'Roboto Mono',monospace"}}>{cnt}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ):(
+                      <div style={{color:"var(--muted)",fontSize:12}}>まだ予想なし</div>
+                    )}
+                  </div>
+                  {isMatchScheduled?(
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      <button onClick={()=>{setMomInput(myMomPred);setMomView("input");}} className="btn btn-dark md">予想を変更する</button>
+                      <button onClick={()=>setShowMomModal(null)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:13,padding:"8px"}}>閉じる</button>
+                    </div>
+                  ):(
+                    <button onClick={()=>setShowMomModal(null)} className="btn btn-dark md">閉じる</button>
+                  )}
+                </>
+              ):(
+                <>
+                  <div style={{marginBottom:16}}>
+                    <div style={{color:"var(--txt)",fontWeight:900,fontSize:16,marginBottom:6}}>⚽ この試合のMoMは誰？</div>
+                    <div style={{color:"var(--muted)",fontSize:13}}>一番活躍すると思う選手を1人。的中で <span style={{color:"var(--gold)",fontWeight:700}}>+30pt</span></div>
+                  </div>
+                  <input className="tinput" placeholder="選手名を入力（例：エムバペ）" value={momInput} onChange={e=>setMomInput(e.target.value)} maxLength={30} style={{marginBottom:10}}/>
+                  <div style={{background:"rgba(100,160,255,0.04)",border:"1px dashed rgba(100,160,255,0.2)",borderRadius:12,padding:"10px 14px",marginBottom:14}}>
+                    <span style={{color:"var(--muted)",fontSize:12}}>📋 出場選手一覧から選ぶ（近日公開）</span>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    <button onClick={()=>saveMom(showMomModal,momInput)} disabled={!momInput.trim()||savingMom} className="btn btn-gold md"
+                      style={{opacity:!momInput.trim()||savingMom?0.5:1,color:"#3a2606"}}>
+                      {savingMom?"保存中...":"⚽ この予想で確定する"}
+                    </button>
+                    <button onClick={()=>setShowMomModal(null)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:13,padding:"8px"}}>キャンセル</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
       {earnedBadgesM.length>0&&<BadgeModal badges={earnedBadgesM} onClose={()=>setEarnedBadgesM([])}/>}
       {showCoinDisclaimer&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2000}}>
