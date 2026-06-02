@@ -6240,8 +6240,11 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
   const [betInput,setBetInput]=useState(10);
   const [submittingBet,setSubmittingBet]=useState(false);
   const [showCoinDisclaimer,setShowCoinDisclaimer]=useState(false);
+  const [pendingDone,setPendingDone]=useState(null);
   useEffect(()=>{if(!t?.id)return;const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
   useEffect(()=>{setBetInput(10);},[expandedId]);
+  // パネルが閉じられたとき（expandedId が変化したとき）に pendingDone があれば完了モーダルを表示
+  useEffect(()=>{if(pendingDone&&expandedId!==pendingDone.matchId){setShowDoneModal(pendingDone);setPendingDone(null);}},[expandedId,pendingDone]);
 
   const submitBet=async(matchId,amount)=>{
     if(!myId||submittingBet)return;
@@ -6260,6 +6263,7 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
       const newPred={...pred,betAmount:amount,odds};
       const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,coins:newCoins,matchPredictions:{...(p.matchPredictions||{}),[matchId]:newPred}}:p)};
       await update(updated);
+      setPendingDone(null);setExpandedId(null);setShowDoneModal({matchId,pick:pred.pick});
     }catch(e){console.error("[submitBet]",e);}
     finally{setSubmittingBet(false);}
   };
@@ -6309,8 +6313,7 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
       const finalMe=newBadges.length>0?{...meWithPreds,badges:[...(participant.badges||[]),...newBadges]}:meWithPreds;
       const updated={...cur,participants:cur.participants.map(p=>p.id===myId?finalMe:p)};
       await update(updated);
-      setExpandedId(null);
-      setShowDoneModal({matchId,pick});
+      setPendingDone({matchId,pick});
       if(newBadges.length>0) setEarnedBadgesM(newBadges);
     }catch(e){
       setSaveErr("保存に失敗しました。もう一度試してください");
@@ -6324,6 +6327,7 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
     const isFinished=m.status==="finished";
     const isExpanded=expandedId===m.id;
     const isSaving=savingId===m.id;
+    const closePanel=()=>setExpandedId(null);
     const actual=isFinished?(m.homeScore>m.awayScore?"home":m.homeScore<m.awayScore?"away":"draw"):null;
     const pts=isFinished&&myPred?scoreMatch(myPred,m):null;
     const correct=actual&&myPred?.pick===actual;
@@ -6367,11 +6371,11 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
                 ?<span className="chip gold">+{pts}pt 的中！</span>
                 :<span className="chip dim">0pt</span>
               )}
-              {isScheduled&&<button onClick={()=>setExpandedId(isExpanded?null:m.id)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:12,fontWeight:700}}>変更</button>}
+              {isScheduled&&<button onClick={()=>isExpanded?closePanel():setExpandedId(m.id)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",fontSize:12,fontWeight:700}}>変更</button>}
             </>
           )}
           {!myPred&&isScheduled&&myId&&(
-            <button onClick={()=>setExpandedId(isExpanded?null:m.id)} className="btn btn-dark sm" style={{marginTop:0,fontSize:12}}>
+            <button onClick={()=>isExpanded?closePanel():setExpandedId(m.id)} className="btn btn-dark sm" style={{marginTop:0,fontSize:12}}>
               <DsIcon name="whistle" size={15}/> 予想する
             </button>
           )}
@@ -6450,8 +6454,8 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
               );
             })()}
             {myPred?.pick&&(
-              <button onClick={()=>savePick(m.id,myPred.pick)} disabled={isSaving} className="btn btn-red md" style={{opacity:isSaving?0.6:1}}>
-                <DsIcon name="check" size={18}/>{isSaving?"保存中...":"この予想で決定する"}
+              <button onClick={()=>closePanel()} className="btn btn-red md">
+                <DsIcon name="check" size={18}/>この予想で完了する
               </button>
             )}
           </div>
