@@ -1677,8 +1677,45 @@ function Onboarding({onComplete}){
   );
 }
 
+/* ── 下タブバー（大会内常時表示） ── */
+function TabBar({page,nav,navDashboard}){
+  const tabs=[
+    {id:"home",     label:"ホーム",     icon:"ball",    action:navDashboard},
+    {id:"matches",  label:"予想",       icon:"whistle", action:()=>nav("matches")},
+    {id:"ranking",  label:"ランキング", icon:"chart",   action:()=>nav("ranking")},
+    {id:"tournament",label:"チャット",  icon:"chatBig", action:()=>nav("tournament")},
+    {id:"mypage",   label:"マイページ", icon:"person",  action:()=>nav("mypage")},
+  ];
+  const activeId=["home","matches","ranking","tournament","mypage"].find(id=>page===id)||"";
+  return(
+    <div style={{
+      position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",
+      background:"rgba(5,16,45,0.94)",backdropFilter:"blur(14px) saturate(1.5)",
+      borderTop:"1px solid rgba(255,255,255,0.09)",
+      display:"flex",alignItems:"stretch",
+      paddingBottom:"env(safe-area-inset-bottom,0px)",zIndex:60,
+    }}>
+      {tabs.map(t=>{
+        const active=activeId===t.id;
+        return(
+          <button key={t.id} onClick={t.action} style={{
+            flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            padding:"9px 0 7px",background:"none",border:"none",cursor:"pointer",position:"relative",
+            color:active?"var(--gold)":"rgba(255,255,255,0.42)",transition:"color .12s",
+          }}>
+            {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,borderRadius:2,background:"var(--gold)"}}/>}
+            <DsIcon name={t.icon} size={20} stroke={active?2.3:1.7}/>
+            <span style={{fontSize:9.5,fontWeight:active?700:500,marginTop:3,letterSpacing:0.2}}>{t.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function App(){
   const [page,setPage]=useState("home");
+  const [showLandingOverride,setShowLandingOverride]=useState(true);
   const [tourn,setTourn]=useState(null);
   const [myId,setMyId]=useState(null);
   const [adminOk,setAdminOk]=useState(false);
@@ -1790,7 +1827,8 @@ function App(){
   const update=useCallback(async(t)=>{setTourn(t);await saveT(t);},[]);
   const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}setPage("tournament");},[]);
   const goCountry=useCallback((c)=>{setSelCountry(c);window.scrollTo(0,0);setPage("country");},[]);
-  const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry};
+  const navDashboard=useCallback(()=>{setShowLandingOverride(false);nav("home");},[nav]);
+  const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard};
 
   const handleOnboardingComplete=(action)=>{
     try{localStorage.setItem("wcup_onboardingDone","true");}catch{}
@@ -1799,11 +1837,12 @@ function App(){
     else if(action==="solo") setPage("matches");
   };
 
+  const showTabBar=!!(tourn&&myId&&!(page==="home"&&showLandingOverride)&&page!=="create"&&page!=="join");
   return(
     <ErrorBoundary>
     {!onboardingDone&&<Onboarding onComplete={handleOnboardingComplete}/>}
-    <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
-      {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId}/>}
+    <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(60px + env(safe-area-inset-bottom,0px))":undefined}}>
+      {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} showLandingOverride={showLandingOverride} setShowLandingOverride={setShowLandingOverride}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
       {page==="tournament"&&<PgTournament {...sp}/>}
@@ -1831,8 +1870,8 @@ function App(){
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update}/>}
       {page==="mypage"&&<PgMyPage nav={nav} tourn={tourn} myId={myId} update={update}/>}
-      {/* 固定プロフィールボタン — home 以外のページでログイン中に右下に常時表示 */}
-      {tourn&&myId&&page!=="home"&&(
+      {/* タブバーが出ていない画面のみ右下フローティングプロフィールボタンを表示 */}
+      {tourn&&myId&&page!=="home"&&!showTabBar&&(
         <button
           onClick={()=>nav("mypage")}
           title="マイページ"
@@ -1851,6 +1890,7 @@ function App(){
           </svg>
         </button>
       )}
+      {showTabBar&&<TabBar page={page} nav={nav} navDashboard={navDashboard}/>}
     </div>
     </ErrorBoundary>
   );
@@ -2170,7 +2210,7 @@ function SbLeaguesSection({myTournaments,onSelect,onCreate,onJoin}){
 }
 
 /* ── Home (侍ブルー D2) ── */
-function PgHome({nav,goT,tourn,myId}){
+function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride}){
   const [showJoin,setShowJoin]=useState(false);
   const [joinId,setJoinId]=useState("");
   const [joinErr,setJoinErr]=useState("");
@@ -2178,7 +2218,6 @@ function PgHome({nav,goT,tourn,myId}){
   const [notifEnabled,setNotifEnabled]=useState(isNotificationEnabled());
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
-  const [showLandingOverride,setShowLandingOverride]=useState(true); // 起動時HomeA固定
   const [showHamMenu,setShowHamMenu]=useState(false);
   const [myTournaments,setMyTournaments]=useState([]);
   const [championVotes,setChampionVotes]=useState(null);
@@ -2474,12 +2513,17 @@ function PgHome({nav,goT,tourn,myId}){
         <div className="sb-app-name">W杯予想メーカー</div>
       </div>
 
-      {/* 参加中の大会への戻るリンク（showLandingOverride 時のみ） */}
+      {/* 参加中の大会への入口（目立つボタンカード） */}
       {showLandingOverride&&isLoggedIn&&(
-        <div style={{display:"flex",alignItems:"center",padding:"4px 16px 8px"}}>
+        <div style={{padding:"8px 14px 4px"}}>
           <button onClick={()=>setShowLandingOverride(false)}
-            style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",color:"var(--sb-text-dim)",fontFamily:"var(--sb-jp)",fontWeight:700,fontSize:14,padding:"6px 4px"}}>
-            ‹ {tourn.name} に戻る
+            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
+              background:"rgba(245,180,49,0.13)",border:"1.5px solid rgba(245,180,49,0.45)",
+              borderRadius:12,padding:"10px 14px",cursor:"pointer",
+              fontFamily:"var(--sb-jp)",fontSize:14,fontWeight:700,color:"#f5b431",
+              boxShadow:"0 2px 12px rgba(245,180,49,0.10)"}}>
+            <span>🏆 {tourn.name} を開く</span>
+            <span style={{fontSize:18,opacity:0.8}}>→</span>
           </button>
         </div>
       )}
@@ -3149,7 +3193,7 @@ ${url}`);
 }
 
 /* ── Join ── */
-function PgJoin({tourn:t,nav,update,setMyId}){
+function PgJoin({tourn:t,nav,update,setMyId,navDashboard}){
   const [nick,setNick]=useState("");const [icon,setIcon]=useState("⚽");const [err,setErr]=useState("");const [showUpgrade,setShowUpgrade]=useState(false);const [loading,setLoading]=useState(false);
   const deadlinePassed=isDeadlinePassed(t.deadline);
   const isLateJoin=deadlinePassed&&t.allowLateJoin;
@@ -3166,7 +3210,7 @@ if(cur.participants.length>=getPlanLimit(cur.plan)){
     const updated={...cur,participants:[...cur.participants,p]};
     saveMyJoined(cur.id);
     try{localStorage.setItem("wcup_myid_"+cur.id,p.id);}catch{}
-    trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);nav("tournament");setLoading(false);
+    trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);navDashboard();setLoading(false);
   };
   if(deadlinePassed)return(
     <div className="screen">
