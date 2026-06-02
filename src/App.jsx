@@ -1677,6 +1677,65 @@ function Onboarding({onComplete}){
   );
 }
 
+/* ── フィードバックモーダル ── */
+function FeedbackModal({onClose,nickname,tourn,myId}){
+  const [msg,setMsg]=useState("");
+  const [nick,setNick]=useState(nickname||"");
+  const [sending,setSending]=useState(false);
+  const [sent,setSent]=useState(false);
+  const [err,setErr]=useState("");
+  const submit=async()=>{
+    if(!msg.trim()){setErr("メッセージを入力してください");return;}
+    setSending(true);setErr("");
+    try{
+      const {error}=await db.from("feedback").insert({
+        message:msg.trim(),
+        nickname:nick.trim()||null,
+        tournament_id:tourn?.id||null,
+        user_id:myId||null,
+        user_agent:navigator.userAgent,
+      });
+      if(error)throw error;
+      setSent(true);
+      setTimeout(()=>onClose(),1600);
+    }catch(e){
+      setErr("送信に失敗しました。もう一度お試しください。");
+      console.error("[feedback]",e);
+    }finally{setSending(false);}
+  };
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:70,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 18px",background:"rgba(5,6,15,0.92)",backdropFilter:"blur(6px)"}}>
+      <div className="card lg" style={{width:"100%",maxWidth:360}}>
+        {sent?(
+          <div style={{textAlign:"center",padding:"28px 0"}}>
+            <div style={{fontSize:44,marginBottom:12}}>🙏</div>
+            <div style={{color:"var(--gold)",fontWeight:900,fontSize:18,marginBottom:6}}>ありがとうございます！</div>
+            <div style={{color:"var(--muted)",fontSize:13}}>フィードバックを受け取りました</div>
+          </div>
+        ):(
+          <>
+            <div style={{color:"var(--txt)",fontWeight:900,fontSize:17,marginBottom:14}}>💬 ご意見・要望</div>
+            <label className="field-lbl">メッセージ <span style={{color:"#ff6066"}}>必須</span></label>
+            <textarea className="tinput" placeholder="ご意見・バグ報告・要望など" value={msg} onChange={e=>setMsg(e.target.value)}
+              rows={4} style={{marginBottom:12,resize:"vertical",minHeight:88,fontFamily:"inherit"}}/>
+            <label className="field-lbl">ニックネーム（任意）</label>
+            <input className="tinput" placeholder="お名前（任意）" value={nick} onChange={e=>setNick(e.target.value)} maxLength={30}
+              style={{marginBottom:err?8:14}}/>
+            {err&&<div style={{color:"#ff6066",fontSize:12,marginBottom:10}}>{err}</div>}
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={onClose} className="btn btn-dark md" style={{flex:1}}>閉じる</button>
+              <button onClick={submit} disabled={sending||!msg.trim()} className="btn btn-red md"
+                style={{flex:1,opacity:sending||!msg.trim()?0.5:1}}>
+                {sending?"送信中...":"送信する"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── 下タブバー（大会内常時表示） ── */
 function TabBar({page,nav,navDashboard}){
   const tabs=[
@@ -2219,6 +2278,7 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
   const [showHamMenu,setShowHamMenu]=useState(false);
+  const [showFeedback,setShowFeedback]=useState(false);
   const [myTournaments,setMyTournaments]=useState([]);
   const [championVotes,setChampionVotes]=useState(null);
   const me=tourn?.participants?.find(p=>p.id===myId);
@@ -2460,6 +2520,9 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
       {/* JapanCelebrationModal（温存） */}
       {japanCelebration&&<JapanCelebrationModal data={japanCelebration} onClose={()=>{localStorage.setItem(japanCelebration.key,"1");setJapanCelebration(null);}}/>}
 
+      {/* フィードバックモーダル */}
+      {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} nickname={me?.nickname||""} tourn={tourn} myId={myId}/>}
+
       {/* ── ハンバーガーナビメニュー（スライドイン・温存） ── */}
       {showHamMenu&&(
         <>
@@ -2487,6 +2550,11 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
                   {item.label}
                 </button>
               ))}
+              <button onClick={()=>{setShowFeedback(true);setShowHamMenu(false);}}
+                style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderBottom:"1px solid var(--line-soft)",cursor:"pointer",color:"var(--gold)",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
+                <span style={{width:24,display:"inline-flex",alignItems:"center",justifyContent:"center"}}><DsIcon name="send" size={18}/></span>
+                ご意見・要望
+              </button>
             </div>
             <button onClick={()=>{setShowLandingOverride(true);setShowHamMenu(false);}}
               style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderTop:"1px solid var(--line)",cursor:"pointer",color:"var(--faint)",fontSize:13,textAlign:"left",width:"100%"}}>
@@ -6876,6 +6944,7 @@ function PgMyPage({nav,tourn,myId,update}){
   const [editNickVal,setEditNickVal]=useState(nickname);
   const [editIcon,setEditIcon]=useState(icon);
   const [saving,setSaving]=useState(false);
+  const [showFeedback,setShowFeedback]=useState(false);
 
   // 統計
   const totalPoints=me?.totalMatchPoints||0;
@@ -7002,9 +7071,10 @@ function PgMyPage({nav,tourn,myId,update}){
         <DsSectionHead title="その他"/>
         <div className="grid3">
         {[
-          {ic:"shop",  label:"コインショップ", action:()=>nav("coinshop")},
-          {ic:"medal", label:"バッジ",         action:()=>nav("badges")},
-          {ic:"globe", label:"全国ランキング", action:()=>nav("ranking")},
+          {ic:"shop",    label:"コインショップ", action:()=>nav("coinshop")},
+          {ic:"medal",   label:"バッジ",         action:()=>nav("badges")},
+          {ic:"globe",   label:"全国ランキング", action:()=>nav("ranking")},
+          {ic:"send",    label:"ご意見・要望",   action:()=>setShowFeedback(true)},
         ].map((s,i)=>(
           <button key={i} onClick={s.action} className="feat" style={{border:"none",cursor:"pointer"}}>
             <div className="fi"><DsIcon name={s.ic} size={20}/></div>
@@ -7013,6 +7083,9 @@ function PgMyPage({nav,tourn,myId,update}){
         ))}
         </div>
       </div>
+
+      {/* フィードバックモーダル */}
+      {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} nickname={nickname} tourn={tourn} myId={myId}/>}
 
       {/* プロフィール編集モーダル */}
       {editNick&&(
