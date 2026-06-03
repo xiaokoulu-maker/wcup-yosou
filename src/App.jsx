@@ -204,6 +204,40 @@ async function fetchGlobalStats(){
   }catch(e){console.warn("[globalStats]",e.message);return null;}
 }
 
+// ── 全体試合予想 集計 ─────────────────────────────────────────
+const GLOBAL_MATCH_VOTES_CACHE_KEY="wcup_globalMatchVotes";
+const GLOBAL_MATCH_VOTES_TTL=5*60*1000;
+async function fetchGlobalMatchVotes(force=false){
+  if(!force){
+    try{
+      const cached=localStorage.getItem(GLOBAL_MATCH_VOTES_CACHE_KEY);
+      if(cached){const p=JSON.parse(cached);if(Date.now()-p.cachedAt<GLOBAL_MATCH_VOTES_TTL)return p.data;}
+    }catch{}
+  }
+  if(!db) return null;
+  try{
+    const{data,error}=await db.from("tournaments").select("participants");
+    if(error||!data||data.length===0) return null;
+    const byMatch={};
+    let totalVoters=0;
+    data.flatMap(t=>t.participants||[]).forEach(p=>{
+      const preds=p.matchPredictions||{};
+      const voted=Object.keys(preds).filter(k=>preds[k]?.pick);
+      if(voted.length===0) return;
+      totalVoters++;
+      voted.forEach(matchId=>{
+        const pick=preds[matchId].pick;
+        if(!byMatch[matchId]) byMatch[matchId]={home:0,away:0,draw:0,total:0};
+        byMatch[matchId][pick]=(byMatch[matchId][pick]||0)+1;
+        byMatch[matchId].total++;
+      });
+    });
+    const result={byMatch,totalVoters};
+    try{localStorage.setItem(GLOBAL_MATCH_VOTES_CACHE_KEY,JSON.stringify({data:result,cachedAt:Date.now()}));}catch{}
+    return result;
+  }catch(e){console.warn("[globalMatchVotes]",e.message);return null;}
+}
+
 // ── spec-14: 全国 Crowd Pick ─────────────────────────────────
 const CHAMP_CACHE_KEY="wcup_globalChampVotes";
 const CHAMP_CACHE_TTL=5*60*1000;
@@ -1967,7 +2001,7 @@ function App(){
       {page==="globalstats"&&<PgGlobalStats nav={nav}/>}
       {page==="solopredict"&&<PgSoloPredict nav={nav}/>}
       {page==="moremenu"&&<PgMoreMenu nav={nav}/>}
-      {page==="matches"&&<PgMatches {...sp}/>}
+      {page==="matches"&&(scope==="global"?<PgGlobalMatches nav={nav} navDashboard={navDashboard}/>:<PgMatches {...sp}/>)}
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId} navDashboard={navDashboard}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update} navDashboard={navDashboard}/>}
       {page==="mypage"&&<PgMyPage nav={nav} tourn={tourn} myId={myId} update={update}/>}
@@ -6369,6 +6403,114 @@ function PgGlobalStats({nav}){
           </>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ── 全体試合予想集計ページ ── */
+function PgGlobalMatches({nav,navDashboard}){
+  const [data,setData]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [refreshing,setRefreshing]=useState(false);
+
+  const load=async(force=false)=>{
+    if(force)setRefreshing(true);
+    const d=await fetchGlobalMatchVotes(force);
+    setData(d);setLoading(false);setRefreshing(false);
+  };
+  useEffect(()=>{load();},[]);
+
+  const byMatch=data?.byMatch||{};
+  const totalVoters=data?.totalVoters||0;
+  const now=new Date();
+  const matchList=MATCHES
+    .filter(m=>byMatch[m.id]&&byMatch[m.id].total>0)
+    .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+
+  const fmtKO=(kickoff)=>{
+    const d=new Date(kickoff);
+    const days=["日","月","火","水","木","金","土"];
+    return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  };
+  const stageLbl=(s,g)=>s==="group"?`G${g}`:s==="r32"?"R32":s==="r16"?"R16":s==="qf"?"QF":s==="sf"?"SF":s==="third"?"3位":"決勝";
+
+  return(
+    <div className="screen">
+      <DsPageHead onBack={()=>navDashboard?navDashboard():nav("home")} title="みんなの試合予想" icon="whistle"/>
+      <div className="wrap section tight">
+        <div className="banner blue" style={{alignItems:"flex-start",gap:8}}>
+          <DsIcon name="globe" size={14} style={{flexShrink:0,marginTop:1}}/>
+          <div style={{fontSize:12}}>全国ユーザーの試合予想を匿名で集計しています。個人情報は含みません。</div>
+        </div>
+      </div>
+
+      {loading?(
+        <div style={{color:G.muted,textAlign:"center",padding:"48px 0",fontSize:13}}>読み込み中...</div>
+      ):matchList.length===0?(
+        <div style={{padding:"32px 20px",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:10}}>⚽</div>
+          <div style={{color:"#fff",fontWeight:800,fontSize:15,marginBottom:6}}>まだ投票データがありません</div>
+          <div style={{color:G.muted,fontSize:12,lineHeight:1.7}}>
+            大会に参加して試合予想を入力すると、<br/>
+            ここに全国の予想比率が表示されます。
+          </div>
+          <button onClick={()=>load(true)} disabled={refreshing} className="btn btn-dark md" style={{marginTop:18}}>
+            <DsIcon name="refresh" size={16}/> 再読み込み
+          </button>
+        </div>
+      ):(
+        <div className="wrap section tight">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <div style={{color:G.muted,fontSize:11}}>{matchList.length}試合 · {totalVoters}人が投票</div>
+            <button onClick={()=>load(true)} disabled={refreshing} style={{
+              background:"none",border:"none",color:G.muted,cursor:refreshing?"default":"pointer",
+              fontSize:11,display:"flex",alignItems:"center",gap:4,padding:"4px 0",
+            }}>
+              <DsIcon name="refresh" size={13}/>{refreshing?"更新中...":"更新"}
+            </button>
+          </div>
+
+          {matchList.map(m=>{
+            const v=byMatch[m.id];
+            const total=v.total||1;
+            const homeP=Math.round(v.home/total*100);
+            const drawP=Math.round(v.draw/total*100);
+            const awayP=100-homeP-drawP;
+            const max=Math.max(homeP,drawP,awayP);
+            const isFinished=new Date(m.kickoff)<now;
+            return(
+              <div key={m.id} style={{...crd,padding:"12px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                  <span style={{color:G.muted,fontSize:10,fontWeight:700}}>{stageLbl(m.stage,m.group)}</span>
+                  <span style={{color:isFinished?G.muted:"#37d67a",fontSize:10}}>{fmtKO(m.kickoff)}{isFinished?" 済":""}</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:5,flex:1,minWidth:0}}>
+                    <FlagImg country={m.home} size={20}/>
+                    <span style={{color:"#fff",fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.home}</span>
+                  </div>
+                  <span style={{color:G.muted,fontSize:10,flexShrink:0}}>VS</span>
+                  <div style={{display:"flex",alignItems:"center",gap:5,flex:1,minWidth:0,justifyContent:"flex-end"}}>
+                    <span style={{color:"#fff",fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"right"}}>{m.away}</span>
+                    <FlagImg country={m.away} size={20}/>
+                  </div>
+                </div>
+                <div style={{display:"flex",height:8,borderRadius:4,overflow:"hidden",marginBottom:6}}>
+                  {v.home>0&&<div style={{flex:v.home,background:"rgba(0,104,183,0.85)"}}/>}
+                  {v.draw>0&&<div style={{flex:v.draw,background:"rgba(143,163,201,0.55)"}}/>}
+                  {v.away>0&&<div style={{flex:v.away,background:"rgba(230,0,51,0.85)"}}/>}
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:10}}>
+                  <span style={{color:"#60a5fa",fontWeight:homeP===max?800:400}}>{m.home} {homeP}%</span>
+                  <span style={{color:G.muted,fontWeight:drawP===max?800:400}}>引分 {drawP}%</span>
+                  <span style={{color:"#f87171",fontWeight:awayP===max?800:400}}>{awayP}% {m.away}</span>
+                </div>
+                <div style={{textAlign:"center",marginTop:5,color:G.muted,fontSize:10}}>{v.total}票</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
