@@ -2004,7 +2004,7 @@ function App(){
       {page==="matches"&&(scope==="global"?<PgGlobalMatches nav={nav} navDashboard={navDashboard}/>:<PgMatches {...sp}/>)}
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId} navDashboard={navDashboard}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update} navDashboard={navDashboard}/>}
-      {page==="mypage"&&<PgMyPage nav={nav} tourn={tourn} myId={myId} update={update}/>}
+      {page==="mypage"&&<PgMyPage nav={nav} goT={goT} tourn={tourn} myId={myId} update={update}/>}
       {showTabBar&&<TabBar page={page} nav={nav} navDashboard={navDashboard} scope={scope} setScope={setScope} tourn={tourn} myId={myId}/>}
     </div>
     </ErrorBoundary>
@@ -2326,16 +2326,12 @@ function SbLeaguesSection({myTournaments,onSelect,onCreate,onJoin}){
 
 /* ── Home (侍ブルー D2) ── */
 function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride}){
-  const [showJoin,setShowJoin]=useState(false);
-  const [joinId,setJoinId]=useState("");
-  const [joinErr,setJoinErr]=useState("");
   const [extraOpen,setExtraOpen]=useState(true);
   const [notifEnabled,setNotifEnabled]=useState(isNotificationEnabled());
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
   const [showHamMenu,setShowHamMenu]=useState(false);
   const [showFeedback,setShowFeedback]=useState(false);
-  const [myTournaments,setMyTournaments]=useState([]);
   const [championVotes,setChampionVotes]=useState(null);
   const me=tourn?.participants?.find(p=>p.id===myId);
   const isLoggedIn=!!(me&&tourn);
@@ -2370,52 +2366,11 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
     return unsub;
   },[tourn?.id]);
 
-  // spec-13: 自分の参加大会を読み込む（5分キャッシュ）
-  useEffect(()=>{
-    const CACHE_KEY="wcup_myTournaments";
-    const CACHE_TTL=5*60*1000;
-    const load=async()=>{
-      try{
-        const cached=localStorage.getItem(CACHE_KEY);
-        if(cached){
-          const{data,cachedAt}=JSON.parse(cached);
-          if(Date.now()-cachedAt<CACHE_TTL&&Array.isArray(data)&&data.length>0){
-            setMyTournaments(data);return;
-          }
-        }
-        const joined=getMyJoined();
-        const fromKeys=Object.keys(localStorage).filter(k=>k.startsWith("wcup_myid_")).map(k=>k.replace("wcup_myid_",""));
-        const allIds=[...new Set([...joined,...fromKeys])].filter(Boolean);
-        if(allIds.length===0)return;
-        const results=await Promise.all(allIds.map(id=>loadT(id)));
-        const valid=results.filter(Boolean).map(t=>{
-          const myPid=localStorage.getItem("wcup_myid_"+t.id)||"";
-          const myPart=t.participants?.find(p=>p.id===myPid);
-          if(!myPart)return null;
-          const sorted=[...(t.participants||[])].sort((a,b)=>(b.totalMatchPoints||0)-(a.totalMatchPoints||0));
-          const myRank=sorted.findIndex(p=>p.id===myPid)+1;
-          return{id:t.id,name:t.name,myPoints:myPart.totalMatchPoints||0,myRank:myRank>0?myRank:null,participantCount:t.participants?.length||0};
-        }).filter(Boolean);
-        try{localStorage.setItem(CACHE_KEY,JSON.stringify({data:valid,cachedAt:Date.now()}));}catch{}
-        setMyTournaments(valid);
-      }catch{}
-    };
-    load();
-  },[]);
-
-  const handleSelectMyTourn=async(item)=>{
-    try{
-      const t=await loadT(item.id);
-      if(t)goT(t);
-    }catch{}
-  };
-
   // spec-14: 全国優勝予想集計を読み込む
   useEffect(()=>{
     loadGlobalChampionVotes().then(d=>{if(d)setChampionVotes(d);}).catch(()=>{});
   },[]);
 
-  const joinByID=async()=>{const id=joinId.trim().toUpperCase();if(!id)return;const t=await loadT(id);if(t)goT(t);else setJoinErr("大会が見つかりませんでした。");};
   const now=new Date();
   const pad=n=>String(n).padStart(2,"0");
   const todayStr=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
@@ -2678,76 +2633,6 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
       {/* みんなの優勝予想 */}
       {championVotes&&championVotes.rankings.length>0&&(
         <SbChampionSection data={championVotes}/>
-      )}
-
-      {/* あなたの大会 */}
-      <SbLeaguesSection
-        myTournaments={myTournaments}
-        onSelect={handleSelectMyTourn}
-        onCreate={()=>{try{localStorage.removeItem("wcup_myTournaments");}catch{}nav("create");}}
-        onJoin={()=>setShowJoin(true)}
-      />
-
-      {/* チャット CTA */}
-      <div className="sb-section">
-        <div className="sb-card sb-chat-cta" onClick={()=>nav("globalchat")} style={{cursor:"pointer"}}>
-          <div className="sb-chat-ic">
-            <MessageCircle size={20} color="var(--sb-blue-b)"/>
-          </div>
-          <div className="sb-chat-tx">
-            <div className="sb-chat-a">みんなのチャット</div>
-            <div className="sb-chat-b">W杯について語ろう</div>
-          </div>
-          <ChevronRight size={18} className="sb-chev"/>
-        </div>
-      </div>
-
-      {/* 予想メニュー */}
-      <div className="sb-section">
-        <div className="sb-section-head">
-          <div className="sb-t"><span className="sb-tick sb-tick-blue"/>予想メニュー</div>
-        </div>
-        <div className="sb-feat-grid">
-          {[
-            {k:"グループ別",d:"A〜L組の順位予想",bg:"rgba(63,107,255,0.2)",ic:<LayoutGrid size={18} color="#fff"/>,action:()=>nav("groups")},
-            {k:"決勝T",d:"ノックアウト予想",bg:"rgba(228,0,43,0.2)",ic:<Trophy size={18} color="#fff"/>,action:()=>nav("bracket")},
-            SHOW_BEST11
-              ? {k:"ベスト11",d:"スタメン11人を選ぼう",bg:"rgba(231,200,115,0.18)",ic:<Medal size={18} color="var(--sb-gold)"/>,action:()=>nav("best11")}
-              : {k:"ベスト16予想",d:"ベスト16に残る16チームを当てる",bg:"rgba(228,0,43,0.18)",ic:<Target size={18} color="#fff"/>,action:()=>nav("best16")},
-            {k:"試合日程",d:"全104試合カレンダー",bg:"rgba(63,107,255,0.2)",ic:<Calendar size={18} color="#fff"/>,action:()=>nav("schedule")},
-          ].map(f=>(
-            <button className="sb-feat" key={f.k} onClick={f.action}>
-              <div className="sb-feat-ic" style={{background:f.bg}}>{f.ic}</div>
-              <div>
-                <div className="sb-feat-lbl">{f.k}</div>
-                <div className="sb-feat-desc">{f.d}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 招待コードで参加 */}
-      <div style={{textAlign:"center",padding:"8px 16px"}}>
-        <button onClick={()=>setShowJoin(v=>!v)}
-          style={{background:"none",border:"none",cursor:"pointer",color:"var(--sb-text-faint)",fontSize:12,fontWeight:500}}>
-          招待された? <span style={{color:"var(--sb-red-b)",fontWeight:700}}>コードで参加</span>
-        </button>
-      </div>
-      {showJoin&&(
-        <div style={{padding:"0 16px 8px"}}>
-          <div style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:16}}>
-            <div style={{color:"var(--sb-text-faint)",fontSize:12,fontWeight:700,marginBottom:8}}>大会IDを入力</div>
-            <div style={{display:"flex",gap:8}}>
-              <input value={joinId} onChange={e=>setJoinId(e.target.value)} placeholder="例: ABCD1234"
-                style={{flex:1,borderRadius:10,padding:"10px 12px",fontSize:13,background:"rgba(5,9,28,0.7)",border:"1px solid var(--sb-line-s)",color:"var(--sb-text)",outline:"none"}}
-                onKeyDown={e=>e.key==="Enter"&&joinByID()}/>
-              <button onClick={joinByID}
-                style={{background:"var(--sb-red)",color:"#fff",fontWeight:700,padding:"10px 16px",borderRadius:10,border:"none",cursor:"pointer",fontSize:13}}>入る</button>
-            </div>
-            {joinErr&&<div style={{color:"var(--sb-red-b)",fontSize:12,marginTop:8}}>{joinErr}</div>}
-          </div>
-        </div>
       )}
 
       <div className="sb-spacer-bottom"/>
@@ -6528,10 +6413,12 @@ function PgGlobalMatches({nav,navDashboard}){
 /* ── もっと見るメニュー ── */
 function PgMoreMenu({nav}){
   const MORE=[
-    {icon:"🗂️",label:"グループ表",  sub:"全12グループ・FIFAランク",   action:()=>nav("groups"),   color:"#0068B7",bg:"rgba(0,104,183,0.07)",border:"rgba(0,104,183,0.2)"},
-    {icon:"🎖️",label:"トーナメント",sub:"決勝T表・予想マップ",         action:()=>nav("bracket"),  color:"#005BAC",bg:"rgba(0,91,172,0.07)", border:"rgba(0,91,172,0.2)"},
-    {icon:"🇯🇵",label:"日本代表特集",sub:"選手・成績・展望データ",      action:()=>{nav("japan");trackEvent("open_japan_mode",{page:"moremenu"});},color:"#7DD3FC",bg:"rgba(0,91,172,0.12)",border:"rgba(14,165,233,0.3)"},
-    {icon:"💬",label:"全体チャット",sub:"W杯について語ろう",           action:()=>nav("globalchat"),color:"#A78BFA",bg:"rgba(139,92,246,0.1)",border:"rgba(139,92,246,0.25)"},
+    {icon:"🗂️",label:"グループ表",  sub:"全12グループ・FIFAランク",         action:()=>nav("groups"),   color:"#0068B7",bg:"rgba(0,104,183,0.07)",border:"rgba(0,104,183,0.2)"},
+    {icon:"🎖️",label:"トーナメント",sub:"決勝T表・予想マップ",               action:()=>nav("bracket"),  color:"#005BAC",bg:"rgba(0,91,172,0.07)", border:"rgba(0,91,172,0.2)"},
+    {icon:"📅",label:"試合日程",    sub:"全104試合カレンダー・結果",          action:()=>nav("schedule"), color:"#22C55E",bg:"rgba(34,197,94,0.08)", border:"rgba(34,197,94,0.25)"},
+    {icon:"🎯",label:"ベスト16予想",sub:"ベスト16に残る16チームを当てる",     action:()=>nav("best16"),   color:"#E60033",bg:"rgba(228,0,43,0.07)", border:"rgba(228,0,43,0.2)"},
+    {icon:"🇯🇵",label:"日本代表特集",sub:"選手・成績・展望データ",            action:()=>{nav("japan");trackEvent("open_japan_mode",{page:"moremenu"});},color:"#7DD3FC",bg:"rgba(0,91,172,0.12)",border:"rgba(14,165,233,0.3)"},
+    {icon:"💬",label:"全体チャット",sub:"W杯について語ろう",                 action:()=>nav("globalchat"),color:"#A78BFA",bg:"rgba(139,92,246,0.1)",border:"rgba(139,92,246,0.25)"},
   ];
   return(
     <div style={{padding:"20px 16px 40px"}}>
@@ -7403,8 +7290,8 @@ function PgBadges({nav,tourn,myId,navDashboard}){
   );
 }
 
-/* ── spec-12: マイページ ── */
-function PgMyPage({nav,tourn,myId,update}){
+/* ── spec-12: マイページ（大会ハブ兼用） ── */
+function PgMyPage({nav,goT,tourn,myId,update}){
   const me=tourn?.participants?.find(p=>p.id===myId);
   const nickname=me?.nickname||"ゲスト";
   const icon=me?.icon||"👤";
@@ -7413,6 +7300,52 @@ function PgMyPage({nav,tourn,myId,update}){
   const [editIcon,setEditIcon]=useState(icon);
   const [saving,setSaving]=useState(false);
   const [showFeedback,setShowFeedback]=useState(false);
+  // 大会ハブ用
+  const [myTournaments,setMyTournaments]=useState([]);
+  const [joinId,setJoinId]=useState("");
+  const [joinErr,setJoinErr]=useState("");
+  const [showJoin,setShowJoin]=useState(false);
+
+  // 参加大会リスト読み込み（5分キャッシュ）
+  useEffect(()=>{
+    const CACHE_KEY="wcup_myTournaments";
+    const CACHE_TTL=5*60*1000;
+    const load=async()=>{
+      try{
+        const cached=localStorage.getItem(CACHE_KEY);
+        if(cached){
+          const{data,cachedAt}=JSON.parse(cached);
+          if(Date.now()-cachedAt<CACHE_TTL&&Array.isArray(data)&&data.length>0){setMyTournaments(data);return;}
+        }
+        const joined=getMyJoined();
+        const fromKeys=Object.keys(localStorage).filter(k=>k.startsWith("wcup_myid_")).map(k=>k.replace("wcup_myid_",""));
+        const allIds=[...new Set([...joined,...fromKeys])].filter(Boolean);
+        if(allIds.length===0)return;
+        const results=await Promise.all(allIds.map(id=>loadT(id)));
+        const valid=results.filter(Boolean).map(t=>{
+          const myPid=localStorage.getItem("wcup_myid_"+t.id)||"";
+          const myPart=t.participants?.find(p=>p.id===myPid);
+          if(!myPart)return null;
+          const sorted=[...(t.participants||[])].sort((a,b)=>(b.totalMatchPoints||0)-(a.totalMatchPoints||0));
+          const myRank=sorted.findIndex(p=>p.id===myPid)+1;
+          return{id:t.id,name:t.name,myPoints:myPart.totalMatchPoints||0,myRank:myRank>0?myRank:null,participantCount:t.participants?.length||0};
+        }).filter(Boolean);
+        try{localStorage.setItem(CACHE_KEY,JSON.stringify({data:valid,cachedAt:Date.now()}));}catch{}
+        setMyTournaments(valid);
+      }catch{}
+    };
+    load();
+  },[]);
+
+  const handleSelectMyTourn=async(item)=>{
+    try{const t=await loadT(item.id);if(t)goT(t);}catch{}
+  };
+  const joinByID=async()=>{
+    const id=joinId.trim().toUpperCase();
+    if(!id)return;
+    const t=await loadT(id);
+    if(t)goT(t);else setJoinErr("大会が見つかりませんでした。");
+  };
 
   // 統計
   const totalPoints=me?.totalMatchPoints||0;
@@ -7427,6 +7360,44 @@ function PgMyPage({nav,tourn,myId,update}){
   const sortedP=[...(tourn?.participants||[])].sort((a,b)=>(b.totalMatchPoints||0)-(a.totalMatchPoints||0));
   const myRankIdx=sortedP.findIndex(p=>p.id===myId);
   const myRankStr=myRankIdx>=0?`${myRankIdx+1}位`:"-";
+
+  // 大会ハブ UI（参加なし・参加あり 共通コンポーネント）
+  const TournamentHub=()=>(
+    <div className="wrap section">
+      <DsSectionHead title="あなたの大会"/>
+      {myTournaments.length>0?(
+        myTournaments.map(t=>(
+          <div key={t.id} className="rowcard" onClick={()=>handleSelectMyTourn(t)} style={{cursor:"pointer",marginBottom:8}}>
+            <div className="ico" style={{color:"#fff",background:"linear-gradient(160deg,#ff4147,#c41420)",border:"none"}}>{t.name?.[0]||"?"}</div>
+            <div className="tx">
+              <div className="t">{t.name}</div>
+              <div className="s">{t.myRank?`${t.myRank}位 / ${t.participantCount}人中`:`${t.participantCount}人中`} · {t.myPoints}pt</div>
+            </div>
+            <DsIcon name="chevron" size={17} stroke={2} style={{color:"var(--faint)"}}/>
+          </div>
+        ))
+      ):(
+        <div className="card" style={{textAlign:"center",padding:"20px",color:"var(--muted)",fontSize:13,marginBottom:12}}>
+          参加中の大会はありません
+        </div>
+      )}
+      <div style={{display:"flex",gap:8,marginTop:8}}>
+        <button onClick={()=>nav("create")} className="btn btn-red md" style={{flex:1}}>＋ 大会を作る</button>
+        <button onClick={()=>setShowJoin(v=>!v)} className="btn btn-dark md" style={{flex:1}}>コードで参加</button>
+      </div>
+      {showJoin&&(
+        <div style={{marginTop:10,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:14}}>
+          <div style={{color:"var(--muted)",fontSize:12,marginBottom:8}}>大会IDを入力</div>
+          <div style={{display:"flex",gap:8}}>
+            <input value={joinId} onChange={e=>setJoinId(e.target.value.toUpperCase())} placeholder="例: ABCD1234"
+              className="tinput" style={{flex:1,minWidth:0}} onKeyDown={e=>e.key==="Enter"&&joinByID()}/>
+            <button onClick={joinByID} className="btn btn-red md" style={{flexShrink:0,width:"auto",padding:"0 18px"}}>入る</button>
+          </div>
+          {joinErr&&<div style={{color:"#ff6066",fontSize:12,marginTop:8}}>{joinErr}</div>}
+        </div>
+      )}
+    </div>
+  );
 
   // 最近の予想（直近10件、キックオフ降順）
   const recentPreds=preds
@@ -7458,13 +7429,7 @@ function PgMyPage({nav,tourn,myId,update}){
     return(
       <div className="screen">
         <DsPageHead onBack={()=>nav("home")} title="マイページ" icon="person"/>
-        <div className="wrap section">
-          <div className="card lg" style={{textAlign:"center",padding:"32px"}}>
-            <DsIcon name="person" size={40} style={{color:"var(--faint)"}}/>
-            <div style={{color:"var(--muted)",fontSize:14,marginTop:12,marginBottom:16}}>大会に参加するとマイページが使えるようになります</div>
-            <button onClick={()=>nav("home")} className="btn btn-red sm" style={{width:"auto",display:"inline-flex",padding:"8px 20px"}}>🏆 大会を探す</button>
-          </div>
-        </div>
+        <TournamentHub/>
       </div>
     );
   }
@@ -7496,17 +7461,7 @@ function PgMyPage({nav,tourn,myId,update}){
         </div>
       </div>
 
-      {tourn&&(
-        <div className="wrap section">
-          <DsSectionHead title="参加中の大会"/>
-          <div className="rowcard" onClick={()=>nav("tournament")} style={{cursor:"pointer"}}>
-            <div className="ico" style={{color:"#fff",background:"linear-gradient(160deg,#ff4147,#c41420)",border:"none"}}>{tourn.name?.[0]||"?"}</div>
-            <div className="tx"><div className="t">{tourn.name}</div><div className="s">{myRankStr} · {sortedP.length}人中 · {totalPoints}pt</div></div>
-            <div className="end" style={{color:"#ff6066"}}>開く</div>
-            <DsIcon name="chevron" size={17} stroke={2} style={{color:"var(--faint)"}}/>
-          </div>
-        </div>
-      )}
+      <TournamentHub/>
 
       <div className="wrap section">
         <DsSectionHead title="最近の予想"/>
