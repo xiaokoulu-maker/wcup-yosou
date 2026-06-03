@@ -1743,38 +1743,67 @@ function FeedbackModal({onClose,nickname,tourn,myId}){
   );
 }
 
-/* ── 下タブバー（大会内常時表示） ── */
-function TabBar({page,nav,navDashboard}){
+/* ── 下タブバー（全ページ固定表示） ── */
+function TabBar({page,nav,navDashboard,scope,setScope,tourn,myId}){
+  const hasTourn=!!(tourn&&myId);
   const tabs=[
-    {id:"home",     label:"ホーム",     icon:"ball",    action:navDashboard},
-    {id:"matches",  label:"予想",       icon:"whistle", action:()=>nav("matches")},
-    {id:"ranking",  label:"ランキング", icon:"chart",   action:()=>nav("ranking")},
-    {id:"tournament",label:"チャット",  icon:"chatBig", action:()=>nav("tournament")},
-    {id:"mypage",   label:"マイページ", icon:"person",  action:()=>nav("mypage")},
+    {id:"home",      label:"ホーム",     icon:"ball",    action:()=>hasTourn?navDashboard():nav("home")},
+    {id:"matches",   label:"予想",       icon:"whistle", action:()=>nav("matches")},
+    {id:"ranking",   label:"ランキング", icon:"chart",   action:()=>nav("ranking")},
+    {id:"globalchat",label:"チャット",   icon:"chatBig", action:()=>nav("globalchat")},
+    {id:"mypage",    label:"マイページ", icon:"person",  action:()=>nav("mypage")},
   ];
-  const activeId=["home","matches","ranking","tournament","mypage"].find(id=>page===id)||"";
+  const activeId=(
+    page==="home"?"home":
+    page==="matches"?"matches":
+    page==="ranking"?"ranking":
+    page==="globalchat"?"globalchat":
+    page==="mypage"?"mypage":""
+  );
   return(
     <div style={{
       position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",
-      background:"rgba(5,16,45,0.94)",backdropFilter:"blur(14px) saturate(1.5)",
+      background:"rgba(5,16,45,0.97)",backdropFilter:"blur(14px) saturate(1.5)",
       borderTop:"1px solid rgba(255,255,255,0.09)",
-      display:"flex",alignItems:"stretch",
-      paddingBottom:"env(safe-area-inset-bottom,0px)",zIndex:60,
+      zIndex:60,
     }}>
-      {tabs.map(t=>{
-        const active=activeId===t.id;
-        return(
-          <button key={t.id} onClick={t.action} style={{
-            flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-            padding:"9px 0 7px",background:"none",border:"none",cursor:"pointer",position:"relative",
-            color:active?"var(--gold)":"rgba(255,255,255,0.42)",transition:"color .12s",
-          }}>
-            {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,borderRadius:2,background:"var(--gold)"}}/>}
-            <DsIcon name={t.icon} size={20} stroke={active?2.3:1.7}/>
-            <span style={{fontSize:9.5,fontWeight:active?700:500,marginTop:3,letterSpacing:0.2}}>{t.label}</span>
-          </button>
-        );
-      })}
+      {/* スコープトグル */}
+      <div style={{display:"flex",justifyContent:"center",padding:"5px 0 3px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+        <div style={{display:"inline-flex",background:"rgba(255,255,255,0.05)",borderRadius:20,padding:2}}>
+          {[{v:"global",label:"全体"},{v:"tournament",label:"大会内"}].map(opt=>{
+            const active=scope===opt.v;
+            const disabled=opt.v==="tournament"&&!hasTourn;
+            return(
+              <button key={opt.v} onClick={()=>{if(!disabled)setScope(opt.v);}} style={{
+                background:active?"rgba(244,180,0,0.18)":"transparent",
+                border:active?"1px solid rgba(244,180,0,0.45)":"1px solid transparent",
+                borderRadius:18,padding:"3px 22px",fontSize:11,fontWeight:active?800:500,
+                color:disabled?"rgba(255,255,255,0.22)":active?"#F4B400":"rgba(255,255,255,0.55)",
+                cursor:disabled?"default":"pointer",letterSpacing:0.3,
+              }}>
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* タブボタン */}
+      <div style={{display:"flex",alignItems:"stretch",paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
+        {tabs.map(t=>{
+          const active=activeId===t.id;
+          return(
+            <button key={t.id} onClick={t.action} style={{
+              flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+              padding:"9px 0 7px",background:"none",border:"none",cursor:"pointer",position:"relative",
+              color:active?"var(--gold)":"rgba(255,255,255,0.42)",transition:"color .12s",
+            }}>
+              {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,borderRadius:2,background:"var(--gold)"}}/>}
+              <DsIcon name={t.icon} size={20} stroke={active?2.3:1.7}/>
+              <span style={{fontSize:9.5,fontWeight:active?700:500,marginTop:3,letterSpacing:0.2}}>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1786,6 +1815,7 @@ function App(){
   const [myId,setMyId]=useState(null);
   const [adminOk,setAdminOk]=useState(false);
   const [selCountry,setSelCountry]=useState(null);
+  const [scope,setScope]=useState("global"); // "global" | "tournament"
   const [onboardingDone,setOnboardingDone]=useState(()=>{
     try{
       if(localStorage.getItem("wcup_onboardingDone")) return true;
@@ -1824,6 +1854,11 @@ function App(){
     if(!myId||!tourn)return;
     const me=tourn.participants?.find(p=>p.id===myId);
     scheduleNotifications(me?.matchPredictions||{});
+  },[tourn?.id,myId]);
+
+  // tourn && myId が揃ったら scope を "tournament" に自動切替
+  useEffect(()=>{
+    if(tourn&&myId) setScope("tournament");
   },[tourn?.id,myId]);
 
   // spec-07: アプリ起動時1回 + 3分ごとのライブスコア自動取得
@@ -1903,11 +1938,11 @@ function App(){
     else if(action==="solo") setPage("matches");
   };
 
-  const showTabBar=!!(tourn&&myId&&!(page==="home"&&showLandingOverride)&&page!=="create"&&page!=="join");
+  const showTabBar=!(page==="create"||page==="join");
   return(
     <ErrorBoundary>
     {!onboardingDone&&<Onboarding onComplete={handleOnboardingComplete}/>}
-    <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(60px + env(safe-area-inset-bottom,0px))":undefined}}>
+    <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(88px + env(safe-area-inset-bottom,0px))":undefined}}>
       {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} showLandingOverride={showLandingOverride} setShowLandingOverride={setShowLandingOverride}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
@@ -1936,27 +1971,7 @@ function App(){
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId} navDashboard={navDashboard}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update} navDashboard={navDashboard}/>}
       {page==="mypage"&&<PgMyPage nav={nav} tourn={tourn} myId={myId} update={update}/>}
-      {/* タブバーが出ていない画面のみ右下フローティングプロフィールボタンを表示 */}
-      {tourn&&myId&&page!=="home"&&!showTabBar&&(
-        <button
-          onClick={()=>nav("mypage")}
-          title="マイページ"
-          style={{
-            position:"fixed",bottom:20,right:16,
-            width:44,height:44,borderRadius:"50%",
-            background:"rgba(10,31,76,0.88)",
-            border:"1.5px solid rgba(255,255,255,0.22)",
-            boxShadow:"0 4px 14px rgba(0,0,0,0.35)",
-            cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
-            color:"#fff",zIndex:50,
-          }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-            <circle cx="12" cy="7.5" r="4.5"/>
-            <path d="M3 21c0-4.97 4.03-9 9-9s9 4.03 9 9H3z"/>
-          </svg>
-        </button>
-      )}
-      {showTabBar&&<TabBar page={page} nav={nav} navDashboard={navDashboard}/>}
+      {showTabBar&&<TabBar page={page} nav={nav} navDashboard={navDashboard} scope={scope} setScope={setScope} tourn={tourn} myId={myId}/>}
     </div>
     </ErrorBoundary>
   );
@@ -2502,7 +2517,7 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
                 {ic:"flag",    t:"日本代表",  action:()=>nav("japan"),      hl:true,  badge:0},
                 {ic:"star",    t:"ベスト11",  action:()=>nav("best11"),     hl:false, badge:0},
                 {ic:"grid",    t:"グループ表",action:()=>nav("groups"),     hl:false, badge:0},
-                {ic:"chatBig", t:"チャット",  action:()=>nav("tournament"), hl:false, badge:chatUnread},
+                {ic:"chatBig", t:"チャット",  action:()=>nav("globalchat"), hl:false, badge:chatUnread},
                 {ic:"medal",   t:"バッジ",    action:()=>nav("badges"),     hl:false, badge:0},
                 {ic:"coin",    t:"コイン",    action:()=>nav("coinshop"),   hl:false, badge:0},
                 {ic:"gear",    t:"設定",      action:()=>nav("admin"),      hl:false, badge:0},
