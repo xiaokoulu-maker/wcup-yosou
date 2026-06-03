@@ -73,9 +73,9 @@ export function SectionHead({ title, gold, action, onAction }) {
   );
 }
 
-export function Stat({ icon, label, value, unit, color, sub }) {
+export function Stat({ icon, label, value, unit, color, sub, onClick }) {
   return (
-    <div className="stat">
+    <div className="stat" onClick={onClick} style={onClick?{cursor:"pointer"}:undefined}>
       <div className="lbl">{icon && <span className="i"><Icon name={icon} size={15} /></span>}{label}</div>
       <div className={"num" + (color ? " " + color : "")}>{value}{unit && <span className="u">{unit}</span>}</div>
       {sub && <div className="sub">{sub}</div>}

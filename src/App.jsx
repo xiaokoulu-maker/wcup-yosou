@@ -2474,7 +2474,7 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
         {/* ── 2×2 ステータス ── */}
         <div className="wrap section">
           <div className="grid2">
-            <DsStat icon="chart" label="現在の順位" value={myRankIdx>=0?myRankIdx+1:"－"} unit={`位 / ${sortedP.length}人`} onClick={()=>nav("ranking")}/>
+            <DsStat icon="chart" label="現在の順位" value={myRankIdx>=0?myRankIdx+1:"－"} unit={`位 / ${sortedP.length}人`} onClick={()=>{nav("ranking");trackEvent("click",{location:"daikai_home",target:"ranking",tournamentId:tourn?.id});}}/>
             <DsStat icon="flame" label="連続的中" value={myStreak} unit="連続" color="red" onClick={()=>nav("badges")}/>
             <DsStat icon="coin" label="コイン残高" value={myCoins.toLocaleString()} color="gold" onClick={()=>nav("coinshop")}/>
             <DsStat icon="medal" label="獲得バッジ" value={myBadgesCount} unit={`/ ${BADGES.length}`} onClick={()=>nav("badges")}/>
@@ -2485,6 +2485,9 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
         <div className="wrap section">
           <button className="btn btn-red lg" onClick={()=>nav("matches")}>
             <DsIcon name="whistle" size={21}/> 試合を予想する
+          </button>
+          <button className="btn btn-dark lg" style={{marginTop:8}} onClick={()=>{nav("predictions");trackEvent("click",{location:"daikai_home",target:"minna_yosou",tournamentId:tourn?.id});}}>
+            <DsIcon name="users" size={20}/> みんなの予想を見る
           </button>
         </div>
 
