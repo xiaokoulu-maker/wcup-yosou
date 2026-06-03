@@ -784,6 +784,12 @@ function getMyCreated(){try{return JSON.parse(localStorage.getItem("wcup_created
 function getMyJoined(){try{return JSON.parse(localStorage.getItem("wcup_joined")||"[]");}catch{return[];}}
 const DEFAULT_PRED_SETTINGS={winner:true,runnerUp:true,topScorer:true,japanResult:true,japanMvp:false,assistKing:false,tournamentMvp:false,best4:false,japanFirstMatchScore:false};
 function getSettings(t){return t?.predictionSettings?{...DEFAULT_PRED_SETTINGS,...t.predictionSettings}:DEFAULT_PRED_SETTINGS;}
+const AWARD_CATS=[
+  {key:"topScorer",    icon:"⚽",label:"得点王",      pts:15},
+  {key:"assistKing",   icon:"🎯",label:"アシスト王",  pts:10},
+  {key:"tournamentMvp",icon:"🏅",label:"大会MVP",     pts:10},
+  {key:"japanMvp",     icon:"🌟",label:"日本代表MVP", pts:8},
+];
 function calcPts(pred,res){
   if(!pred||!res?.winner)return 0;
   let p=0;
@@ -3665,63 +3671,175 @@ await update(updated);setSaved(true);setLoading(false);
 
 /* ── Predictions ── */
 function PgPredictions({tourn:t,setTourn,nav,goCountry}){
+  const [view,setView]=useState("list");
+  const [selCat,setSelCat]=useState(null);
   useEffect(()=>{if(!t?.id)return;const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
-  const winCount={};t.participants.forEach(p=>{if(p.predictions?.winner)winCount[p.predictions.winner]=(winCount[p.predictions.winner]||0)+1;});
+  if(!t)return null;
+  const participants=t.participants||[];
+  const settings=getSettings(t);
+  const activeCats=AWARD_CATS.filter(c=>settings[c.key]);
+  const curCatKey=activeCats.find(c=>c.key===selCat)?.key||activeCats[0]?.key||null;
+  const curCat=AWARD_CATS.find(c=>c.key===curCatKey)||null;
+  // チップ行：Badge グリッドに既出の topScorer を除いた追加個人賞のみ
+  const chipCats=activeCats;
+  // 比較ビュー集計
+  const awardCounts={};
+  if(curCatKey){
+    participants.forEach(p=>{const v=(p.predictions?.[curCatKey]||"").trim();if(v){awardCounts[v]=(awardCounts[v]||0)+1;}});
+  }
+  const awardRank=Object.entries(awardCounts).sort((a,b)=>b[1]-a[1]);
+  const topPick=awardRank[0]?{name:awardRank[0][0],count:awardRank[0][1]}:null;
+  // 優勝予想集計
+  const winCount={};
+  participants.forEach(p=>{if(p.predictions?.winner)winCount[p.predictions.winner]=(winCount[p.predictions.winner]||0)+1;});
   const winRank=Object.entries(winCount).sort((a,b)=>b[1]-a[1]);
+  const tabBtn=(active)=>({background:active?"rgba(244,180,0,0.13)":"rgba(255,255,255,0.04)",border:active?"1px solid rgba(244,180,0,0.42)":"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:"5px 12px",fontSize:11,fontWeight:700,color:active?G.gold:G.muted,cursor:"pointer"});
   return(
     <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-        <div><div style={{color:G.gold,fontSize:21,fontWeight:900}}>みんなの予想</div><div style={{color:G.muted,fontSize:12,marginTop:2}}>{t.participants.length}人参加中 · 🔄 自動更新中</div></div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,gap:8}}>
+        <div style={{flex:1}}>
+          <div style={{color:G.gold,fontSize:21,fontWeight:900}}>みんなの予想</div>
+          <div style={{color:G.muted,fontSize:12,marginTop:2}}>{participants.length}人参加中 · 🔄 自動更新中</div>
+        </div>
+        {activeCats.length>0&&(
+          <div style={{display:"flex",gap:5,flexShrink:0}}>
+            <button onClick={()=>setView("list")} style={tabBtn(view==="list")}>一覧</button>
+            <button onClick={()=>setView("compare")} style={tabBtn(view==="compare")}>🏆 個人賞比較</button>
+          </div>
+        )}
       </div>
-      {winRank.length>0&&<div style={{...crd,border:`1px solid ${G.gold}44`}}>
-        <div style={{color:G.gold,fontWeight:700,fontSize:12,marginBottom:12,letterSpacing:1}}>🥇 WINNER PREDICTION</div>
-        {winRank.map(([c,n],i)=><div key={c} onClick={()=>goCountry(c)} style={{cursor:"pointer",marginBottom:10}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}><FlagImg country={c} size={20}/><span style={{color:G.navy,fontSize:13}}>{c}</span></div>
-            <span style={{color:G.gold,fontWeight:700,fontSize:13}}>{n}人</span>
-          </div>
-          <div style={{background:"rgba(0,91,172,0.1)",borderRadius:6,height:7,overflow:"hidden"}}>
-            <div style={{background:i===0?"linear-gradient(90deg,#0068B7,#004C99)":i<3?"#9CA3AF":"#C9DDF5",height:"100%",borderRadius:6,width:(n*100/(t.participants.length||1))+"%"}}/>
-          </div>
-        </div>)}
-      </div>}
-      {t.participants.length===0?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>まだ参加者がいません</div>
-        :t.participants.map(p=>(
-          <div key={p.id} style={{...crd,overflow:"visible"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-              <div style={{fontSize:34,lineHeight:1,filter:"drop-shadow(0 2px 6px rgba(0,0,0,0.4))"}}>{p.icon}</div>
-              <div style={{flex:1}}>
-                <div style={{color:G.navy,fontWeight:800,fontSize:15}}>{p.nickname}</div>
-                {t.results&&<div style={{color:G.gold,fontSize:13,fontWeight:800}}>{p.points}<span style={{fontSize:10,fontWeight:600,marginLeft:2}}>pt</span></div>}
-              </div>
-              {p.predictions?.winner&&(
-                <div onClick={()=>goCountry(p.predictions.winner)} style={{textAlign:"center",background:"rgba(0,104,183,0.06)",borderRadius:12,padding:"6px 10px",border:"1px solid rgba(0,104,183,0.2)",cursor:"pointer",minWidth:52}}>
-                  <FlagImg country={p.predictions.winner} size={22}/>
-                  <div style={{color:G.gold,fontSize:8,marginTop:3,fontWeight:700,letterSpacing:0.5}}>優勝予想</div>
-                </div>
-              )}
+
+      {/* ── 一覧ビュー ── */}
+      {view==="list"&&<>
+        {winRank.length>0&&<div style={{...crd,border:`1px solid ${G.gold}44`}}>
+          <div style={{color:G.gold,fontWeight:700,fontSize:12,marginBottom:12,letterSpacing:1}}>🥇 WINNER PREDICTION</div>
+          {winRank.map(([c,n],i)=><div key={c} onClick={()=>goCountry(c)} style={{cursor:"pointer",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}><FlagImg country={c} size={20}/><span style={{color:G.navy,fontSize:13}}>{c}</span></div>
+              <span style={{color:G.gold,fontWeight:700,fontSize:13}}>{n}人</span>
             </div>
-            {p.predictions?(
-              <>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>
-                  <Badge label="準優勝" val={p.predictions.runnerUp}/>
-                  <Badge label="得点王" val={p.predictions.topScorer||"未入力"}/>
-                  <Badge label="日本代表" val={p.predictions.japanResult}/>
-                  <Badge label="応援国" val={p.predictions.favoriteCountry}/>
-                </div>
-                {p.predictions.comment&&(
-                  <div style={{marginTop:10,background:G.dark,borderRadius:12,padding:"10px 14px",border:"1px solid #D9E8FF",position:"relative"}}>
-                    <div style={{position:"absolute",top:-8,left:16,background:"rgba(0,104,183,0.1)",borderRadius:20,padding:"1px 8px"}}>
-                      <span style={{color:G.gold,fontSize:9,fontWeight:700}}>💬 コメント</span>
-                    </div>
-                    <div style={{color:G.muted,fontSize:12,lineHeight:1.6,fontStyle:"italic",marginTop:2}}>"{p.predictions.comment}"</div>
+            <div style={{background:"rgba(0,91,172,0.1)",borderRadius:6,height:7,overflow:"hidden"}}>
+              <div style={{background:i===0?"linear-gradient(90deg,#0068B7,#004C99)":i<3?"#9CA3AF":"#C9DDF5",height:"100%",borderRadius:6,width:(n*100/(participants.length||1))+"%"}}/>
+            </div>
+          </div>)}
+        </div>}
+        {participants.length===0
+          ?<div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>まだ参加者がいません</div>
+          :participants.map(p=>{
+            const filled=chipCats.filter(c=>(p.predictions?.[c.key]||"").trim());
+            return(
+              <div key={p.id} style={{...crd,overflow:"visible"}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                  <div style={{fontSize:34,lineHeight:1,filter:"drop-shadow(0 2px 6px rgba(0,0,0,0.4))"}}>{p.icon||"⚽"}</div>
+                  <div style={{flex:1}}>
+                    <div style={{color:G.navy,fontWeight:800,fontSize:15}}>{p.nickname}</div>
+                    {t.results&&<div style={{color:G.gold,fontSize:13,fontWeight:800}}>{p.points||0}<span style={{fontSize:10,fontWeight:600,marginLeft:2}}>pt</span></div>}
                   </div>
-                )}
-              </>
-            ):<div style={{color:"#445",fontSize:13,textAlign:"center",padding:"8px 0"}}>予想未入力</div>}
-          </div>
-        ))}
-      <div style={{marginTop:8}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+                  {p.predictions?.winner&&(
+                    <div onClick={()=>goCountry(p.predictions.winner)} style={{textAlign:"center",background:"rgba(0,104,183,0.06)",borderRadius:12,padding:"6px 10px",border:"1px solid rgba(0,104,183,0.2)",cursor:"pointer",minWidth:52}}>
+                      <FlagImg country={p.predictions.winner} size={22}/>
+                      <div style={{color:G.gold,fontSize:8,marginTop:3,fontWeight:700,letterSpacing:0.5}}>優勝予想</div>
+                    </div>
+                  )}
+                </div>
+                {p.predictions?(
+                  <>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>
+                      <Badge label="準優勝" val={p.predictions.runnerUp}/>
+                      <Badge label="日本代表" val={p.predictions.japanResult}/>
+                      <Badge label="応援国" val={p.predictions.favoriteCountry}/>
+                    </div>
+                    {chipCats.length>0&&(
+                      <div style={{marginTop:9,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+                        {filled.length>0?(
+                          <>
+                            {filled.slice(0,3).map(c=>(
+                              <span key={c.key} style={{background:"rgba(244,180,0,0.10)",border:"1px solid rgba(244,180,0,0.28)",borderRadius:999,padding:"3px 9px",fontSize:11,fontWeight:700,color:G.gold,display:"inline-flex",alignItems:"center",gap:4}}>
+                                {c.icon} {(p.predictions[c.key]||"").trim()}
+                              </span>
+                            ))}
+                            {filled.length>3&&<span style={{color:G.muted,fontSize:11,fontWeight:600}}>+{filled.length-3}</span>}
+                          </>
+                        ):(
+                          <span style={{color:G.muted,fontSize:11}}>個人賞は未予想</span>
+                        )}
+                      </div>
+                    )}
+                    {p.predictions.comment&&(
+                      <div style={{marginTop:10,background:G.dark,borderRadius:12,padding:"10px 14px",border:"1px solid #D9E8FF",position:"relative"}}>
+                        <div style={{position:"absolute",top:-8,left:16,background:"rgba(0,104,183,0.1)",borderRadius:20,padding:"1px 8px"}}>
+                          <span style={{color:G.gold,fontSize:9,fontWeight:700}}>💬 コメント</span>
+                        </div>
+                        <div style={{color:G.muted,fontSize:12,lineHeight:1.6,fontStyle:"italic",marginTop:2}}>"{p.predictions.comment}"</div>
+                      </div>
+                    )}
+                  </>
+                ):<div style={{color:"#445",fontSize:13,textAlign:"center",padding:"8px 0"}}>予想未入力</div>}
+              </div>
+            );
+          })}
+        <div style={{marginTop:8}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+      </>}
+
+      {/* ── 個人賞比較ビュー ── */}
+      {view==="compare"&&<>
+        {activeCats.length===0?(
+          <div style={{color:G.muted,textAlign:"center",padding:"40px 0",fontSize:13}}>この大会では個人賞予想が設定されていません</div>
+        ):(
+          <>
+            {/* カテゴリタブ */}
+            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:16}}>
+              {activeCats.map(c=>(
+                <button key={c.key} onClick={()=>setSelCat(c.key)}
+                  style={{background:curCatKey===c.key?"rgba(244,180,0,0.15)":"rgba(255,255,255,0.04)",border:curCatKey===c.key?"1px solid rgba(244,180,0,0.45)":"1px solid rgba(255,255,255,0.1)",borderRadius:999,padding:"6px 14px",fontSize:12,fontWeight:700,color:curCatKey===c.key?G.gold:G.muted,cursor:"pointer"}}>
+                  {c.icon} {c.label}
+                </button>
+              ))}
+            </div>
+            {/* 本命カード */}
+            {topPick?(
+              <div style={{...crd,border:`1px solid rgba(244,180,0,0.42)`,marginBottom:14}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                  <span style={{fontSize:22}}>👑</span>
+                  <span style={{color:G.gold,fontWeight:900,fontSize:13}}>みんなの本命 · {curCat?.icon} {curCat?.label}</span>
+                </div>
+                <div style={{color:G.navy,fontWeight:900,fontSize:22,marginBottom:4}}>{topPick.name}</div>
+                <div style={{color:G.muted,fontSize:12}}>{topPick.count}人が予想 · {participants.length>0?Math.round(topPick.count/participants.length*100):0}%</div>
+              </div>
+            ):(
+              <div style={{...crd,marginBottom:14,textAlign:"center",color:G.muted,fontSize:13,padding:"18px 14px"}}>
+                まだ誰も予想していません
+              </div>
+            )}
+            {/* 参加者リスト */}
+            {participants.length===0?(
+              <div style={{color:G.muted,textAlign:"center",padding:"20px 0",fontSize:13}}>参加者がいません</div>
+            ):(
+              <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                {participants.map(p=>{
+                  const val=(p.predictions?.[curCatKey]||"").trim();
+                  const isTop=!!(topPick&&val&&val===topPick.name);
+                  return(
+                    <div key={p.id} style={{background:G.dark,borderRadius:14,padding:"12px 14px",border:`1px solid ${isTop?"rgba(244,180,0,0.28)":"rgba(255,255,255,0.07)"}`,display:"flex",alignItems:"center",gap:10}}>
+                      <span style={{fontSize:20,lineHeight:1,flexShrink:0}}>{p.icon||"⚽"}</span>
+                      <span style={{flex:1,color:G.navy,fontWeight:700,fontSize:13,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.nickname}</span>
+                      {val?(
+                        <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+                          <span style={{color:isTop?G.gold:G.navy,fontWeight:isTop?800:500,fontSize:13}}>{val}</span>
+                          {isTop&&<span style={{background:"rgba(244,180,0,0.15)",border:"1px solid rgba(244,180,0,0.4)",borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:700,color:G.gold,whiteSpace:"nowrap"}}>本命</span>}
+                        </div>
+                      ):(
+                        <span style={{color:G.muted,fontSize:12,flexShrink:0}}>未予想</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+        <div style={{marginTop:14}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+      </>}
     </div>
   );
 }
