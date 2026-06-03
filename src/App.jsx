@@ -977,6 +977,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
   const [replyTo,setReplyTo]=useState(null);
   const [openMenuFor,setOpenMenuFor]=useState(null);
   const bottomRef=useRef(null);
+  const msgListRef=useRef(null);
   const reactionDebounce=useRef({});
 
   useEffect(()=>{
@@ -1000,7 +1001,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
   },[tournamentId]);
 
   useEffect(()=>{
-    if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"});
+    if(msgListRef.current) msgListRef.current.scrollTop=msgListRef.current.scrollHeight;
   },[messages]);
 
   const handleSend=async()=>{
@@ -1255,7 +1256,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
         </div>
       </div>
       {/* メッセージ一覧 */}
-      <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-0" style={{minHeight:0}}>
+      <div ref={msgListRef} className="flex-1 overflow-y-auto py-2 flex flex-col gap-0" style={{minHeight:0}}>
         {loading&&<div className="text-text-on-navy-dim text-center py-8 text-xs">読み込み中...</div>}
         {!loading&&messages.length===0&&(
           <div className="flex flex-col items-center justify-center py-10 text-center px-4">
@@ -1915,25 +1916,25 @@ function App(){
       {page==="predict"&&<PgPredict {...sp}/>}
       {page==="predictions"&&<PgPredictions {...sp}/>}
       {page==="ranking"&&<PgRanking {...sp}/>}
-      {page==="stats"&&<PgStats tourn={tourn} nav={nav}/>}
+      {page==="stats"&&<PgStats tourn={tourn} nav={nav} navDashboard={navDashboard}/>}
       {page==="admin"&&<PgAdmin {...sp}/>}
       {page==="schedule"&&<PgSchedule nav={nav} goCountry={goCountry}/>}
       {page==="groups"&&<PgGroups nav={nav} goCountry={goCountry}/>}
       {page==="country"&&<PgCountry nav={nav} country={selCountry} goCountry={goCountry}/>}
       {page==="globalchat"&&<PgGlobalChat nav={nav}/>}
-      {page==="bracket"&&<PgBracket nav={nav} tourn={tourn}/>}
+      {page==="bracket"&&<PgBracket nav={nav} tourn={tourn} navDashboard={navDashboard}/>}
       {page==="world"&&<PgWorldMode nav={nav} tourn={tourn} goCountry={goCountry}/>}
       {page==="japan"&&<PgJapanMode nav={nav} tourn={tourn}/>}
-      {page==="survival"&&<PgSurvival nav={nav} tourn={tourn} update={update}/>}
-      {page==="singlepred"&&<PgSinglePred nav={nav} tourn={tourn} update={update} myId={myId}/>}
+      {page==="survival"&&<PgSurvival nav={nav} tourn={tourn} update={update} navDashboard={navDashboard}/>}
+      {page==="singlepred"&&<PgSinglePred nav={nav} tourn={tourn} update={update} myId={myId} navDashboard={navDashboard}/>}
       {page==="best11"&&<PgBest11 nav={nav}/>}
       {page==="best16"&&<PgBest16 nav={nav}/>}
       {page==="globalstats"&&<PgGlobalStats nav={nav}/>}
       {page==="solopredict"&&<PgSoloPredict nav={nav}/>}
       {page==="moremenu"&&<PgMoreMenu nav={nav}/>}
       {page==="matches"&&<PgMatches {...sp}/>}
-      {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId}/>}
-      {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update}/>}
+      {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId} navDashboard={navDashboard}/>}
+      {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update} navDashboard={navDashboard}/>}
       {page==="mypage"&&<PgMyPage nav={nav} tourn={tourn} myId={myId} update={update}/>}
       {/* タブバーが出ていない画面のみ右下フローティングプロフィールボタンを表示 */}
       {tourn&&myId&&page!=="home"&&!showTabBar&&(
@@ -3605,7 +3606,7 @@ function ShareBox({pred,tournId,nav}){
 }
 
 /* ── Predict ── */
-function PgPredict({tourn:t,nav,update,myId}){
+function PgPredict({tourn:t,nav,update,myId,navDashboard}){
   const [pred,setPred]=useState({winner:"",runnerUp:"",topScorer:"",assistKing:"",tournamentMvp:"",japanMvp:"",japanResult:"",favoriteCountry:"",comment:""});
   const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const [saved,setSaved]=useState(false);const [awardsOpen,setAwardsOpen]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
   if(!t)return(
@@ -3623,7 +3624,7 @@ function PgPredict({tourn:t,nav,update,myId}){
   );
   if(isDeadlinePassed(t.deadline))return(
     <div className="screen">
-      <DsBackRow onClick={()=>nav("tournament")}/>
+      <DsBackRow onClick={()=>navDashboard()}/>
       <div className="wrap section">
         <div className="card lg" style={{textAlign:"center",padding:"32px 20px"}}>
           <div style={{fontSize:40,marginBottom:12}}>⛔</div>
@@ -3644,7 +3645,7 @@ await update(updated);setSaved(true);setLoading(false);
   const awFilled=awActiveCats.filter(c=>(pred[c.key]||"").trim());
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>nav("tournament")} eyebrow="MY PREDICTION" title="予想を入力する"/>
+      <DsPageHead onBack={()=>navDashboard()} eyebrow="MY PREDICTION" title="予想を入力する"/>
       <div className="wrap section tight">
         {t.deadline&&(
           <div className="banner gold" style={{marginBottom:14}}>
@@ -3725,7 +3726,7 @@ await update(updated);setSaved(true);setLoading(false);
 }
 
 /* ── Predictions ── */
-function PgPredictions({tourn:t,setTourn,nav,goCountry}){
+function PgPredictions({tourn:t,setTourn,nav,goCountry,navDashboard}){
   const [view,setView]=useState("list");
   const [selCat,setSelCat]=useState(null);
   useEffect(()=>{if(!t?.id)return;const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
@@ -3750,7 +3751,7 @@ function PgPredictions({tourn:t,setTourn,nav,goCountry}){
   const winRank=Object.entries(winCount).sort((a,b)=>b[1]-a[1]);
   const tabBtn=(active)=>({background:active?"rgba(244,180,0,0.13)":"rgba(255,255,255,0.04)",border:active?"1px solid rgba(244,180,0,0.42)":"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:"5px 12px",fontSize:11,fontWeight:700,color:active?G.gold:G.muted,cursor:"pointer"});
   return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
+    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>navDashboard()}/>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,gap:8}}>
         <div style={{flex:1}}>
           <div style={{color:G.gold,fontSize:21,fontWeight:900}}>みんなの予想</div>
@@ -3833,7 +3834,7 @@ function PgPredictions({tourn:t,setTourn,nav,goCountry}){
               </div>
             );
           })}
-        <div style={{marginTop:8}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+        <div style={{marginTop:8}}><button style={btnO} onClick={()=>navDashboard()}>← 大会ページへ戻る</button></div>
       </>}
 
       {/* ── 個人賞比較ビュー ── */}
@@ -3893,14 +3894,14 @@ function PgPredictions({tourn:t,setTourn,nav,goCountry}){
             )}
           </>
         )}
-        <div style={{marginTop:14}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+        <div style={{marginTop:14}}><button style={btnO} onClick={()=>navDashboard()}>← 大会ページへ戻る</button></div>
       </>}
     </div>
   );
 }
 
 /* ── Ranking ── */
-function PgRanking({tourn:t,setTourn,nav,myId}){
+function PgRanking({tourn:t,setTourn,nav,myId,navDashboard}){
   const [rankTab,setRankTab]=useState("match");
   const [sharingStats,setSharingStats]=useState(false);
   const [globalData,setGlobalData]=useState(null);
@@ -3997,7 +3998,7 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
 
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>nav("tournament")} eyebrow={t.name} title="ランキング" icon="chart"/>
+      <DsPageHead onBack={()=>navDashboard()} eyebrow={t.name} title="ランキング" icon="chart"/>
       <div className="wrap section tight">
         <DsTabs value={rankTab} onChange={setRankTab} items={[
           {key:"match",     label:"試合予想"},
@@ -4174,7 +4175,7 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
             <DsIcon name="camera" size={20}/>{sharingStats?"画像生成中...":"成績を画像でシェア"}
           </button>
         )}
-        <button onClick={()=>nav("tournament")} className="btn btn-dark md">
+        <button onClick={()=>navDashboard()} className="btn btn-dark md">
           <DsIcon name="back" size={17} stroke={2.2}/> 大会ページへ戻る
         </button>
       </div>
@@ -4183,7 +4184,7 @@ function PgRanking({tourn:t,setTourn,nav,myId}){
 }
 
 /* ── 詳細統計 ── */
-function PgStats({tourn:t,nav}){
+function PgStats({tourn:t,nav,navDashboard}){
   if(!t)return null;
   const preds=t.participants.map(p=>p.predictions).filter(Boolean);
   const count=(key)=>{
@@ -4198,7 +4199,7 @@ function PgStats({tourn:t,nav}){
   return(
     <div style={{paddingBottom:40}}>
       <div style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 100%)",padding:"36px 20px 22px",textAlign:"center",position:"relative",overflow:"hidden",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
-        <Back onClick={()=>nav("tournament")}/>
+        <Back onClick={()=>navDashboard()}/>
         <div style={{color:G.gold,fontSize:22,fontWeight:900}}>📊 詳細統計</div>
         <div style={{color:G.muted,fontSize:12,marginTop:4}}>{t.name} · {preds.length}人が予想済み</div>
       </div>
@@ -4226,7 +4227,7 @@ function PgStats({tourn:t,nav}){
             </div>
           </>
         }
-        <button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button>
+        <button style={btnO} onClick={()=>navDashboard()}>← 大会ページへ戻る</button>
       </div>
     </div>
   );
@@ -5399,7 +5400,7 @@ function PgBest16({nav}){
 }
 
 /* ── トーナメント表 ── */
-function PgBracket({nav,tourn}){
+function PgBracket({nav,tourn,navDashboard}){
   const [tab,setTab]=useState("bracket");
   const participants=tourn?.participants||[];
   const myId=null; // tournament pageからmyIdが渡されないのでlocalで処理
@@ -5651,7 +5652,7 @@ function PgBracket({nav,tourn}){
             <PersonView filterFn={p=>!!p.predictions?.winner} empty="まだ優勝予想が入力されていません"/>
           </>
         )}
-        <button className="btn btn-dark md" onClick={()=>nav("tournament")} style={{marginTop:12}}>
+        <button className="btn btn-dark md" onClick={()=>navDashboard()} style={{marginTop:12}}>
           <DsIcon name="back" size={17} stroke={2.2}/> 大会ページへ戻る
         </button>
       </div>
@@ -6089,7 +6090,7 @@ function PgJapanMode({nav,tourn}){
 
 
 /* ── 予想生存チェック ── */
-function PgSurvival({nav,tourn,update}){
+function PgSurvival({nav,tourn,update,navDashboard}){
   if(!tourn)return<div style={{padding:"20px 18px"}}><Back onClick={()=>nav("home")}/><div style={{color:G.muted,textAlign:"center",padding:"40px 0"}}>大会が選択されていません</div></div>;
   const eliminated=(tourn.results?.eliminatedCountries)||[];
   const hasRes=!!tourn.results?.winner;
@@ -6126,7 +6127,7 @@ function PgSurvival({nav,tourn,update}){
   return(
     <div style={{paddingBottom:40}}>
       <div style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 100%)",padding:"36px 20px 22px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
-        <Back onClick={()=>nav("tournament")}/>
+        <Back onClick={()=>navDashboard()}/>
         <div style={{fontSize:40,marginBottom:6}}>🔥</div>
         <div style={{color:"#E05A00",fontSize:22,fontWeight:900}}>予想生存チェック</div>
         <div style={{color:G.muted,fontSize:12,marginTop:4}}>{tourn.name}</div>
@@ -6189,14 +6190,14 @@ function PgSurvival({nav,tourn,update}){
         }
         {/* 注意書き */}
         {eliminated.length===0&&!hasRes&&<div style={{background:G.dark,borderRadius:10,padding:"10px 14px",marginTop:8}}><div style={{color:G.muted,fontSize:11,lineHeight:1.8}}>※ 管理者が「敗退国管理」で国をマークすると生存状況が更新されます。<br/>※ 管理者ページ → 敗退国管理 から設定できます。</div></div>}
-        <div style={{marginTop:12}}><button style={btnO} onClick={()=>nav("tournament")}>← 大会ページへ戻る</button></div>
+        <div style={{marginTop:12}}><button style={btnO} onClick={()=>navDashboard()}>← 大会ページへ戻る</button></div>
       </div>
     </div>
   );
 }
 
 /* ── 日本戦単発予想 ── */
-function PgSinglePred({nav,tourn,update,myId}){
+function PgSinglePred({nav,tourn,update,myId,navDashboard}){
   const [pred,setPred]=useState({result:"",score:"",firstGoal:"",japanMvp:""});
   const [loading,setLoading]=useState(false);
   const [saved,setSaved]=useState(false);
@@ -6213,12 +6214,12 @@ function PgSinglePred({nav,tourn,update,myId}){
     await update(updated);
     trackEvent("submit_single_match_prediction",{tournamentId:tourn.id,participantId:myId});
     setSaved(true);setLoading(false);
-    setTimeout(()=>nav("tournament"),1500);
+    setTimeout(()=>navDashboard(),1500);
   };
 
   return(
     <div style={{padding:"20px 18px 40px"}}>
-      <Back onClick={()=>nav("tournament")}/>
+      <Back onClick={()=>navDashboard()}/>
       <div style={{color:"#7DD3FC",fontSize:21,fontWeight:900,marginBottom:4}}>🇯🇵 日本戦単発予想</div>
       {JAPAN_NEXT_OPPONENT
         ?<div style={{color:G.muted,fontSize:13,marginBottom:16}}>日本 vs {JAPAN_NEXT_OPPONENT}の予想</div>
@@ -6512,7 +6513,7 @@ function ScoringRulesCard({defaultOpen=false,compact=false}){
 }
 
 /* ── 試合予想ページ (Phase A) ── */
-function PgMatches({tourn:t,setTourn,nav,update,myId}){
+function PgMatches({tourn:t,setTourn,nav,update,myId,navDashboard}){
   const [tab,setTab]=useState("upcoming");
   const [savingId,setSavingId]=useState(null);
   const [expandedId,setExpandedId]=useState(null);
@@ -6785,7 +6786,7 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
   const accuracyPct=finishedPreds.length>0?Math.round(correctCount/finishedPreds.length*100):0;
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>nav("tournament")} eyebrow={t.name} title="試合を予想"
+      <DsPageHead onBack={()=>navDashboard()} eyebrow={t.name} title="試合を予想"
         right={<span className="chip red">+{SCORING.outcome}pt</span>}/>
       <div className="wrap section tight">
         <DsBanner tone="gold" icon="target">
@@ -6981,7 +6982,7 @@ function PgMatches({tourn:t,setTourn,nav,update,myId}){
 }
 
 /* ── コインショップ ── */
-function PgCoinShop({nav,tourn,myId,update}){
+function PgCoinShop({nav,tourn,myId,update,navDashboard}){
   const me=tourn?.participants?.find(p=>p.id===myId);
   const coins=getCoins(me);
   const [claimMsg,setClaimMsg]=useState("");
@@ -7012,7 +7013,7 @@ function PgCoinShop({nav,tourn,myId,update}){
       {/* ヘッダー */}
       <div className="bg-navy-hero px-5 pt-4 pb-4 flex items-center gap-3 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-36 h-36 rounded-full pointer-events-none" style={{background:"radial-gradient(circle,rgba(244,180,0,0.2),transparent 70%)",transform:"translate(30%,-30%)"}}/>
-        <button onClick={()=>nav("tournament")} className="text-white text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none z-10 active:scale-90 transition-transform">←</button>
+        <button onClick={()=>navDashboard()} className="text-white text-2xl font-bold bg-transparent border-0 cursor-pointer leading-none z-10 active:scale-90 transition-transform">←</button>
         <div className="flex-1 text-center z-10">
           <div className="text-white font-black text-lg">🪙 コインショップ</div>
         </div>
@@ -7110,7 +7111,7 @@ function PgCoinShop({nav,tourn,myId,update}){
 }
 
 /* ── マイ・バッジ ── */
-function PgBadges({nav,tourn,myId}){
+function PgBadges({nav,tourn,myId,navDashboard}){
   const me=tourn?.participants?.find(p=>p.id===myId);
   const myBadges=me?.badges||[];
   const earnedIds=new Set(myBadges.map(b=>b.id));
@@ -7135,7 +7136,7 @@ function PgBadges({nav,tourn,myId}){
 
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>nav("tournament")} title="マイ・バッジ" icon="medal"/>
+      <DsPageHead onBack={()=>navDashboard()} title="マイ・バッジ" icon="medal"/>
       <div className="wrap section tight">
         <div className="card lg">
           <div className="bprog">
