@@ -3603,8 +3603,8 @@ function ShareBox({pred,tournId,nav}){
 
 /* ── Predict ── */
 function PgPredict({tourn:t,nav,update,myId}){
-  const [pred,setPred]=useState({winner:"",runnerUp:"",topScorer:"",japanResult:"",favoriteCountry:"",comment:""});
-  const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const [saved,setSaved]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
+  const [pred,setPred]=useState({winner:"",runnerUp:"",topScorer:"",assistKing:"",tournamentMvp:"",japanMvp:"",japanResult:"",favoriteCountry:"",comment:""});
+  const [err,setErr]=useState("");const [loading,setLoading]=useState(false);const [saved,setSaved]=useState(false);const [awardsOpen,setAwardsOpen]=useState(false);const set=k=>v=>setPred(p=>({...p,[k]:v}));
   if(!t)return(
     <div className="screen">
       <DsBackRow onClick={()=>nav("home")}/>
@@ -3636,6 +3636,9 @@ setLoading(true);const fresh=await loadT(t.id);const cur=fresh||t;
 const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,predictions:pred,points:cur.results?calcPts(pred,cur.results):0}:p)};
 await update(updated);setSaved(true);setLoading(false);
   };
+  const awSettings=getSettings(t);
+  const awActiveCats=AWARD_CATS.filter(c=>awSettings[c.key]);
+  const awFilled=awActiveCats.filter(c=>(pred[c.key]||"").trim());
   return(
     <div className="screen">
       <DsPageHead onBack={()=>nav("tournament")} eyebrow="MY PREDICTION" title="予想を入力する"/>
@@ -3648,11 +3651,60 @@ await update(updated);setSaved(true);setLoading(false);
         <div className="card lg">
           <div style={{marginBottom:18}}><label className="field-lbl">🥇 優勝国</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
           <div style={{marginBottom:18}}><label className="field-lbl">🥈 準優勝国</label><FlagChips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
-          <div style={{marginBottom:18}}><label className="field-lbl">⚽ 得点王予想</label><ScorerChips opts={TOP_SCORER_CANDIDATES} value={pred.topScorer} onChange={set("topScorer")}/></div>
           <div style={{marginBottom:18}}><label className="field-lbl">🇯🇵 日本代表の成績</label><Chips opts={JAPAN_RES} value={pred.japanResult} onChange={set("japanResult")}/></div>
           <div style={{marginBottom:18}}><label className="field-lbl">❤️ 応援国</label><FlagChips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
           <div><label className="field-lbl">💬 一言コメント</label><textarea className="tinput" style={{height:72,resize:"none",paddingTop:14,paddingBottom:14}} placeholder="予想の根拠や意気込みを！" value={pred.comment} onChange={e=>set("comment")(e.target.value)}/></div>
         </div>
+        {/* 個人賞折りたたみカード（有効カテゴリが1つ以上のとき表示）*/}
+        {awActiveCats.length>0&&(
+          <div className="card" style={{marginTop:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:awardsOpen||awFilled.length>0?12:0}}>
+              <span style={{fontSize:16}}>🏆</span>
+              <span style={{color:"var(--txt)",fontWeight:800,fontSize:14,flex:1}}>個人賞・スタッツ予想</span>
+              <span style={{color:"var(--gold)",fontSize:11,fontWeight:700,background:"rgba(245,180,49,0.1)",border:"1px solid rgba(245,180,49,0.25)",borderRadius:20,padding:"2px 8px"}}>任意</span>
+            </div>
+            {/* collapsed */}
+            {!awardsOpen&&awFilled.length===0&&(
+              <div>
+                <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>得点王・MVP などを当てると追加ポイント！</div>
+                <button onClick={()=>setAwardsOpen(true)} className="btn btn-dark sm" style={{width:"100%"}}>＋ 個人賞も予想する</button>
+                <div style={{color:"var(--muted)",fontSize:11,marginTop:8,textAlign:"center"}}>✓ 未入力でも送信できます</div>
+              </div>
+            )}
+            {/* summary */}
+            {!awardsOpen&&awFilled.length>0&&(
+              <div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+                  {awFilled.map(c=>(
+                    <span key={c.key} style={{background:"rgba(245,180,49,0.11)",border:"1px solid rgba(245,180,49,0.3)",borderRadius:999,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)",display:"inline-flex",alignItems:"center",gap:4}}>
+                      {c.icon} {(pred[c.key]||"").trim()}
+                    </span>
+                  ))}
+                </div>
+                <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>● {awFilled.length} / {awActiveCats.length} 予想済み</div>
+                <button onClick={()=>setAwardsOpen(true)} className="btn btn-dark sm" style={{width:"100%"}}>✎ 個人賞を編集</button>
+              </div>
+            )}
+            {/* expanded */}
+            {awardsOpen&&(
+              <div>
+                {awActiveCats.map(c=>(
+                  <div key={c.key} style={{marginBottom:16}}>
+                    <label className="field-lbl">{c.icon} {c.label}</label>
+                    {c.key==="topScorer"
+                      ?<ScorerChips opts={TOP_SCORER_CANDIDATES} value={pred.topScorer} onChange={set("topScorer")}/>
+                      :<input className="tinput" placeholder="選手名を入力（例：エムバペ）" value={pred[c.key]||""} onChange={e=>set(c.key)(e.target.value)} maxLength={30}/>
+                    }
+                  </div>
+                ))}
+                <div style={{background:"rgba(62,123,255,0.05)",border:"1px dashed rgba(62,123,255,0.2)",borderRadius:12,padding:"10px 14px",marginBottom:12}}>
+                  <span style={{color:"var(--muted)",fontSize:12}}>📋 候補から選ぶ（近日公開）</span>
+                </div>
+                <button onClick={()=>setAwardsOpen(false)} className="btn btn-dark sm" style={{width:"100%"}}>入力を閉じる ▲</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="wrap section">
         {saved
