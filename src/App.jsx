@@ -1984,7 +1984,7 @@ function App(){
       {page==="join"&&<PgJoin {...sp}/>}
       {page==="predict"&&<PgPredict {...sp}/>}
       {page==="predictions"&&<PgPredictions {...sp}/>}
-      {page==="ranking"&&<PgRanking {...sp}/>}
+      {page==="ranking"&&(scope==="global"?<PgGlobalRanking nav={nav} navDashboard={navDashboard} myId={myId}/>:<PgRanking {...sp}/>)}
       {page==="stats"&&<PgStats tourn={tourn} nav={nav} navDashboard={navDashboard}/>}
       {page==="admin"&&<PgAdmin {...sp}/>}
       {page==="schedule"&&<PgSchedule nav={nav} goCountry={goCountry}/>}
@@ -3953,28 +3953,7 @@ function PgPredictions({tourn:t,setTourn,nav,goCountry,navDashboard}){
 function PgRanking({tourn:t,setTourn,nav,myId,navDashboard}){
   const [rankTab,setRankTab]=useState("match");
   const [sharingStats,setSharingStats]=useState(false);
-  const [globalData,setGlobalData]=useState(null);
-  const [globalLoading,setGlobalLoading]=useState(false);
-  const [globalErr,setGlobalErr]=useState("");
-  const [sharingGlobal,setSharingGlobal]=useState(false);
-  const lastGlobalFetch=useRef(0);
   useEffect(()=>{if(!t?.id)return;const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
-  useEffect(()=>{
-    if(rankTab==="global"&&!globalData){
-      loadGlobalRanking();
-    }
-  },[rankTab]);
-
-  const loadGlobalRanking=async(force=false)=>{
-    const now=Date.now();
-    if(!force&&now-lastGlobalFetch.current<30000)return;
-    lastGlobalFetch.current=now;
-    setGlobalLoading(true);setGlobalErr("");
-    const res=await fetchGlobalRanking(force);
-    if(!res)setGlobalErr("現在ランキングを取得できません。通信を確認して再試行してください。");
-    else setGlobalData(res);
-    setGlobalLoading(false);
-  };
   if(!t)return null;
   const hasRes=!!t.results?.winner;
   const tournRanked=[...t.participants].map(p=>({...p,pts:p.predictions&&hasRes?calcPts(p.predictions,t.results):(p.points||0)})).sort((a,b)=>b.pts-a.pts);
@@ -4053,7 +4032,6 @@ function PgRanking({tourn:t,setTourn,nav,myId,navDashboard}){
           {key:"match",     label:"試合予想"},
           {key:"tournament",label:"大会予想"},
           {key:"coin",      label:"コイン"},
-          {key:"global",    label:"全国"},
         ]}/>
       </div>
 
@@ -4124,99 +4102,6 @@ function PgRanking({tourn:t,setTourn,nav,myId,navDashboard}){
         );
       })()}
 
-      {/* ===== 全国ランキング ===== */}
-      {rankTab==="global"&&(()=>{
-        const me=t?.participants?.find(p=>p.id===myId);
-        const myPts=me?.totalMatchPoints||0;
-        const list=globalData?.list||[];
-        const total=globalData?.total||0;
-        const myEntry=list.find(r=>r.id===myId);
-        const myRank=myEntry?.rank??null;
-        const inTop100=myEntry!=null&&myEntry.rank<=100;
-        const nearby=myEntry&&myEntry.rank>100?list.filter(r=>Math.abs(r.rank-myEntry.rank)<=5):[];
-        const top100=list.slice(0,100);
-        return(
-          <div>
-            <div className="wrap section tight">
-              <div className="card lg" style={{textAlign:"center"}}>
-                <div className="eyebrow" style={{justifyContent:"center",marginBottom:8}}>YOUR GLOBAL RANK</div>
-                {myPts>0?(
-                  <>
-                    {myRank
-                      ?<><div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:900,fontSize:48,color:"var(--gold)",lineHeight:1}}>#{myRank}</div><div style={{color:"var(--muted)",fontSize:13,marginTop:4}}>/ {total.toLocaleString()} 人中</div></>
-                      :<div style={{color:"var(--muted)",fontSize:14,marginTop:4}}>圏外（TOP200外）</div>
-                    }
-                    <div className="hairline"/>
-                    <div style={{color:"var(--muted)",fontSize:13}}>累計 <span style={{color:"var(--txt)",fontWeight:900,fontSize:20}}>{myPts}</span> pt</div>
-                  </>
-                ):(
-                  <>
-                    <div style={{color:"var(--muted)",fontSize:13,marginBottom:12}}>あなたはまだランクインしていません</div>
-                    <button onClick={()=>nav("matches")} className="btn btn-red sm" style={{width:"auto",padding:"8px 18px",display:"inline-flex"}}>⚽ 予想して登場！</button>
-                  </>
-                )}
-              </div>
-            </div>
-            {globalLoading&&<div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>🌐 読み込み中...</div>}
-            {globalErr&&!globalLoading&&(
-              <div className="wrap section tight">
-                <div className="banner blue" style={{flexDirection:"column",gap:8}}>
-                  <span>{globalErr}</span>
-                  <button onClick={()=>loadGlobalRanking(true)} className="btn btn-dark sm" style={{width:"auto",padding:"6px 14px"}}>再試行</button>
-                </div>
-              </div>
-            )}
-            {!globalLoading&&!globalErr&&list.length===0&&(
-              <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0",fontSize:13}}>W杯開幕後にランキング開始！</div>
-            )}
-            {!globalLoading&&list.length>0&&(
-              <div className="wrap section tight">
-                <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,marginBottom:8}}>🏆 TOP {Math.min(100,list.length)}</div>
-                {top100.map(r=>{
-                  const isMe=r.id===myId;
-                  const medal=r.rank===1?"👑":r.rank===2?"🥈":r.rank===3?"🥉":null;
-                  return(
-                    <div key={r.id+"_"+r.rank} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
-                      <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:r.rank<=3?"var(--gold)":isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{medal||r.rank}</div>
-                      <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
-                      <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}{isMe&&<span style={{marginLeft:8,fontFamily:"'Roboto Mono',monospace",fontSize:9,color:"#ff6066",fontWeight:900}}>YOU</span>}</div></div>
-                      <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
-                    </div>
-                  );
-                })}
-                {!inTop100&&nearby.length>0&&(
-                  <>
-                    <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,margin:"16px 0 8px"}}>📍 あなたの周辺</div>
-                    {nearby.map(r=>{
-                      const isMe=r.id===myId;
-                      return(
-                        <div key={r.id+"_nb"} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
-                          <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:12,color:isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{r.rank}</div>
-                          <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
-                          <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}</div></div>
-                          <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-                <div style={{display:"flex",gap:9,marginTop:16}}>
-                  <button onClick={()=>loadGlobalRanking(true)} className="btn btn-dark sm" style={{flex:1}}>
-                    <DsIcon name="refresh" size={16}/> 更新
-                  </button>
-                  {myRank&&myPts>0&&(
-                    <button onClick={async()=>{if(sharingGlobal)return;setSharingGlobal(true);const me2=t.participants.find(p=>p.id===myId);await doShareImage(<ShareCardGlobalRank rank={myRank} total={total} pts={myPts} nickname={me2?.nickname||""} icon={me2?.icon||"⚽"}/>,"wcup-global.png","全国ランキング入りしました！ #W杯予想メーカー");setSharingGlobal(false);}}
-                      disabled={sharingGlobal} className="btn btn-red sm" style={{flex:1,opacity:sharingGlobal?0.7:1}}>
-                      <DsIcon name="camera" size={16}/>{sharingGlobal?"生成中":"順位をシェア"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
       {/* シェア + 戻るボタン */}
       <div className="wrap section">
         {(rankTab==="match"||rankTab==="tournament")&&myMatchEntry&&(
@@ -4228,6 +4113,131 @@ function PgRanking({tourn:t,setTourn,nav,myId,navDashboard}){
           <DsIcon name="back" size={17} stroke={2.2}/> 大会ページへ戻る
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ── 全国ランキング（全体scope用） ── */
+function PgGlobalRanking({nav,navDashboard,myId}){
+  const [globalData,setGlobalData]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [err,setErr]=useState("");
+  const [sharingGlobal,setSharingGlobal]=useState(false);
+  const lastFetch=useRef(0);
+
+  const load=async(force=false)=>{
+    const now=Date.now();
+    if(!force&&now-lastFetch.current<30000){return;}
+    lastFetch.current=now;
+    setLoading(true);setErr("");
+    const res=await fetchGlobalRanking(force);
+    if(!res)setErr("現在ランキングを取得できません。通信を確認して再試行してください。");
+    else setGlobalData(res);
+    setLoading(false);
+  };
+  useEffect(()=>{load();},[]);
+
+  const list=globalData?.list||[];
+  const total=globalData?.total||0;
+  const myEntry=myId?list.find(r=>r.id===myId):null;
+  const myRank=myEntry?.rank??null;
+  const myPts=myEntry?.points||0;
+  const inTop100=myEntry!=null&&myEntry.rank<=100;
+  const nearby=myEntry&&myEntry.rank>100?list.filter(r=>Math.abs(r.rank-myEntry.rank)<=5):[];
+  const top100=list.slice(0,100);
+
+  return(
+    <div className="screen">
+      <DsPageHead onBack={()=>navDashboard?navDashboard():nav("home")} title="全国ランキング" icon="chart"/>
+      <div className="wrap section tight">
+        <div className="banner blue" style={{alignItems:"flex-start",gap:8}}>
+          <DsIcon name="globe" size={14} style={{flexShrink:0,marginTop:1}}/>
+          <div style={{fontSize:12}}>大会エントリ単位での集計です。同一ユーザーが複数エントリで並ぶ場合があります。</div>
+        </div>
+      </div>
+
+      {/* YOUR GLOBAL RANK カード */}
+      {myId&&(
+        <div className="wrap section tight">
+          <div className="card lg" style={{textAlign:"center"}}>
+            <div className="eyebrow" style={{justifyContent:"center",marginBottom:8}}>YOUR GLOBAL RANK</div>
+            {myPts>0?(
+              <>
+                {myRank
+                  ?<><div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:900,fontSize:48,color:"var(--gold)",lineHeight:1}}>#{myRank}</div>
+                    <div style={{color:"var(--muted)",fontSize:13,marginTop:4}}>/ {total.toLocaleString()} 人中</div></>
+                  :<div style={{color:"var(--muted)",fontSize:14,marginTop:4}}>圏外（TOP200外）</div>
+                }
+                <div className="hairline"/>
+                <div style={{color:"var(--muted)",fontSize:13}}>累計 <span style={{color:"var(--txt)",fontWeight:900,fontSize:20}}>{myPts}</span> pt</div>
+              </>
+            ):(
+              <>
+                <div style={{color:"var(--muted)",fontSize:13,marginBottom:12}}>あなたはまだランクインしていません</div>
+                <button onClick={()=>nav("matches")} className="btn btn-red sm" style={{width:"auto",padding:"8px 18px",display:"inline-flex"}}>⚽ 予想して登場！</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* リスト */}
+      {loading&&<div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>🌐 読み込み中...</div>}
+      {err&&!loading&&(
+        <div className="wrap section tight">
+          <div className="banner blue" style={{flexDirection:"column",gap:8}}>
+            <span>{err}</span>
+            <button onClick={()=>load(true)} className="btn btn-dark sm" style={{width:"auto",padding:"6px 14px"}}>再試行</button>
+          </div>
+        </div>
+      )}
+      {!loading&&!err&&list.length===0&&(
+        <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0",fontSize:13}}>W杯開幕後にランキング開始！</div>
+      )}
+      {!loading&&list.length>0&&(
+        <div className="wrap section tight">
+          <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,marginBottom:8}}>🏆 TOP {Math.min(100,list.length)}</div>
+          {top100.map(r=>{
+            const isMe=r.id===myId;
+            const medal=r.rank===1?"👑":r.rank===2?"🥈":r.rank===3?"🥉":null;
+            return(
+              <div key={r.id+"_"+r.rank} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
+                <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:r.rank<=3?"var(--gold)":isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{medal||r.rank}</div>
+                <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
+                <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}{isMe&&<span style={{marginLeft:8,fontFamily:"'Roboto Mono',monospace",fontSize:9,color:"#ff6066",fontWeight:900}}>YOU</span>}</div></div>
+                <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
+              </div>
+            );
+          })}
+          {!inTop100&&nearby.length>0&&(
+            <>
+              <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,margin:"16px 0 8px"}}>📍 あなたの周辺</div>
+              {nearby.map(r=>{
+                const isMe=r.id===myId;
+                return(
+                  <div key={r.id+"_nb"} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
+                    <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:12,color:isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{r.rank}</div>
+                    <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
+                    <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}</div></div>
+                    <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+          <div style={{display:"flex",gap:9,marginTop:16}}>
+            <button onClick={()=>load(true)} disabled={loading} className="btn btn-dark sm" style={{flex:1}}>
+              <DsIcon name="refresh" size={16}/> 更新
+            </button>
+            {myRank&&myPts>0&&myEntry&&(
+              <button onClick={async()=>{if(sharingGlobal)return;setSharingGlobal(true);await doShareImage(<ShareCardGlobalRank rank={myRank} total={total} pts={myPts} nickname={myEntry.nickname||""} icon={myEntry.icon||"⚽"}/>,"wcup-global.png","全国ランキング入りしました！ #W杯予想メーカー");setSharingGlobal(false);}}
+                disabled={sharingGlobal} className="btn btn-red sm" style={{flex:1,opacity:sharingGlobal?0.7:1}}>
+                <DsIcon name="camera" size={16}/>{sharingGlobal?"生成中":"順位をシェア"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
