@@ -1844,7 +1844,6 @@ function TabBar({page,nav,navDashboard,scope,setScope,tourn,myId}){
 
 function App(){
   const [page,setPage]=useState("home");
-  const [showLandingOverride,setShowLandingOverride]=useState(true);
   const [tourn,setTourn]=useState(null);
   const [myId,setMyId]=useState(null);
   const [adminOk,setAdminOk]=useState(false);
@@ -1871,8 +1870,8 @@ function App(){
               const mid=localStorage.getItem("wcup_myid_"+t.id);
               if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);
             }catch{}
-            // 起動時HomeA固定：#t-IDハッシュがあっても着地はHomeA（開催後の挙動は別途検討）
-            // アプリ内goT（大会選択・参加後）は従来どおりtournamentへ遷移する
+            // 招待リンク(#t-ID)でアクセスした場合は大会内スコープ・HomeB 直行
+            setScope("tournament");
           }
         }
       }catch(e){
@@ -1888,11 +1887,6 @@ function App(){
     if(!myId||!tourn)return;
     const me=tourn.participants?.find(p=>p.id===myId);
     scheduleNotifications(me?.matchPredictions||{});
-  },[tourn?.id,myId]);
-
-  // tourn && myId が揃ったら scope を "tournament" に自動切替
-  useEffect(()=>{
-    if(tourn&&myId) setScope("tournament");
   },[tourn?.id,myId]);
 
   // spec-07: アプリ起動時1回 + 3分ごとのライブスコア自動取得
@@ -1960,9 +1954,9 @@ function App(){
     if(pageEvents[p]) trackEvent(pageEvents[p],{page:p});
   },[]);
   const update=useCallback(async(t)=>{setTourn(t);await saveT(t);},[]);
-  const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}setPage("tournament");},[]);
+  const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}setScope("tournament");setPage("tournament");},[]);
   const goCountry=useCallback((c)=>{setSelCountry(c);window.scrollTo(0,0);setPage("country");},[]);
-  const navDashboard=useCallback(()=>{setShowLandingOverride(false);nav("home");},[nav]);
+  const navDashboard=useCallback(()=>{setScope("tournament");nav("home");},[nav]);
   const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard};
 
   const handleOnboardingComplete=(action)=>{
@@ -1977,7 +1971,7 @@ function App(){
     <ErrorBoundary>
     {!onboardingDone&&<Onboarding onComplete={handleOnboardingComplete}/>}
     <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(88px + env(safe-area-inset-bottom,0px))":undefined}}>
-      {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} showLandingOverride={showLandingOverride} setShowLandingOverride={setShowLandingOverride}/>}
+      {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} scope={scope} setScope={setScope}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
       {page==="tournament"&&<PgTournament {...sp}/>}
@@ -2325,7 +2319,7 @@ function SbLeaguesSection({myTournaments,onSelect,onCreate,onJoin}){
 }
 
 /* ── Home (侍ブルー D2) ── */
-function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride}){
+function PgHome({nav,goT,tourn,myId,scope,setScope}){
   const [extraOpen,setExtraOpen]=useState(true);
   const [notifEnabled,setNotifEnabled]=useState(isNotificationEnabled());
   const [chatUnread,setChatUnread]=useState(0);
@@ -2393,7 +2387,7 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
   const myBadgesCount=me?.badges?.length||0;
 
   // ── HomeB (handoff home.jsx / HomeB デザイン適用) ──
-  if(isLoggedIn&&!showLandingOverride){
+  if(isLoggedIn&&scope==="tournament"){
     // 日本戦カウントダウンバナー（ロジック温存・スタイルのみ更新）
     const JapanBanner=()=>{
       const [jpNow,setJpNow]=useState(Date.now());
@@ -2570,7 +2564,7 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
                 ご意見・要望
               </button>
             </div>
-            <button onClick={()=>{setShowLandingOverride(true);setShowHamMenu(false);}}
+            <button onClick={()=>{setScope("global");setShowHamMenu(false);}}
               style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderTop:"1px solid var(--line)",cursor:"pointer",color:"var(--faint)",fontSize:13,textAlign:"left",width:"100%"}}>
               <DsIcon name="arrowRight" size={18} style={{color:"var(--faint)",transform:"scaleX(-1)"}}/>
               ホーム画面
@@ -2596,9 +2590,9 @@ function PgHome({nav,goT,tourn,myId,showLandingOverride,setShowLandingOverride})
       </div>
 
       {/* 参加中の大会への入口（目立つボタンカード） */}
-      {showLandingOverride&&isLoggedIn&&(
+      {scope!=="tournament"&&isLoggedIn&&(
         <div style={{padding:"8px 14px 4px"}}>
-          <button onClick={()=>setShowLandingOverride(false)}
+          <button onClick={()=>setScope("tournament")}
             style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
               background:"rgba(245,180,49,0.13)",border:"1.5px solid rgba(245,180,49,0.45)",
               borderRadius:12,padding:"10px 14px",cursor:"pointer",
