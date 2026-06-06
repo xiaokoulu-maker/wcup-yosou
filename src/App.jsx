@@ -3580,10 +3580,11 @@ setLoading(true);
         </div>
       </div>
       <Err msg={err}/>
-      {reqPlan.key==="free"&&<button style={btnG} onClick={()=>submit()} disabled={loading}>{loading?"作成中...":"🏆 無料で予想大会を作る"}</button>}
-      {reqPlan.key!=="free"&&<a href={reqPlan.url} target="_blank" rel="noopener noreferrer" style={{...btnG,display:"block",textDecoration:"none",textAlign:"center",marginBottom:6}}>この人数でかんたん決済へ進む</a>}
-      {reqPlan.key!=="free"&&<div style={{color:G.muted,fontSize:10,textAlign:"center",marginBottom:8}}>※現在はテスト決済です。本番公開時に正式リンクへ切り替えます</div>}
-      {reqPlan.key!=="free"&&<button style={{...btnGr,fontSize:12,padding:"10px"}} onClick={()=>submit(FREE_LIMIT)} disabled={loading}>{loading?"作成中...":"まず5人で作成する（後でアップグレード可）"}</button>}
+      {/* dev ユーザーは人数に関わらず直接作成（決済ステップを完全スキップ） */}
+      {(reqPlan.key==="free"||isDev)&&<button style={btnG} onClick={()=>submit()} disabled={loading}>{loading?"作成中...":"🏆 大会を作る"}</button>}
+      {reqPlan.key!=="free"&&!isDev&&<a href={reqPlan.url} target="_blank" rel="noopener noreferrer" style={{...btnG,display:"block",textDecoration:"none",textAlign:"center",marginBottom:6}}>この人数でかんたん決済へ進む</a>}
+      {reqPlan.key!=="free"&&!isDev&&<div style={{color:G.muted,fontSize:10,textAlign:"center",marginBottom:8}}>※現在はテスト決済です。本番公開時に正式リンクへ切り替えます</div>}
+      {reqPlan.key!=="free"&&!isDev&&<button style={{...btnGr,fontSize:12,padding:"10px"}} onClick={()=>submit(FREE_LIMIT)} disabled={loading}>{loading?"作成中...":"まず5人で作成する（後でアップグレード可）"}</button>}
     </div>
   );
 }
@@ -3936,7 +3937,7 @@ function PgTournament({tourn:t,setTourn,nav,goCountry}){
 ${url}`);
   const copy=async()=>{try{await navigator.clipboard.writeText(url);}catch{}setCopied(true);setTimeout(()=>setCopied(false),2000);};
   const full=t.participants.length>=t.maxParticipants;
-  const isPaid=t.plan&&t.plan!=="free";
+  const isPaid=t.plan&&t.plan!=="free"&&t.plan!=="dev";
   const deadlinePassed=isDeadlinePassed(t.deadline);
   return(
     <div className="screen">
@@ -4006,7 +4007,7 @@ ${url}`);
         <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("admin")}>🔐 管理者用：結果入力・参加者管理</button>
         {(()=>{
           const remaining=t.maxParticipants-t.participants.length;
-          const isPaidPlan=t.plan&&t.plan!=="free";
+          const isPaidPlan=t.plan&&t.plan!=="free"&&t.plan!=="dev";
           if(full)return(
             <div className="card" style={{padding:"12px 14px"}}>
               <div style={{color:"var(--muted)",fontSize:12,marginBottom:8}}>👥 参加上限に達しました。人数を増やすにはアップグレードが必要です。</div>
@@ -5380,7 +5381,7 @@ function PgUpgrade({nav,tourn:t,update}){
 
         {/* プランカード */}
         {PLANS.map((plan,idx)=>{
-          const isCurrentPlan=t?.plan===plan.key||(plan.key==="free"&&(!t?.plan||t.plan==="free"));
+          const isCurrentPlan=t?.plan===plan.key||(plan.key==="free"&&(!t?.plan||t.plan==="free"||t.plan==="dev"));
           const isPremium=plan.key==="premium";
           const isSelectable=plan.key!=="free";
           return(
