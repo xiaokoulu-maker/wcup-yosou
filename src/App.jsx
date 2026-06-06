@@ -2541,6 +2541,8 @@ function App(){
   const goCountry=useCallback((c)=>{setSelCountry(c);window.scrollTo(0,0);setPage("country");},[]);
   const goWcTeam=useCallback((code)=>{setWcTeamCode(code);window.scrollTo(0,0);setPage("wc_team");},[]);
   const navDashboard=useCallback(()=>{setScope("tournament");nav("room");},[nav]);
+  const [roomInitTab,setRoomInitTab]=useState("home");
+  const navToPredict=useCallback(()=>{setRoomInitTab("predict");setScope("tournament");nav("room");},[nav]);
   const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard};
 
   const handleOnboardingComplete=(action)=>{
@@ -2563,8 +2565,8 @@ function App(){
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
       {page==="tournament"&&<PgTournament {...sp}/>}
-      {page==="room"&&<PgTournamentRoom {...sp}/>}
-      {page==="join"&&<PgJoin {...sp}/>}
+      {page==="room"&&<PgTournamentRoom {...sp} initialTab={roomInitTab} clearInitTab={()=>setRoomInitTab("home")}/>}
+      {page==="join"&&<PgJoin {...sp} navToPredict={navToPredict}/>}
       {page==="predict"&&<PgPredict {...sp}/>}
       {page==="predictions"&&<PgPredictions {...sp}/>}
       {page==="ranking"&&(scope==="global"?<PgGlobalRanking nav={nav} navDashboard={navDashboard} myId={myId}/>:<PgRanking {...sp}/>)}
@@ -3881,8 +3883,9 @@ function RoomPredictTab({t,nav,update,myId}){
 }
 
 /* ── Tournament Room (F1+F2: 骨格＋ホームタブ＋予想タブインライン) ── */
-function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard}){
-  const [tab,setTab]=useState("home");
+function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard,initialTab,clearInitTab}){
+  const [tab,setTab]=useState(initialTab||"home");
+  useEffect(()=>{if(clearInitTab)clearInitTab();},[]);
   const [copied,setCopied]=useState(false);
   useEffect(()=>{if(!t?.id)return;loadT(t.id).then(f=>{if(f)setTourn(f);});const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
   if(!t)return null;
@@ -4150,7 +4153,7 @@ ${url}`);
 }
 
 /* ── Join ── */
-function PgJoin({tourn:t,nav,update,setMyId,navDashboard}){
+function PgJoin({tourn:t,nav,update,setMyId,navDashboard,navToPredict}){
   const [nick,setNick]=useState("");const [icon,setIcon]=useState("⚽");const [err,setErr]=useState("");const [showUpgrade,setShowUpgrade]=useState(false);const [loading,setLoading]=useState(false);
   const deadlinePassed=isDeadlinePassed(t.deadline);
   const isLateJoin=deadlinePassed&&t.allowLateJoin;
@@ -4168,7 +4171,7 @@ if(cur.participants.length>=getPlanLimit(cur.plan)){
     const updated={...cur,participants:[...cur.participants,p]};
     saveMyJoined(cur.id);
     try{localStorage.setItem("wcup_myid_"+cur.id,p.id);}catch{}
-    trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);navDashboard();setLoading(false);
+    trackEvent("join_tournament",{tournamentId:cur.id,page:"join"});await update(updated);setMyId(p.id);(navToPredict||navDashboard)();setLoading(false);
   };
   if(deadlinePassed)return(
     <div className="screen">
