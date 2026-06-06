@@ -439,7 +439,12 @@ const STRIPE={
 };
 // 無料プランは5人まで
 const FREE_LIMIT=5;
+// 開発者オーバーライド: ブラウザコンソールで localStorage.setItem("wcup_dev","1") を実行して有効化
+// (このアプリはSupabase Authを使わないためlocalStorageフラグで代用)
+const DEV_OWNERS=["xiaokoulu@gmail.com"]; // 参考情報（実際の判定はlocalStorageフラグ）
+const isDevUser=()=>localStorage.getItem("wcup_dev")==="1";
 function getPlanLimit(plan){
+  if(plan==="dev")      return 100;
   if(plan==="standard") return STRIPE.standard.people;
   if(plan==="premium")  return STRIPE.premium.people;
   if(plan==="group")    return STRIPE.group.people;
@@ -3406,6 +3411,7 @@ function PgHomeLegacy({nav,goT}){
 
 /* ── Create ── */
 function PgCreate({nav,goT}){
+  const isDev=isDevUser();
   const PRESETS={
     lite:{label:"⚡ ライト大会",color:"#0EA5E9",bg:"rgba(14,165,233,0.08)",desc:"初めての人向け。1分で参加できます。",settings:{winner:true,runnerUp:false,topScorer:false,japanResult:true,japanMvp:false,assistKing:false,tournamentMvp:false,best4:false,japanFirstMatchScore:false}},
     standard:{label:"⚽ スタンダード大会",color:"#0068B7",bg:"rgba(0,104,183,0.08)",desc:"友達同士で一番盛り上がる基本セット。",settings:{winner:true,runnerUp:true,topScorer:true,japanResult:true,japanMvp:true,assistKing:false,tournamentMvp:false,best4:false,japanFirstMatchScore:false}},
@@ -3435,7 +3441,7 @@ function PgCreate({nav,goT}){
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
 setLoading(true);
     const maxP=overrideMax!==null?overrideMax:Number(form.maxParticipants);
-    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:maxP,adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:"free",deadline:form.deadline||null,predictionSettings:predSet,allowLateJoin:form.allowLateJoin!==false,createdAt:new Date().toISOString()};
+    const t={id:genId(),name:form.name.trim(),creatorName:form.creatorName.trim(),maxParticipants:maxP,adminPasscode:form.adminPasscode.trim(),participants:[],results:null,plan:isDev?"dev":"free",deadline:form.deadline||null,predictionSettings:predSet,allowLateJoin:form.allowLateJoin!==false,createdAt:new Date().toISOString()};
     saveMyCreated(t.id);trackEvent("create_tournament",{tournamentId:t.id,page:"create"});await goT(t);setLoading(false);
   };
   const reqPlan=getRequiredPlanByPeople(form.maxParticipants);
@@ -3455,16 +3461,16 @@ setLoading(true);
               <div style={{color:G.navy,fontSize:42,fontWeight:900,lineHeight:1}}>{form.maxParticipants}</div>
               <div style={{color:G.muted,fontSize:12,marginTop:3}}>人</div>
             </div>
-            <button onClick={()=>setForm(f=>({...f,maxParticipants:Math.min(50,f.maxParticipants+1)}))} style={{width:52,height:52,borderRadius:14,background:"rgba(0,104,183,0.03)",border:"2px solid #D9E8FF",color:"#0068B7",fontSize:28,cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>＋</button>
+            <button onClick={()=>setForm(f=>({...f,maxParticipants:Math.min(isDev?100:50,f.maxParticipants+1)}))} style={{width:52,height:52,borderRadius:14,background:"rgba(0,104,183,0.03)",border:"2px solid #D9E8FF",color:"#0068B7",fontSize:28,cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>＋</button>
           </div>
-          <div style={{background:reqPlan.key==="free"?"rgba(34,197,94,0.08)":"rgba(0,104,183,0.06)",border:`1px solid ${reqPlan.key==="free"?"rgba(34,197,94,0.3)":"rgba(0,104,183,0.3)"}`,borderRadius:12,padding:"12px 14px"}}>
+          {!isDev&&<div style={{background:reqPlan.key==="free"?"rgba(34,197,94,0.08)":"rgba(0,104,183,0.06)",border:`1px solid ${reqPlan.key==="free"?"rgba(34,197,94,0.3)":"rgba(0,104,183,0.3)"}`,borderRadius:12,padding:"12px 14px"}}>
             {reqPlan.key==="free"&&<div style={{color:"#22C55E",fontWeight:800,fontSize:13,marginBottom:2}}>✅ 無料プランで利用できます</div>}
             {reqPlan.key==="free"&&<div style={{color:G.muted,fontSize:12}}>{FREE_LIMIT}人まで無料</div>}
             {reqPlan.key!=="free"&&<div style={{color:G.gold,fontWeight:800,fontSize:13,marginBottom:4}}>💳 この人数では有料プランが必要です</div>}
             {reqPlan.key!=="free"&&<div style={{color:G.navy,fontSize:13}}><span style={{color:reqPlan.key==="standard"?"#22C55E":reqPlan.key==="premium"?G.gold:"#A78BFA",fontWeight:700}}>{reqPlan.label}プラン</span><span style={{color:G.muted}}> · {reqPlan.people}人まで · </span><span style={{color:G.gold,fontWeight:700}}>¥{reqPlan.price.toLocaleString()}</span></div>}
             {reqPlan.key!=="free"&&<div style={{color:G.muted,fontSize:11,marginTop:5}}>カード / Apple Pay / Google Pay</div>}
             {reqPlan.key!=="free"&&<div style={{color:G.muted,fontSize:10,marginTop:1}}>対応端末ではウォレット決済が使えます · PayPayは今後対応予定</div>}
-          </div>
+          </div>}
         </div>
         <FInput label="管理用パスコード ＊" placeholder="3文字以上" type="password" value={form.adminPasscode} onChange={setF("adminPasscode")}/>
       </div>
