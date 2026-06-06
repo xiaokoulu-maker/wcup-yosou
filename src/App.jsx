@@ -511,6 +511,27 @@ const WC_GROUPS=[
   {name:"L",teams:[{n:"イラン",f:"ir"},{n:"ウズベキスタン",f:"uz"},{n:"カタール",f:"qa"},{n:"コンゴ",f:"cd"}]},
 ];
 
+// ── wc_teams 表示用メタ（実際の出場48チーム / 日本語名・国旗コード）──
+// WC_GROUPS の予想チームと一部異なるため独立して管理する
+const WC_TEAM_META={
+  ALG:{ja:"アルジェリア",  f:"dz"}, ARG:{ja:"アルゼンチン",       f:"ar"}, AUS:{ja:"オーストラリア",   f:"au"},
+  AUT:{ja:"オーストリア",  f:"at"}, BEL:{ja:"ベルギー",           f:"be"}, BIH:{ja:"ボスニア・ヘルツェゴビナ",f:"ba"},
+  BRA:{ja:"ブラジル",      f:"br"}, CPV:{ja:"カーボベルデ",        f:"cv"}, CAN:{ja:"カナダ",           f:"ca"},
+  COL:{ja:"コロンビア",    f:"co"}, COD:{ja:"コンゴ民主共和国",    f:"cd"}, CIV:{ja:"コートジボワール",  f:"ci"},
+  CRO:{ja:"クロアチア",    f:"hr"}, CUW:{ja:"キュラソー",         f:"cw"}, CZE:{ja:"チェコ",           f:"cz"},
+  ECU:{ja:"エクアドル",    f:"ec"}, EGY:{ja:"エジプト",           f:"eg"}, ENG:{ja:"イングランド",      f:"gb-eng"},
+  FRA:{ja:"フランス",      f:"fr"}, GER:{ja:"ドイツ",             f:"de"}, GHA:{ja:"ガーナ",           f:"gh"},
+  HAI:{ja:"ハイチ",        f:"ht"}, IRN:{ja:"イラン",             f:"ir"}, IRQ:{ja:"イラク",           f:"iq"},
+  JPN:{ja:"日本",          f:"jp"}, JOR:{ja:"ヨルダン",           f:"jo"}, KOR:{ja:"韓国",             f:"kr"},
+  MEX:{ja:"メキシコ",      f:"mx"}, MAR:{ja:"モロッコ",           f:"ma"}, NED:{ja:"オランダ",         f:"nl"},
+  NZL:{ja:"ニュージーランド",f:"nz"},NOR:{ja:"ノルウェー",         f:"no"}, PAN:{ja:"パナマ",           f:"pa"},
+  PAR:{ja:"パラグアイ",    f:"py"}, POR:{ja:"ポルトガル",         f:"pt"}, QAT:{ja:"カタール",         f:"qa"},
+  KSA:{ja:"サウジアラビア",f:"sa"}, SCO:{ja:"スコットランド",      f:"gb-sct"},SEN:{ja:"セネガル",       f:"sn"},
+  RSA:{ja:"南アフリカ",    f:"za"}, ESP:{ja:"スペイン",           f:"es"}, SWE:{ja:"スウェーデン",      f:"se"},
+  SUI:{ja:"スイス",        f:"ch"}, TUN:{ja:"チュニジア",         f:"tn"}, TUR:{ja:"トルコ",           f:"tr"},
+  URU:{ja:"ウルグアイ",    f:"uy"}, USA:{ja:"アメリカ",           f:"us"}, UZB:{ja:"ウズベキスタン",    f:"uz"},
+};
+
 // ════════════════════════════════════════════════════
 // 試合別予想 Phase A ― 採点定数・採点関数・試合マスタ
 // ════════════════════════════════════════════════════
@@ -1804,6 +1825,348 @@ function FeedbackModal({onClose,nickname,tourn,myId}){
   );
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// W杯2026 データ表示ページ（段階2）
+// データソース: /public/data/ 静的JSON（fetch失敗時は「データ準備中」表示）
+// 既存の予想・ランキング・大会機能には一切触れない
+// ────────────────────────────────────────────────────────────────────────────
+
+// 共通: 国旗画像
+function WcFlag({code,size=32}){
+  const m=WC_TEAM_META[code];
+  if(!m?.f)return<span style={{display:"inline-block",width:size,height:size*0.67,borderRadius:3,background:"rgba(255,255,255,.08)"}}/>
+  return<img src={`https://flagcdn.com/w40/${m.f}.png`} alt={code}
+    style={{width:size,height:size*0.67,objectFit:"cover",borderRadius:3,verticalAlign:"middle",flexShrink:0}}
+    onError={e=>e.target.style.display="none"}/>;
+}
+
+// 共通: データ準備中バナー
+function WcDataLoading(){return<div className="wrap section"><div className="banner blue">データ準備中です。しばらくお待ちください。</div></div>;}
+
+// ── 出場国一覧ページ ──────────────────────────────────────────────────────
+function PgWcTeams({nav,goWcTeam}){
+  const [teams,setTeams]=useState(null);
+  const [statsMap,setStatsMap]=useState({});
+  const [loading,setLoading]=useState(true);
+  const [fetchErr,setFetchErr]=useState(false);
+  const [searchQ,setSearchQ]=useState("");
+
+  useEffect(()=>{
+    let cancelled=false;
+    Promise.all([
+      fetch("/data/wc-teams.json").then(r=>r.json()),
+      fetch("/data/wc-team-stats.json").then(r=>r.json()),
+    ]).then(([ts,ss])=>{
+      if(cancelled)return;
+      const sm={};ss.forEach(s=>{sm[s.team_code]=s;});
+      setTeams(ts);setStatsMap(sm);setLoading(false);
+    }).catch(()=>{if(!cancelled){setFetchErr(true);setLoading(false);}});
+    return()=>{cancelled=true;};
+  },[]);
+
+  const displayed=teams?(searchQ.trim()
+    ?teams.filter(t=>{
+        const q=searchQ.toLowerCase();
+        const ja=WC_TEAM_META[t.fifa_code]?.ja||"";
+        return t.name_en.toLowerCase().includes(q)||ja.includes(q)||t.fifa_code.toLowerCase().includes(q);
+      })
+    :teams
+  ).slice().sort((a,b)=>{
+    const ja=(c)=>WC_TEAM_META[c]?.ja||"zzz";
+    return ja(a.fifa_code).localeCompare(ja(b.fifa_code),"ja");
+  }):[];
+
+  return(
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("home")} title="出場国一覧" icon="globe"/>
+      <div className="wrap" style={{paddingTop:8,paddingBottom:4}}>
+        <input className="tinput" placeholder="国名・コードで検索" value={searchQ}
+          onChange={e=>setSearchQ(e.target.value)} style={{marginBottom:0}}/>
+      </div>
+      {loading&&<div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0"}}>読み込み中...</div>}
+      {fetchErr&&<WcDataLoading/>}
+      {!loading&&!fetchErr&&(
+        <>
+        <div className="wrap section tight">
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {displayed.map(t=>{
+              const meta=WC_TEAM_META[t.fifa_code];
+              const st=statsMap[t.fifa_code];
+              return(
+                <div key={t.fifa_code} onClick={()=>goWcTeam(t.fifa_code)}
+                  style={{background:"linear-gradient(160deg,rgba(19,28,58,.9),rgba(13,19,40,.9))",
+                    border:"1px solid var(--line-soft)",borderRadius:14,padding:"12px 10px",
+                    cursor:"pointer",overflow:"hidden"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
+                    <WcFlag code={t.fifa_code} size={28}/>
+                    <span style={{fontFamily:"'Roboto Mono',monospace",fontSize:9.5,color:"var(--dim)",fontWeight:700}}>{t.fifa_code}</span>
+                  </div>
+                  <div style={{color:"var(--txt)",fontWeight:800,fontSize:13,lineHeight:1.2,marginBottom:6}}>
+                    {meta?.ja||t.name_en}
+                  </div>
+                  {st&&<div style={{display:"flex",gap:8,color:"var(--muted)",fontSize:9.5,flexWrap:"wrap"}}>
+                    <span>👤 {st.squad_count}人</span>
+                    {st.avg_age&&<span>📅 {st.avg_age}歳</span>}
+                    {st.avg_height&&<span>📏 {st.avg_height}cm</span>}
+                  </div>}
+                  {t.head_coach&&<div style={{color:"var(--dim)",fontSize:9,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>👤 {t.head_coach}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{textAlign:"center",padding:"8px 16px 16px",color:"var(--faint)",fontSize:9.5}}>
+          FIFA公式スカッドリスト（2026年6月版）
+        </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── 国別詳細ページ ───────────────────────────────────────────────────────────
+function PgWcTeamDetail({nav,teamCode,goWcTeam}){
+  const [team,setTeam]=useState(null);
+  const [players,setPlayers]=useState([]);
+  const [stats,setStats]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [fetchErr,setFetchErr]=useState(false);
+
+  useEffect(()=>{
+    if(!teamCode){setFetchErr(true);setLoading(false);return;}
+    let cancelled=false;
+    Promise.all([
+      fetch("/data/wc-teams.json").then(r=>r.json()),
+      fetch("/data/wc-players.json").then(r=>r.json()),
+      fetch("/data/wc-team-stats.json").then(r=>r.json()),
+    ]).then(([ts,ps,ss])=>{
+      if(cancelled)return;
+      setTeam(ts.find(t=>t.fifa_code===teamCode)||null);
+      setPlayers(ps.filter(p=>p.team_code===teamCode).sort((a,b)=>(a.shirt_number||99)-(b.shirt_number||99)));
+      setStats(ss.find(s=>s.team_code===teamCode)||null);
+      setLoading(false);
+    }).catch(()=>{if(!cancelled){setFetchErr(true);setLoading(false);}});
+    return()=>{cancelled=true;};
+  },[teamCode]);
+
+  const meta=WC_TEAM_META[teamCode||""]||null;
+  const byPos=(pos)=>players.filter(p=>p.position===pos);
+  const calcAge=(dob)=>{if(!dob)return null;const y=new Date().getFullYear()-parseInt(dob.slice(0,4));return y;};
+
+  return(
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("wc_teams")} title={meta?.ja||teamCode||"国別詳細"} icon="flag"/>
+      {loading&&<div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0"}}>読み込み中...</div>}
+      {fetchErr&&<WcDataLoading/>}
+      {!loading&&!fetchErr&&team&&(
+        <>
+        {/* ── ヒーロー ── */}
+        <div className="wrap section tight">
+          <div className="card lg" style={{textAlign:"center",padding:"20px 16px"}}>
+            <WcFlag code={teamCode} size={56}/>
+            <div style={{color:"var(--txt)",fontWeight:900,fontSize:20,marginTop:10,marginBottom:2}}>
+              {meta?.ja||team.name_en}
+            </div>
+            <div style={{color:"var(--dim)",fontFamily:"'Roboto Mono',monospace",fontSize:11,marginBottom:team.head_coach?8:0}}>
+              {team.fifa_code}
+            </div>
+            {team.head_coach&&<div style={{color:"var(--muted)",fontSize:12}}>監督: {team.head_coach}</div>}
+          </div>
+        </div>
+
+        {/* ── 統計 ── */}
+        {stats&&(
+          <div className="wrap section tight">
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>
+              {[
+                {label:"登録選手",value:`${stats.squad_count}人`},
+                {label:"平均年齢",value:stats.avg_age?`${stats.avg_age}歳`:"—"},
+                {label:"平均身長",value:stats.avg_height?`${stats.avg_height}cm`:"—"},
+              ].map((s,i)=>(
+                <div key={i} style={{background:"rgba(255,255,255,.04)",border:"1px solid var(--line-soft)",borderRadius:12,padding:"10px 8px",textAlign:"center"}}>
+                  <div style={{color:"var(--muted)",fontSize:9,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",marginBottom:4}}>{s.label}</div>
+                  <div style={{color:"var(--txt)",fontWeight:800,fontSize:15}}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:10,color:"var(--muted)",fontSize:11}}>
+              {[["GK",stats.gk_count],["DF",stats.df_count],["MF",stats.mf_count],["FW",stats.fw_count]].map(([p,c])=>(
+                <span key={p}><span style={{color:"var(--dim)",fontWeight:700}}>{p}</span> {c}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── 選手リスト ── */}
+        {["GK","DF","MF","FW"].map(pos=>{
+          const ps=byPos(pos);
+          if(ps.length===0)return null;
+          const posLabel={GK:"GK ゴールキーパー",DF:"DF ディフェンダー",MF:"MF ミッドフィルダー",FW:"FW フォワード"}[pos];
+          return(
+            <div key={pos} className="wrap section tight">
+              <DsSectionHead title={posLabel}/>
+              <div className="card" style={{padding:0,overflow:"hidden"}}>
+                {ps.map((p,i)=>(
+                  <div key={p.shirt_number} style={{
+                    display:"flex",alignItems:"center",gap:10,padding:"10px 14px",
+                    borderBottom:i<ps.length-1?"1px solid var(--line-soft)":undefined,
+                  }}>
+                    <span style={{fontFamily:"'Roboto Mono',monospace",fontSize:11,color:"var(--dim)",minWidth:22,textAlign:"right"}}>{p.shirt_number}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{color:"var(--txt)",fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.player_name||"—"}</div>
+                      <div style={{color:"var(--muted)",fontSize:10,marginTop:1}}>{p.club||""}</div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      {p.date_of_birth&&<div style={{color:"var(--dim)",fontSize:10}}>{calcAge(p.date_of_birth)}歳</div>}
+                      {p.height_cm&&<div style={{color:"var(--faint)",fontSize:9}}>{p.height_cm}cm</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        <div style={{textAlign:"center",padding:"8px 16px 16px",color:"var(--faint)",fontSize:9.5}}>
+          FIFA公式スカッドリスト（2026年6月版）
+        </div>
+        </>
+      )}
+      {!loading&&!fetchErr&&!team&&<div className="wrap section"><div className="banner blue">チームデータが見つかりませんでした。</div></div>}
+    </div>
+  );
+}
+
+// ── 選手一覧ページ ────────────────────────────────────────────────────────
+function PgWcPlayers({nav,goWcTeam}){
+  const [allPlayers,setAllPlayers]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [fetchErr,setFetchErr]=useState(false);
+  const [searchQ,setSearchQ]=useState("");
+  const [filterTeam,setFilterTeam]=useState("ALL");
+  const [filterPos,setFilterPos]=useState("ALL");
+  const [showCount,setShowCount]=useState(50);
+
+  useEffect(()=>{
+    let cancelled=false;
+    fetch("/data/wc-players.json").then(r=>r.json()).then(ps=>{
+      if(!cancelled){setAllPlayers(ps);setLoading(false);}
+    }).catch(()=>{if(!cancelled){setFetchErr(true);setLoading(false);}});
+    return()=>{cancelled=true;};
+  },[]);
+
+  const filtered=useMemo(()=>{
+    if(!allPlayers)return[];
+    return allPlayers.filter(p=>{
+      if(filterTeam!=="ALL"&&p.team_code!==filterTeam)return false;
+      if(filterPos!=="ALL"&&p.position!==filterPos)return false;
+      if(searchQ.trim()){
+        const q=searchQ.toLowerCase();
+        return(p.player_name||"").toLowerCase().includes(q)||(p.club||"").toLowerCase().includes(q);
+      }
+      return true;
+    }).sort((a,b)=>{
+      if(a.team_code!==b.team_code)return a.team_code.localeCompare(b.team_code);
+      return(a.shirt_number||99)-(b.shirt_number||99);
+    });
+  },[allPlayers,filterTeam,filterPos,searchQ]);
+
+  const displayed=filtered.slice(0,showCount);
+  const calcAge=(dob)=>{if(!dob)return"";const y=new Date().getFullYear()-parseInt(dob.slice(0,4));return`${y}歳`;};
+
+  // チームセレクト用オプション
+  const teamOptions=useMemo(()=>{
+    if(!allPlayers)return[];
+    const codes=[...new Set(allPlayers.map(p=>p.team_code))].sort();
+    return codes.map(c=>({code:c,label:(WC_TEAM_META[c]?.ja||c)+` (${c})`}));
+  },[allPlayers]);
+
+  return(
+    <div className="screen">
+      <DsPageHead onBack={()=>nav("home")} title="選手一覧" icon="users"/>
+
+      {/* フィルター */}
+      <div className="wrap" style={{paddingTop:8,paddingBottom:0,display:"flex",flexDirection:"column",gap:8}}>
+        <input className="tinput" placeholder="選手名・クラブ名で検索" value={searchQ}
+          onChange={e=>{setSearchQ(e.target.value);setShowCount(50);}} style={{marginBottom:0}}/>
+        <div style={{display:"flex",gap:8}}>
+          <select value={filterTeam} onChange={e=>{setFilterTeam(e.target.value);setShowCount(50);}}
+            style={{flex:1,background:"var(--panel)",color:"var(--txt)",border:"1px solid var(--line-soft)",
+              borderRadius:10,padding:"8px 10px",fontSize:12,fontWeight:600}}>
+            <option value="ALL">全チーム</option>
+            {teamOptions.map(o=><option key={o.code} value={o.code}>{o.label}</option>)}
+          </select>
+          <div style={{display:"flex",gap:4}}>
+            {["ALL","GK","DF","MF","FW"].map(p=>(
+              <button key={p} onClick={()=>{setFilterPos(p);setShowCount(50);}} style={{
+                padding:"7px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:700,
+                background:filterPos===p?"var(--gold)":"rgba(255,255,255,.07)",
+                color:filterPos===p?"#000":"var(--muted)",
+              }}>{p}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {loading&&<div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0"}}>読み込み中...</div>}
+      {fetchErr&&<WcDataLoading/>}
+
+      {!loading&&!fetchErr&&(
+        <>
+        <div className="wrap section tight">
+          <div style={{color:"var(--muted)",fontSize:11,marginBottom:8}}>
+            {filtered.length} 選手
+            {filtered.length>showCount&&<span>（{showCount}件表示）</span>}
+          </div>
+          <div className="card" style={{padding:0,overflow:"hidden"}}>
+            {displayed.length===0&&(
+              <div style={{padding:"20px",textAlign:"center",color:"var(--muted)",fontSize:13}}>該当する選手が見つかりません</div>
+            )}
+            {displayed.map((p,i)=>(
+              <div key={`${p.team_code}-${p.shirt_number}`}
+                style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",
+                  borderBottom:i<displayed.length-1?"1px solid var(--line-soft)":undefined,
+                  cursor:goWcTeam?"pointer":undefined}}
+                onClick={()=>goWcTeam&&goWcTeam(p.team_code)}>
+                <div style={{flexShrink:0,width:28,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                  <WcFlag code={p.team_code} size={20}/>
+                  <span style={{fontFamily:"'Roboto Mono',monospace",fontSize:9,color:"var(--dim)"}}>{p.shirt_number}</span>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{background:"rgba(255,255,255,.07)",borderRadius:4,padding:"1px 5px",
+                      fontSize:9,fontWeight:800,color:"var(--dim)",flexShrink:0}}>{p.position}</span>
+                    <span style={{color:"var(--txt)",fontWeight:700,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.player_name||"—"}</span>
+                  </div>
+                  <div style={{color:"var(--muted)",fontSize:10,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {p.club||""}
+                  </div>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0,color:"var(--dim)",fontSize:10}}>
+                  <div>{calcAge(p.date_of_birth)}</div>
+                  {p.height_cm&&<div style={{fontSize:9,color:"var(--faint)"}}>{p.height_cm}cm</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+          {filtered.length>showCount&&(
+            <button onClick={()=>setShowCount(n=>n+50)}
+              style={{width:"100%",marginTop:12,padding:"12px",background:"rgba(255,255,255,.06)",
+                border:"1px solid var(--line-soft)",borderRadius:12,color:"var(--muted)",
+                fontSize:13,fontWeight:700,cursor:"pointer"}}>
+              もっと見る（残り {filtered.length-showCount} 件）
+            </button>
+          )}
+        </div>
+        <div style={{textAlign:"center",padding:"8px 16px 16px",color:"var(--faint)",fontSize:9.5}}>
+          FIFA公式スカッドリスト（2026年6月版）
+        </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ── 下タブバー（全ページ固定表示） ── */
 function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
   const [open,setOpen]=useState(false);
@@ -1827,6 +2190,8 @@ function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
     {ic:"medal",   label:"バッジ",      dest:"badges"},
     {ic:"person",  label:"マイページ",  dest:"mypage"},
     {ic:"gear",    label:"設定",        dest:"admin"},
+    {ic:"globe",   label:"出場国一覧",  dest:"wc_teams"},
+    {ic:"users",   label:"選手一覧",    dest:"wc_players"},
   ];
   return(
     <>
@@ -1983,6 +2348,7 @@ function App(){
   const [selCountry,setSelCountry]=useState(null);
   const [scope,setScope]=useState("global"); // "global" | "tournament"
   const [showFeedback,setShowFeedback]=useState(false);
+  const [wcTeamCode,setWcTeamCode]=useState(null); // wc_team ページ用
   const [onboardingDone,setOnboardingDone]=useState(()=>{
     try{
       if(localStorage.getItem("wcup_onboardingDone")) return true;
@@ -2090,6 +2456,7 @@ function App(){
   const update=useCallback(async(t)=>{setTourn(t);await saveT(t);},[]);
   const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}setScope("tournament");setPage("tournament");},[]);
   const goCountry=useCallback((c)=>{setSelCountry(c);window.scrollTo(0,0);setPage("country");},[]);
+  const goWcTeam=useCallback((code)=>{setWcTeamCode(code);window.scrollTo(0,0);setPage("wc_team");},[]);
   const navDashboard=useCallback(()=>{setScope("tournament");nav("home");},[nav]);
   const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard};
 
@@ -2137,6 +2504,10 @@ function App(){
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId} navDashboard={navDashboard}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update} navDashboard={navDashboard}/>}
       {page==="mypage"&&<PgMyPage nav={nav} goT={goT} tourn={tourn} myId={myId} update={update}/>}
+      {/* ── 段階2: W杯2026 データ表示ページ（追記のみ・既存機能に影響なし） ── */}
+      {page==="wc_teams"&&<PgWcTeams nav={nav} goWcTeam={goWcTeam}/>}
+      {page==="wc_players"&&<PgWcPlayers nav={nav} goWcTeam={goWcTeam}/>}
+      {page==="wc_team"&&<PgWcTeamDetail nav={nav} teamCode={wcTeamCode} goWcTeam={goWcTeam}/>}
       {showTabBar&&<TabBar page={page} nav={nav} navDashboard={navDashboard} scope={scope} setScope={setScope} tourn={tourn} myId={myId}/>}
     </div>
     </ErrorBoundary>
