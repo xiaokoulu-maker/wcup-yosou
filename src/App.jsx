@@ -2180,7 +2180,7 @@ function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
   const hasTourn=!!(tourn&&myId);
   const isTournScope=scope==="tournament"&&hasTourn;
   const go=(dest)=>{
-    if(dest==="home") isTournScope?navDashboard():nav("home");
+    if(dest==="home"){window.location.hash="";nav("home");}
     else nav(dest);
     setOpen(false);
   };
@@ -2283,7 +2283,7 @@ function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
 
 function TabBar({page,nav,tourn,myId}){
   const tabs=[
-    {id:"home",      label:"ホーム",     icon:"ball",    action:()=>nav("home")},
+    {id:"home",      label:"ホーム",     icon:"ball",    action:()=>{window.location.hash="";nav("home");}},
     {id:"mytourn",   label:"大会",       icon:"trophy",  action:()=>nav("mytourn")},
     {id:"ranking",   label:"ランキング", icon:"chart",   action:()=>nav("ranking")},
     {id:"globalchat",label:"チャット",   icon:"chatBig", action:()=>nav("globalchat")},
@@ -3799,6 +3799,9 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
       {/* ── ホームタブ ── */}
       {tab==="home"&&(
         <div style={{padding:"16px 18px 0"}}>
+          <button onClick={()=>{window.location.hash="";nav("home");}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,cursor:"pointer",padding:"0 0 10px",display:"flex",alignItems:"center",gap:4}}>
+            <DsIcon name="chevron" size={13} stroke={2} style={{transform:"rotate(180deg)"}}/> ホームに戻る
+          </button>
           <div className="card lg" style={{textAlign:"center",marginBottom:14}}>
             <img src={LOGO_IMG} alt="" style={{width:44,height:44,borderRadius:9,objectFit:"contain",background:"#061533",marginBottom:8,boxShadow:"0 0 0 2.5px rgba(62,123,255,.2)"}}/>
             <div style={{color:"var(--gold)",fontSize:18,fontWeight:900,marginBottom:6}}>{t.name}</div>
@@ -4056,7 +4059,7 @@ if(cur.participants.length>=getPlanLimit(cur.plan)){
   };
   if(deadlinePassed)return(
     <div className="screen">
-      <DsBackRow onClick={()=>nav("tournament")}/>
+      <DsBackRow onClick={()=>navDashboard()}/>
       <div className="wrap section">
         <div className="card lg" style={{textAlign:"center",padding:"32px 20px"}}>
           <div style={{fontSize:40,marginBottom:12}}>⛔</div>
@@ -4863,7 +4866,7 @@ function PgGlobalRanking({nav,navDashboard,myId}){
 
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>navDashboard?navDashboard():nav("home")} title="全国ランキング" icon="chart"/>
+      <DsPageHead onBack={()=>nav("home")} title="全国ランキング" icon="chart"/>
       <div className="wrap section tight">
         <div className="banner blue" style={{alignItems:"flex-start",gap:8}}>
           <DsIcon name="globe" size={14} style={{flexShrink:0,marginTop:1}}/>
@@ -5021,7 +5024,7 @@ const startEdit=(p)=>{setEditId(p.id);setEditNick(p.nickname);};
 const saveEdit=async()=>{const fresh=await loadT(t.id);const cur=fresh||t;await update({...cur,participants:cur.participants.map(p=>p.id===editId?{...p,nickname:editNick}:p)});setEditId(null);};
 
 if(!adminOk)return(
-<div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
+<div style={{padding:"20px 18px 40px"}}><Back onClick={()=>navDashboard()}/>
 <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:4}}>🔐 管理者ページ</div>
 <div style={{color:G.muted,fontSize:13,marginBottom:20}}>管理用パスコードを入力してください</div>
 <div style={crd}><FInput label="パスコード" placeholder="パスコードを入力" type="password" value={pass} onChange={setPass}/><Err msg={passErr}/><button style={btnG} onClick={checkPass}>認証する</button></div>
@@ -5029,7 +5032,7 @@ if(!adminOk)return(
 );
 
   return(
-    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>nav("tournament")}/>
+    <div style={{padding:"20px 18px 40px"}}><Back onClick={()=>navDashboard()}/>
       <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:14}}>🔐 管理者ページ</div>
       {/* タブ */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
@@ -5338,7 +5341,7 @@ function PgUpgrade({nav,tourn:t,update}){
     const updated={...t,plan:planKey,maxParticipants:plan.people};
     await update(updated);
     setUnlocked(true);
-    setTimeout(()=>nav("tournament"),1500);
+    setTimeout(()=>nav("room"),1500);
   };
 
   const PLANS=[
@@ -5359,7 +5362,7 @@ function PgUpgrade({nav,tourn:t,update}){
     <div style={{paddingBottom:40}}>
       {/* ヘッダー */}
       <div style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 100%)",padding:"36px 20px 24px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
-        <Back onClick={()=>nav(t?"tournament":"home")}/>
+        <Back onClick={()=>t?navDashboard():nav("home")}/>
         <div style={{fontSize:44,marginBottom:8}}>🏆</div>
         <div style={{color:G.gold,fontSize:22,fontWeight:900,marginBottom:6}}>プランを選ぶ</div>
         <div style={{color:G.muted,fontSize:13,lineHeight:1.7}}>人数が増えるほど盛り上がる。<br/>ちょうどいいプランを選ぼう。</div>
@@ -6381,7 +6384,7 @@ function PgBracket({nav,tourn,navDashboard}){
 
   return(
     <div className="screen">
-      <div style={{textAlign:"center",padding:"8px 18px 0"}}><DsBackRow onClick={()=>nav(tourn?"tournament":"home")}/></div>
+      <div style={{textAlign:"center",padding:"8px 18px 0"}}><DsBackRow onClick={()=>tourn?navDashboard():nav("home")}/></div>
       <div style={{textAlign:"center",padding:"4px 18px 0"}}>
         <h1 style={{fontSize:22,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
           <DsIcon name="trophy" size={20} style={{color:"var(--gold)"}}/> トーナメント表
@@ -7161,7 +7164,7 @@ function PgGlobalMatches({nav,navDashboard}){
 
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>navDashboard?navDashboard():nav("home")} title="みんなの試合予想" icon="whistle"/>
+      <DsPageHead onBack={()=>nav("home")} title="みんなの試合予想" icon="whistle"/>
       <div className="wrap section tight">
         <div className="banner blue" style={{alignItems:"flex-start",gap:8}}>
           <DsIcon name="globe" size={14} style={{flexShrink:0,marginTop:1}}/>
