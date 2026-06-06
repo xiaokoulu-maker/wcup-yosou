@@ -1,0 +1,482 @@
+[
+  {
+    "fifa_code": "ALG",
+    "name_en": "Algeria",
+    "name_ja": null,
+    "head_coach": "PETKOVIC Vladimir",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "ARG",
+    "name_en": "Argentina",
+    "name_ja": null,
+    "head_coach": "SCALONI Lionel",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "AUS",
+    "name_en": "Australia",
+    "name_ja": null,
+    "head_coach": "POPOVIC Tony",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "AUT",
+    "name_en": "Austria",
+    "name_ja": null,
+    "head_coach": "RANGNICK Ralf",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "BEL",
+    "name_en": "Belgium",
+    "name_ja": null,
+    "head_coach": "GARCIA Rudi",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "BIH",
+    "name_en": "Bosnia And Herzegovina",
+    "name_ja": null,
+    "head_coach": "BARBAREZ Sergej",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "BRA",
+    "name_en": "Brazil",
+    "name_ja": null,
+    "head_coach": "ANCELOTTI Carlo",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "CPV",
+    "name_en": "Cabo Verde",
+    "name_ja": null,
+    "head_coach": null,
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "CAN",
+    "name_en": "Canada",
+    "name_ja": null,
+    "head_coach": "MARSCH Jesse",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "COL",
+    "name_en": "Colombia",
+    "name_ja": null,
+    "head_coach": "LORENZO Nestor",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "COD",
+    "name_en": "Congo DR",
+    "name_ja": null,
+    "head_coach": "DESABRE Sebastien",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "CIV",
+    "name_en": "Côte D'Ivoire",
+    "name_ja": null,
+    "head_coach": "FAE Emerse",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "CRO",
+    "name_en": "Croatia",
+    "name_ja": null,
+    "head_coach": "DALIC Zlatko",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "CUW",
+    "name_en": "Curaçao",
+    "name_ja": null,
+    "head_coach": "ADVOCAAT Dick",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "CZE",
+    "name_en": "Czechia",
+    "name_ja": null,
+    "head_coach": "KOUBEK Miroslav",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "ECU",
+    "name_en": "Ecuador",
+    "name_ja": null,
+    "head_coach": "BECCACECE Sebastian",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "EGY",
+    "name_en": "Egypt",
+    "name_ja": null,
+    "head_coach": null,
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "ENG",
+    "name_en": "England",
+    "name_ja": null,
+    "head_coach": "TUCHEL Thomas",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "FRA",
+    "name_en": "France",
+    "name_ja": null,
+    "head_coach": "DESCHAMPS Didier",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "GER",
+    "name_en": "Germany",
+    "name_ja": null,
+    "head_coach": "NAGELSMANN Julian",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "GHA",
+    "name_en": "Ghana",
+    "name_ja": null,
+    "head_coach": null,
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "HAI",
+    "name_en": "Haiti",
+    "name_ja": null,
+    "head_coach": "MIGNE Sebastien",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "IRN",
+    "name_en": "IR Iran",
+    "name_ja": null,
+    "head_coach": "GHALEHNOY Amir",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "IRQ",
+    "name_en": "Iraq",
+    "name_ja": null,
+    "head_coach": "ARNOLD Graham",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "JPN",
+    "name_en": "Japan",
+    "name_ja": null,
+    "head_coach": "MORIYASU Hajime",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "JOR",
+    "name_en": "Jordan",
+    "name_ja": null,
+    "head_coach": "SELLAMI Jamal",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "KOR",
+    "name_en": "Korea Republic",
+    "name_ja": null,
+    "head_coach": null,
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "MEX",
+    "name_en": "Mexico",
+    "name_ja": null,
+    "head_coach": "AGUIRRE Javier",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "MAR",
+    "name_en": "Morocco",
+    "name_ja": null,
+    "head_coach": "OUAHBI Mohamed",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "NED",
+    "name_en": "Netherlands",
+    "name_ja": null,
+    "head_coach": "KOEMAN Ronald",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "NZL",
+    "name_en": "New Zealand",
+    "name_ja": null,
+    "head_coach": "BAZELEY Darren",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "NOR",
+    "name_en": "Norway",
+    "name_ja": null,
+    "head_coach": "SOLBAKKEN Stale",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "PAN",
+    "name_en": "Panama",
+    "name_ja": null,
+    "head_coach": "CHRISTIANSEN Thomas",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "PAR",
+    "name_en": "Paraguay",
+    "name_ja": null,
+    "head_coach": "ALFARO Gustavo",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "POR",
+    "name_en": "Portugal",
+    "name_ja": null,
+    "head_coach": "MARTINEZ Roberto",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "QAT",
+    "name_en": "Qatar",
+    "name_ja": null,
+    "head_coach": "LOPETEGUI Julen",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "KSA",
+    "name_en": "Saudi Arabia",
+    "name_ja": null,
+    "head_coach": "DONIS Georgios",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "SCO",
+    "name_en": "Scotland",
+    "name_ja": null,
+    "head_coach": "CLARKE Steve",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "SEN",
+    "name_en": "Senegal",
+    "name_ja": null,
+    "head_coach": "THIAW Pape",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "RSA",
+    "name_en": "South Africa",
+    "name_ja": null,
+    "head_coach": "BROOS Hugo",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "ESP",
+    "name_en": "Spain",
+    "name_ja": null,
+    "head_coach": null,
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "SWE",
+    "name_en": "Sweden",
+    "name_ja": null,
+    "head_coach": "POTTER Graham",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "SUI",
+    "name_en": "Switzerland",
+    "name_ja": null,
+    "head_coach": "YAKIN Murat",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "TUN",
+    "name_en": "Tunisia",
+    "name_ja": null,
+    "head_coach": "LAMOUCHI Sabri",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "TUR",
+    "name_en": "Türkiye",
+    "name_ja": null,
+    "head_coach": "MONTELLA Vincenzo",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "URU",
+    "name_en": "Uruguay",
+    "name_ja": null,
+    "head_coach": "BIELSA Marcelo",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "USA",
+    "name_en": "USA",
+    "name_ja": null,
+    "head_coach": "POCHETTINO Mauricio",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  },
+  {
+    "fifa_code": "UZB",
+    "name_en": "Uzbekistan",
+    "name_ja": null,
+    "head_coach": "CANNAVARO Fabio",
+    "source_url": "https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf",
+    "source_name": "FIFA Official Squad List PDF",
+    "source_version": "Version 1 / 2026-06-06",
+    "imported_at": "2026-06-06T06:52:59.518Z"
+  }
+]

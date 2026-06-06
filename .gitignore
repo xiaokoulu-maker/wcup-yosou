@@ -1,2 +1,12 @@
 node_modules/
 dist/
+# 環境変数（Supabase service role key 等は絶対 Git に含めない）
+.env
+.env.local
+.env.*.local
+# 取り込みスクリプトの一時ファイル
+data/import-log.json
+scripts/*.pdf
+scripts/*.txt
+# 検証用一時ファイル（npm run dev 以外でのみ生成）
+squad-parsed.txt
