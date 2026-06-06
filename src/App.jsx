@@ -2281,18 +2281,17 @@ function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
   );
 }
 
-function TabBar({page,nav,navDashboard,scope,setScope,tourn,myId}){
-  const hasTourn=!!(tourn&&myId);
+function TabBar({page,nav,tourn,myId}){
   const tabs=[
-    {id:"home",      label:"ホーム",     icon:"ball",    action:()=>hasTourn?navDashboard():nav("home")},
-    {id:"matches",   label:"予想",       icon:"whistle", action:()=>nav("matches")},
+    {id:"home",      label:"ホーム",     icon:"ball",    action:()=>nav("home")},
+    {id:"mytourn",   label:"大会",       icon:"trophy",  action:()=>nav("mytourn")},
     {id:"ranking",   label:"ランキング", icon:"chart",   action:()=>nav("ranking")},
     {id:"globalchat",label:"チャット",   icon:"chatBig", action:()=>nav("globalchat")},
     {id:"mypage",    label:"マイページ", icon:"person",  action:()=>nav("mypage")},
   ];
   const activeId=(
     page==="home"?"home":
-    page==="matches"?"matches":
+    page==="mytourn"?"mytourn":
     page==="ranking"?"ranking":
     page==="globalchat"?"globalchat":
     page==="mypage"?"mypage":""
@@ -2304,27 +2303,6 @@ function TabBar({page,nav,navDashboard,scope,setScope,tourn,myId}){
       borderTop:"1px solid rgba(255,255,255,0.09)",
       zIndex:60,
     }}>
-      {/* スコープトグル */}
-      <div style={{display:"flex",justifyContent:"center",padding:"5px 0 3px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-        <div style={{display:"inline-flex",background:"rgba(255,255,255,0.05)",borderRadius:20,padding:2}}>
-          {[{v:"global",label:"全体"},{v:"tournament",label:"大会内"}].map(opt=>{
-            const active=scope===opt.v;
-            const disabled=opt.v==="tournament"&&!hasTourn;
-            return(
-              <button key={opt.v} onClick={()=>{if(!disabled)setScope(opt.v);}} style={{
-                background:active?"rgba(244,180,0,0.18)":"transparent",
-                border:active?"1px solid rgba(244,180,0,0.45)":"1px solid transparent",
-                borderRadius:18,padding:"3px 22px",fontSize:11,fontWeight:active?800:500,
-                color:disabled?"rgba(255,255,255,0.22)":active?"#F4B400":"rgba(255,255,255,0.55)",
-                cursor:disabled?"default":"pointer",letterSpacing:0.3,
-              }}>
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      {/* タブボタン */}
       <div style={{display:"flex",alignItems:"stretch",paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
         {tabs.map(t=>{
           const active=activeId===t.id;
@@ -2341,6 +2319,89 @@ function TabBar({page,nav,navDashboard,scope,setScope,tourn,myId}){
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/* ── PgMyTournaments: 大会タブ（0/1/複数 で分岐） ── */
+function PgMyTournaments({nav,goT}){
+  const [list,setList]=useState(null); // null=loading
+
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      const joined=getMyJoined();
+      const fromKeys=Object.keys(localStorage)
+        .filter(k=>k.startsWith("wcup_myid_"))
+        .map(k=>k.replace("wcup_myid_",""));
+      const allIds=[...new Set([...joined,...fromKeys])].filter(Boolean);
+      if(allIds.length===0){if(!cancelled)setList([]);return;}
+      const results=await Promise.all(allIds.map(id=>loadT(id)));
+      const valid=results.filter(t=>{
+        if(!t)return false;
+        const mid=localStorage.getItem("wcup_myid_"+t.id);
+        return !!(mid&&t.participants?.find(p=>p.id===mid));
+      });
+      if(cancelled)return;
+      setList(valid);
+      // 1件なら即 room へ
+      if(valid.length===1)goT(valid[0]);
+    })();
+    return()=>{cancelled=true;};
+  },[]);// eslint-disable-line react-hooks/exhaustive-deps
+
+  // loading or single-tournament auto-redirect
+  if(list===null||(list&&list.length===1)){
+    return(
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"50vh"}}>
+        <div style={{textAlign:"center",color:G.muted,fontSize:13}}>読み込み中...</div>
+      </div>
+    );
+  }
+
+  // 参加中大会なし
+  if(list.length===0){
+    return(
+      <div style={{padding:"24px 18px"}}>
+        <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:20}}>🏆 大会</div>
+        <div className="card" style={{textAlign:"center",padding:"32px 20px",marginBottom:14}}>
+          <div style={{fontSize:44,marginBottom:12}}>🏟️</div>
+          <div style={{color:"var(--txt)",fontWeight:700,fontSize:15,marginBottom:8}}>まだ大会に参加していません</div>
+          <div style={{color:G.muted,fontSize:13,marginBottom:20}}>友達と一緒に予想大会を楽しもう！</div>
+          <button className="btn btn-red lg" style={{marginBottom:10}} onClick={()=>nav("create")}>🏆 大会を作る</button>
+          <button className="btn btn-dark lg" onClick={()=>nav("home")}>✋ 招待リンクから参加する</button>
+        </div>
+      </div>
+    );
+  }
+
+  // 複数大会→一覧
+  return(
+    <div style={{padding:"16px 18px"}}>
+      <div style={{color:G.gold,fontSize:21,fontWeight:900,marginBottom:14}}>🏆 大会を選ぶ</div>
+      {list.map(t=>{
+        const mid=localStorage.getItem("wcup_myid_"+t.id)||"";
+        const me=t.participants?.find(p=>p.id===mid);
+        const sorted=[...(t.participants||[])].sort((a,b)=>(b.points||0)-(a.points||0));
+        const rank=sorted.findIndex(p=>p.id===mid)+1;
+        const deadlinePassed=isDeadlinePassed(t.deadline);
+        return(
+          <div key={t.id} className="card" style={{marginBottom:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}
+            onClick={()=>goT(t)}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{color:"var(--txt)",fontWeight:700,fontSize:14,marginBottom:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <span className="chip dim">{t.participants?.length||0}人</span>
+                {me&&<span className="chip dim">{me.icon||"⚽"} {me.nickname}</span>}
+                {rank>0&&<span className="chip dim">🏅 {rank}位</span>}
+                {deadlinePassed&&<span className="chip dim" style={{color:"#ff8080"}}>締切済</span>}
+              </div>
+            </div>
+            <DsIcon name="arrowRight" size={18} style={{color:G.muted,flexShrink:0}}/>
+          </div>
+        );
+      })}
+      <button className="btn btn-dark lg" style={{marginTop:12}} onClick={()=>nav("create")}>＋ 新しい大会を作る</button>
     </div>
   );
 }
@@ -2515,7 +2576,8 @@ function App(){
       {page==="wc_teams"&&<PgWcTeams nav={nav} goWcTeam={goWcTeam}/>}
       {page==="wc_players"&&<PgWcPlayers nav={nav} goWcTeam={goWcTeam}/>}
       {page==="wc_team"&&<PgWcTeamDetail nav={nav} teamCode={wcTeamCode} goWcTeam={goWcTeam}/>}
-      {showTabBar&&<TabBar page={page} nav={nav} navDashboard={navDashboard} scope={scope} setScope={setScope} tourn={tourn} myId={myId}/>}
+      {page==="mytourn"&&<PgMyTournaments nav={nav} goT={goT}/>}
+      {showTabBar&&<TabBar page={page} nav={nav} tourn={tourn} myId={myId}/>}
     </div>
     </ErrorBoundary>
   );
@@ -3721,14 +3783,12 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
     {id:"home",    icon:"ball",    label:"ホーム"},
     {id:"predict", icon:"whistle", label:"予想"},
     {id:"ranking", icon:"chart",   label:"ランキング"},
-    {id:"chat",    icon:"chatBig", label:"チャット"},
     {id:"other",   icon:"grid",    label:"その他"},
   ];
   const goTab=(id)=>{
     if(id==="ranking"){trackEvent("open_ranking_tab",{tournamentId:t.id});nav("ranking");return;}
     if(id==="home")trackEvent("open_tournament_home",{tournamentId:t.id});
     if(id==="predict")trackEvent("open_prediction_tab",{tournamentId:t.id});
-    if(id==="chat")trackEvent("open_chat_tab",{tournamentId:t.id});
     if(id==="other")trackEvent("open_more_tab",{tournamentId:t.id});
     setTab(id);
   };
@@ -3784,13 +3844,6 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
 
       {/* ── 予想タブ（F2: インライン大会予想） ── */}
       {tab==="predict"&&<RoomPredictTab t={t} nav={nav} update={update} myId={myId}/>}
-
-      {/* ── チャットタブ ── */}
-      {tab==="chat"&&(
-        <div style={{padding:"16px 18px 0"}}>
-          <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={460}/>
-        </div>
-      )}
 
       {/* ── その他タブ ── */}
       {tab==="other"&&(()=>{
@@ -3972,9 +4025,6 @@ ${url}`);
           );
           return null;
         })()}
-      </div>
-      <div className="wrap section tight">
-        <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={280}/>
       </div>
       <CoffeeSupport compact={true}/>
       <AffiliateBlock title="🏟️ みんなで観戦する準備" keys={["pizza","drink","projector","streaming"]} compact={true}/>
