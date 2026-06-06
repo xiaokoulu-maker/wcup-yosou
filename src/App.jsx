@@ -2223,7 +2223,7 @@ function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
         padding:"0 14px",boxSizing:"border-box",
         background:"rgba(5,16,45,0.97)",backdropFilter:"blur(14px) saturate(1.5)",
         WebkitBackdropFilter:"blur(14px) saturate(1.5)",
-        borderBottom:"1px solid rgba(255,255,255,0.09)",zIndex:50,
+        borderBottom:isTournScope?"2px solid rgba(245,180,49,.35)":"1px solid rgba(255,255,255,0.09)",zIndex:50,
       }}>
         {/* 左: scope 分岐 */}
         {isTournScope?(
@@ -2543,6 +2543,15 @@ function App(){
   const navDashboard=useCallback(()=>{setScope("tournament");nav("room");},[nav]);
   const [roomInitTab,setRoomInitTab]=useState("home");
   const navToPredict=useCallback(()=>{setRoomInitTab("predict");setScope("tournament");nav("room");},[nav]);
+  const goUpgrade=useCallback(async(tournId)=>{
+    const t=await loadT(tournId);
+    if(!t)return;
+    setTourn(t);await saveT(t);
+    window.location.hash="#t-"+t.id;
+    try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}
+    setScope("tournament");
+    nav("upgrade");
+  },[nav]);
   const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard};
 
   const handleOnboardingComplete=(action)=>{
@@ -2563,7 +2572,7 @@ function App(){
       {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} nickname={me?.nickname||""} tourn={tourn} myId={myId}/>}
       {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} scope={scope} setScope={setScope}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
-      {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
+      {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update} navDashboard={navDashboard}/>}
       {page==="tournament"&&<PgTournament {...sp}/>}
       {page==="room"&&<PgTournamentRoom {...sp} initialTab={roomInitTab} clearInitTab={()=>setRoomInitTab("home")}/>}
       {page==="join"&&<PgJoin {...sp} navToPredict={navToPredict}/>}
@@ -2589,7 +2598,7 @@ function App(){
       {page==="matches"&&(scope==="global"?<PgGlobalMatches nav={nav} navDashboard={navDashboard}/>:<PgMatches {...sp}/>)}
       {page==="badges"&&<PgBadges nav={nav} tourn={tourn} myId={myId} navDashboard={navDashboard}/>}
       {page==="coinshop"&&<PgCoinShop nav={nav} tourn={tourn} myId={myId} update={update} navDashboard={navDashboard}/>}
-      {page==="mypage"&&<PgMyPage nav={nav} goT={goT} tourn={tourn} myId={myId} update={update}/>}
+      {page==="mypage"&&<PgMyPage nav={nav} goT={goT} tourn={tourn} myId={myId} update={update} scope={scope} navDashboard={navDashboard} goUpgrade={goUpgrade}/>}
       {/* ── 段階2: W杯2026 データ表示ページ（追記のみ・既存機能に影響なし） ── */}
       {page==="wc_teams"&&<PgWcTeams nav={nav} goWcTeam={goWcTeam}/>}
       {page==="wc_players"&&<PgWcPlayers nav={nav} goWcTeam={goWcTeam}/>}
@@ -3897,24 +3906,43 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
   const lineMsg=encodeURIComponent(`W杯予想大会を作った！\n優勝国・得点王・日本代表の成績を予想して参加して！\n参加はこちら👇\n${url}`);
   const copy=async()=>{try{await navigator.clipboard.writeText(url);}catch{}setCopied(true);setTimeout(()=>setCopied(false),2000);};
   const ROOM_TABS=[
-    {id:"home",    icon:"ball",    label:"ホーム"},
+    {id:"home",    icon:"ball",    label:"ルーム"},
     {id:"predict", icon:"whistle", label:"予想"},
-    {id:"ranking", icon:"chart",   label:"ランキング"},
-    {id:"other",   icon:"grid",    label:"その他"},
+    {id:"ranking", icon:"chart",   label:"順位"},
+    {id:"mypage",  icon:"person",  label:"マイページ"},
   ];
   const goTab=(id)=>{
     if(id==="ranking"){trackEvent("open_ranking_tab",{tournamentId:t.id});nav("ranking");return;}
+    if(id==="mypage"){trackEvent("open_mypage_tab",{tournamentId:t.id});nav("mypage");return;}
     if(id==="home")trackEvent("open_tournament_home",{tournamentId:t.id});
     if(id==="predict")trackEvent("open_prediction_tab",{tournamentId:t.id});
-    if(id==="other")trackEvent("open_more_tab",{tournamentId:t.id});
     setTab(id);
   };
+  const menuItems=[
+    {icon:"users",  label:"みんなの予想",     sub:"参加者の予想一覧",  action:()=>nav("predictions")},
+    {icon:"chart",  label:"詳細統計",         sub:"ポイント・的中状況", action:()=>nav("stats")},
+    {icon:"bracket",label:"トーナメント表",   sub:"",                   action:()=>nav("bracket")},
+    {icon:"flame",  label:"予想生存チェック", sub:"",                   action:()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}, accent:true},
+    {icon:"grid",   label:"グループ表",       sub:"",                   action:()=>nav("groups")},
+    {icon:"flag",   label:"日本代表モード",   sub:"",                   action:()=>nav("japan"), hl:true},
+    {icon:"medal",  label:"バッジ",           sub:"",                   action:()=>nav("badges")},
+    {icon:"coin",   label:"コインショップ",   sub:"",                   action:()=>nav("coinshop")},
+  ];
   return(
-    <div className="screen" style={{paddingBottom:"calc(64px + env(safe-area-inset-bottom,0px))"}}>
+    <div className="screen" data-scope="tournament" style={{paddingBottom:"calc(64px + env(safe-area-inset-bottom,0px))"}}>
 
-      {/* ── ホームタブ ── */}
+      {/* ── 大会名バナー（常設、全タブ共通） ── */}
+      <div style={{padding:"8px 18px 0"}}>
+        <div style={{background:"rgba(245,180,49,.08)",border:"1px solid rgba(245,180,49,.28)",borderRadius:10,padding:"7px 12px",display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:14,flexShrink:0}}>🏆</span>
+          <span style={{color:"var(--gold)",fontWeight:800,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{t.name}</span>
+          <span style={{color:"rgba(245,180,49,.45)",fontSize:9,fontFamily:"'Roboto Mono',monospace",flexShrink:0,letterSpacing:1}}>{t.id}</span>
+        </div>
+      </div>
+
+      {/* ── ルームタブ ── */}
       {tab==="home"&&(
-        <div style={{padding:"16px 18px 0"}}>
+        <div style={{padding:"12px 18px 0"}}>
           <button onClick={()=>{window.location.hash="";nav("home");}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,cursor:"pointer",padding:"0 0 10px",display:"flex",alignItems:"center",gap:4}}>
             <DsIcon name="chevron" size={13} stroke={2} style={{transform:"rotate(180deg)"}}/> ホームに戻る
           </button>
@@ -3944,7 +3972,7 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
             }
           </div>
 
-          <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)"}}>
+          <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)",marginBottom:14}}>
             <div style={{color:"var(--gold)",fontWeight:700,marginBottom:10,fontSize:13}}>📣 友達を招待しよう</div>
             <div style={{display:"flex",gap:8,marginBottom:10}}>
               <input readOnly className="tinput" style={{flex:1,fontSize:11}} value={url}/>
@@ -3959,73 +3987,49 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
               <span className="chip dim"><span style={{letterSpacing:1,fontSize:10}}>大会ID</span> <strong style={{color:"var(--gold)",letterSpacing:3}}>{t.id}</strong></span>
             </div>
           </div>
+
+          {/* 大会メニュー（旧「その他」タブから移設） */}
+          <div style={{marginBottom:8}}><DsSectionHead title="大会メニュー"/></div>
+          <div className="card flush" style={{marginBottom:10}}>
+            {menuItems.map((item,i)=>(
+              <button key={item.label} onClick={item.action} style={{
+                display:"flex",alignItems:"center",gap:12,padding:"11px 14px",
+                background:"transparent",border:"none",
+                borderBottom:i<menuItems.length-1?"1px solid var(--line-soft)":"none",
+                cursor:"pointer",width:"100%",textAlign:"left",
+                color:item.hl?"var(--gold)":item.accent?"#FB923C":"var(--txt)",
+              }}>
+                <div style={{width:30,height:30,borderRadius:8,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <DsIcon name={item.icon} size={16} stroke={1.8}/>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600}}>{item.label}</div>
+                  {item.sub&&<div style={{fontSize:11,color:"var(--muted)",marginTop:1}}>{item.sub}</div>}
+                </div>
+                <DsIcon name="chevron" size={15} stroke={2} style={{color:"var(--faint)"}}/>
+              </button>
+            ))}
+          </div>
+          <div style={{marginBottom:8}}>
+            <button className="btn btn-dark sm" style={{color:"var(--muted)",width:"100%"}} onClick={()=>nav("admin")}>
+              🔐 管理者用：結果入力・参加者管理
+            </button>
+          </div>
         </div>
       )}
 
       {/* ── 予想タブ（F2: インライン大会予想） ── */}
       {tab==="predict"&&<RoomPredictTab t={t} nav={nav} update={update} myId={myId}/>}
 
-      {/* ── その他タブ ── */}
-      {tab==="other"&&(()=>{
-        const items=[
-          {icon:"trophy", label:"大会予想（優勝国など）",    sub:"優勝・得点王・日本代表成績", action:()=>nav("predict")},
-          {icon:"users",  label:"みんなの予想を見る",         sub:"参加者の予想一覧",           action:()=>nav("predictions")},
-          {icon:"chart",  label:"詳細統計",                   sub:"ポイント・的中状況",          action:()=>nav("stats")},
-          {icon:"bracket",label:"トーナメント表・予想マップ", sub:"",                            action:()=>nav("bracket")},
-          {icon:"flame",  label:"予想生存チェック",           sub:"",                            action:()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}, accent:true},
-          {icon:"grid",   label:"グループ表",                 sub:"グループ・FIFAランキング",    action:()=>nav("groups")},
-          {icon:"flag",   label:"日本代表モード",              sub:"",                            action:()=>nav("japan"), hl:true},
-          {icon:"medal",  label:"バッジ",                     sub:"",                            action:()=>nav("badges")},
-          {icon:"coin",   label:"コインショップ",              sub:"",                            action:()=>nav("coinshop")},
-        ];
-        return(
-          <div style={{padding:"16px 0 8px"}}>
-            <div style={{padding:"0 18px 8px"}}>
-              <DsSectionHead title="この大会のメニュー"/>
-            </div>
-            <div className="card flush" style={{margin:"0 18px"}}>
-              {items.map((item,i)=>(
-                <button key={item.label} onClick={item.action} style={{
-                  display:"flex",alignItems:"center",gap:14,padding:"13px 16px",
-                  background:"transparent",border:"none",
-                  borderBottom:i<items.length-1?"1px solid var(--line-soft)":"none",
-                  cursor:"pointer",width:"100%",textAlign:"left",
-                  color:item.hl?"var(--gold)":item.accent?"#FB923C":"var(--txt)",
-                }}>
-                  <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <DsIcon name={item.icon} size={19} stroke={1.8}/>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13.5,fontWeight:700}}>{item.label}</div>
-                    {item.sub&&<div style={{fontSize:11.5,color:"var(--muted)",marginTop:2}}>{item.sub}</div>}
-                  </div>
-                  <DsIcon name="chevron" size={16} stroke={2}/>
-                </button>
-              ))}
-            </div>
-            <div style={{padding:"14px 18px 0",display:"flex",flexDirection:"column",gap:8}}>
-              <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("admin")}>
-                🔐 管理者用：結果入力・参加者管理
-              </button>
-              {(!t.plan||t.plan==="free")&&(
-                <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("upgrade")}>
-                  5人まで無料。友達が増えたらアップグレードできます →
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── ルーム下部タブバー ── */}
+      {/* ── ルーム下部タブバー（ゴールドアクセント） ── */}
       <div style={{
         position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",
-        background:"rgba(5,16,45,0.97)",backdropFilter:"blur(14px) saturate(1.5)",
-        borderTop:"1px solid rgba(255,255,255,0.09)",zIndex:60,
+        background:"rgba(5,14,36,0.97)",backdropFilter:"blur(14px) saturate(1.5)",
+        borderTop:"1px solid rgba(245,180,49,.18)",zIndex:60,
       }}>
         <div style={{display:"flex",alignItems:"stretch",paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
           {ROOM_TABS.map(tb=>{
-            const active=tb.id===tab&&tb.id!=="predict"&&tb.id!=="ranking";
+            const active=tb.id===tab&&tb.id!=="predict"&&tb.id!=="ranking"&&tb.id!=="mypage";
             return(
               <button key={tb.id} onClick={()=>goTab(tb.id)} style={{
                 flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
@@ -5483,7 +5487,7 @@ function EliminatedManager({tourn,update}){
 }
 
 /* ── Upgrade ── */
-function PgUpgrade({nav,tourn:t,update}){
+function PgUpgrade({nav,tourn:t,update,navDashboard}){
   const [unlockCode,setUnlockCode]=useState("");
   const [unlockErr,setUnlockErr]=useState("");
   const [unlocked,setUnlocked]=useState(false);
@@ -8283,7 +8287,7 @@ function PgBadges({nav,tourn,myId,navDashboard}){
 }
 
 /* ── spec-12: マイページ（大会ハブ兼用） ── */
-function PgMyPage({nav,goT,tourn,myId,update}){
+function PgMyPage({nav,goT,tourn,myId,update,scope,navDashboard,goUpgrade}){
   const me=tourn?.participants?.find(p=>p.id===myId);
   const nickname=me?.nickname||"ゲスト";
   const icon=me?.icon||"👤";
@@ -8298,6 +8302,7 @@ function PgMyPage({nav,goT,tourn,myId,update}){
   const [joinId,setJoinId]=useState("");
   const [joinErr,setJoinErr]=useState("");
   const [showJoin,setShowJoin]=useState(false);
+  const [showUpgradeSelect,setShowUpgradeSelect]=useState(false);
 
   // 参加大会リスト読み込み（5分キャッシュ）
   useEffect(()=>{
@@ -8321,7 +8326,7 @@ function PgMyPage({nav,goT,tourn,myId,update}){
           if(!myPart)return null;
           const sorted=[...(t.participants||[])].sort((a,b)=>(b.totalMatchPoints||0)-(a.totalMatchPoints||0));
           const myRank=sorted.findIndex(p=>p.id===myPid)+1;
-          return{id:t.id,name:t.name,myPoints:myPart.totalMatchPoints||0,myRank:myRank>0?myRank:null,participantCount:t.participants?.length||0};
+          return{id:t.id,name:t.name,myPoints:myPart.totalMatchPoints||0,myRank:myRank>0?myRank:null,participantCount:t.participants?.length||0,plan:t.plan||"free"};
         }).filter(Boolean);
         try{localStorage.setItem(CACHE_KEY,JSON.stringify({data:valid,cachedAt:Date.now()}));}catch{}
         setMyTournaments(valid);
@@ -8420,18 +8425,72 @@ function PgMyPage({nav,goT,tourn,myId,update}){
     finally{setSaving(false);}
   };
 
+  const freeTournaments=myTournaments.filter(t=>!t.plan||t.plan==="free");
+  const GlobalUpgradeSection=()=>{
+    if(scope==="tournament")return null;
+    return(
+      <div className="wrap section">
+        {!showUpgradeSelect?(
+          <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)",textAlign:"center"}}>
+            <div style={{fontSize:24,marginBottom:4}}>🚀</div>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>参加人数を増やすには？</div>
+            <div style={{color:"var(--muted)",fontSize:12,marginBottom:12}}>大会を選んでプランをアップグレードできます</div>
+            <button className="btn btn-gold md" style={{width:"100%"}} onClick={()=>setShowUpgradeSelect(true)}>
+              大会を選んでアップグレード
+            </button>
+          </div>
+        ):freeTournaments.length===0?(
+          <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)",textAlign:"center"}}>
+            <div style={{color:"var(--muted)",fontSize:13,marginBottom:12}}>
+              {myTournaments.length===0?"まず大会を作成するとアップグレードできます":"参加中の大会はすでにアップグレード済みです"}
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button className="btn btn-dark sm" style={{flex:1}} onClick={()=>setShowUpgradeSelect(false)}>戻る</button>
+              <button className="btn btn-red md" style={{flex:1}} onClick={()=>nav("create")}>＋ 大会を作る</button>
+            </div>
+          </div>
+        ):(
+          <div>
+            <div style={{color:"var(--gold)",fontSize:12,fontWeight:700,marginBottom:8}}>アップグレードする大会を選んでください</div>
+            <div className="card flush" style={{marginBottom:8}}>
+              {freeTournaments.map((item,i)=>(
+                <button key={item.id} onClick={()=>goUpgrade&&goUpgrade(item.id)} style={{
+                  display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
+                  background:"transparent",border:"none",
+                  borderBottom:i<freeTournaments.length-1?"1px solid var(--line-soft)":"none",
+                  cursor:"pointer",width:"100%",textAlign:"left",
+                }}>
+                  <div style={{width:32,height:32,borderRadius:8,background:"rgba(245,180,49,.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"var(--gold)",fontWeight:900,fontSize:14}}>
+                    {item.name?.[0]||"?"}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:600,color:"var(--txt)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.name}</div>
+                    <div style={{fontSize:11,color:"var(--muted)"}}>無料プラン · {item.participantCount}人参加中</div>
+                  </div>
+                  <span style={{color:"var(--gold)",fontSize:11,fontWeight:700,flexShrink:0}}>アップグレード →</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={()=>setShowUpgradeSelect(false)} className="btn btn-dark sm" style={{width:"100%"}}>キャンセル</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if(!me){
     return(
       <div className="screen">
-        <DsPageHead onBack={()=>nav("home")} title="マイページ" icon="person"/>
+        <DsPageHead onBack={()=>scope==="tournament"&&navDashboard?navDashboard():nav("home")} title="マイページ" icon="person"/>
         <TournamentHub/>
+        <GlobalUpgradeSection/>
       </div>
     );
   }
 
   return(
     <div className="screen">
-      <DsPageHead onBack={()=>nav("home")} title="マイページ" icon="person"/>
+      <DsPageHead onBack={()=>scope==="tournament"&&navDashboard?navDashboard():nav("home")} title="マイページ" icon="person"/>
 
       <div className="wrap section tight">
         <div className="card lg">
@@ -8457,6 +8516,21 @@ function PgMyPage({nav,goT,tourn,myId,update}){
       </div>
 
       <TournamentHub/>
+
+      {scope==="tournament"&&tourn&&(!tourn.plan||tourn.plan==="free")&&(
+        <div className="wrap section">
+          <div className="card lg" style={{borderColor:"rgba(245,180,49,.3)",textAlign:"center"}}>
+            <div style={{fontSize:28,marginBottom:6}}>🚀</div>
+            <div style={{fontWeight:800,marginBottom:4,fontSize:14}}>5人まで無料</div>
+            <div style={{color:"var(--muted)",fontSize:12,marginBottom:12}}>友達が増えたらアップグレードで人数を増やせます</div>
+            <button className="btn btn-gold md" style={{width:"100%"}} onClick={()=>nav("upgrade")}>
+              プランを見る → アップグレード
+            </button>
+          </div>
+        </div>
+      )}
+
+      <GlobalUpgradeSection/>
 
       <div className="wrap section">
         <DsSectionHead title="最近の予想"/>

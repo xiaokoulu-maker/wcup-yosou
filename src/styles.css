@@ -170,6 +170,13 @@ textarea:focus{border-color:#005BAC !important;box-shadow:0 0 0 3px rgba(0,91,17
   --maxw:438px;
 }
 *{-webkit-tap-highlight-color:transparent}
+/* tournament scope: サムライブルーを軸に暖かいゴールドアクセント */
+.screen[data-scope="tournament"]{
+  background:
+    radial-gradient(640px 380px at 88% 2%, rgba(220,30,46,.08), transparent 55%),
+    radial-gradient(480px 320px at 8% 92%,  rgba(230,165,0,.07), transparent 58%),
+    linear-gradient(180deg,#0c1028 0%, #090c1e 22%, #070919 100%);
+}
 .screen{width:100%;max-width:var(--maxw);min-height:100vh;position:relative;
   color:var(--txt);font-family:"Noto Sans JP",system-ui,sans-serif;
   background:
