@@ -1330,10 +1330,18 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
         )}
         {/* テキスト入力 + 送信 */}
         <div className="flex items-end gap-2 px-3 py-2">
-          <input className="bg-white/10 text-white placeholder-text-on-navy-weak rounded-full px-4 py-2 flex-1 text-sm outline-none border border-transparent focus:border-hinomaru/50 min-w-0"
-            placeholder="メッセージを入力..."
+          <textarea className="bg-white/10 text-white placeholder-text-on-navy-weak rounded-2xl px-4 py-2 flex-1 text-sm outline-none border border-transparent focus:border-hinomaru/50 min-w-0 resize-none"
+            placeholder="メッセージを入力... (Shift+Enter で送信)"
+            rows={1}
+            enterKeyHint="enter"
+            style={{maxHeight:120,overflowY:"auto",lineHeight:1.4}}
             value={input} onChange={e=>setInput(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&handleSend()}
+            onKeyDown={e=>{
+              if(e.key==="Enter"&&!e.isComposing&&(e.shiftKey||e.ctrlKey)){
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             maxLength={200}/>
           <button onClick={handleSend} disabled={sending||!input.trim()}
             className={`bg-hinomaru text-white rounded-full px-4 py-2 font-bold text-sm flex-shrink-0 border-0 cursor-pointer shadow-cta-red transition-opacity${(!input.trim()||sending)?" opacity-40 cursor-default shadow-none":""}`}>
