@@ -3520,7 +3520,185 @@ setLoading(true);
   );
 }
 
-/* ── Tournament Room (F1: 骨格 + ホームタブ最小構成) ── */
+/* ── Room: 予想タブ（F2 インライン大会予想） ── */
+function RoomPredictTab({t,nav,update,myId}){
+  const me=t?.participants?.find(p=>p.id===myId);
+  const isJoined=!!me;
+  const deadlinePassed=isDeadlinePassed(t.deadline);
+  const BASE_PRED={winner:"",runnerUp:"",topScorer:"",assistKing:"",tournamentMvp:"",japanMvp:"",japanResult:"",favoriteCountry:"",comment:""};
+  const [pred,setPred]=useState(me?.predictions?{...BASE_PRED,...me.predictions}:{...BASE_PRED});
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const [saved,setSaved]=useState(false);
+  const [awardsOpen,setAwardsOpen]=useState(false);
+  const [copied,setCopied]=useState(false);
+  const set=k=>v=>setPred(p=>({...p,[k]:v}));
+  const url=`${window.location.origin}${window.location.pathname}#t-${t.id}`;
+  const lineShareText=encodeURIComponent(`私の2026W杯優勝予想は【${pred.winner||"？"}】！\n日本代表は【${pred.japanResult||"？"}】予想です。\nあなたも予想してみて👇\n${url}\n#W杯予想`);
+  const copyUrl=async()=>{try{await navigator.clipboard.writeText(url);}catch{}setCopied(true);setTimeout(()=>setCopied(false),2000);};
+  const save=async()=>{
+    const s2=getSettings(t);
+    const missing=(s2.winner&&!pred.winner)||(s2.japanResult&&!pred.japanResult)||!pred.favoriteCountry;
+    if(missing){setErr("必須項目を選択してください");return;}
+    setLoading(true);
+    const fresh=await loadT(t.id);const cur=fresh||t;
+    if(isDeadlinePassed(cur.deadline)){setErr("締め切りが終了しています");setLoading(false);return;}
+    const updated={...cur,participants:cur.participants.map(p=>p.id===myId?{...p,predictions:pred,points:cur.results?calcPts(pred,cur.results):0}:p)};
+    await update(updated);
+    trackEvent("save_tournament_prediction",{tournamentId:t.id});
+    setSaved(true);setLoading(false);
+  };
+  const awSettings=getSettings(t);
+  const awActiveCats=AWARD_CATS.filter(c=>awSettings[c.key]);
+  const awFilled=awActiveCats.filter(c=>(pred[c.key]||"").trim());
+
+  // 未参加
+  if(!isJoined)return(
+    <div style={{padding:"16px 18px 0"}}>
+      <div className="card lg" style={{textAlign:"center",padding:"28px 16px"}}>
+        <div style={{fontSize:36,marginBottom:12}}>⚽</div>
+        <div style={{color:"var(--gold)",fontWeight:900,fontSize:16,marginBottom:8}}>大会に参加してから予想できます</div>
+        <div style={{color:"var(--muted)",fontSize:13,lineHeight:1.7,marginBottom:16}}>大会に参加すると予想を入力できます。</div>
+        <button className="btn btn-red lg" onClick={()=>nav("join")}>✋ 参加して予想する</button>
+      </div>
+    </div>
+  );
+
+  // 締め切り済み
+  if(deadlinePassed)return(
+    <div style={{padding:"16px 18px 0"}}>
+      <div className="banner blue" style={{marginBottom:14,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>
+        ⛔ 予想の受付は終了しました
+      </div>
+      {me?.predictions?.winner&&(
+        <div className="card lg">
+          <div style={{color:"var(--dim)",fontWeight:700,fontSize:12,marginBottom:12}}>あなたの予想</div>
+          <div className="kv">
+            <div><div className="k">🥇 優勝</div><div className="v">{me.predictions.winner}</div></div>
+            <div><div className="k">🇯🇵 日本</div><div className="v">{me.predictions.japanResult||"—"}</div></div>
+            {me.predictions.topScorer&&<div><div className="k">⚽ 得点王</div><div className="v">{me.predictions.topScorer}</div></div>}
+          </div>
+        </div>
+      )}
+      <button className="btn btn-dark md" style={{width:"100%",marginTop:8}} onClick={()=>nav("ranking")}>
+        <DsIcon name="chart" size={17}/> ランキングを見る
+      </button>
+    </div>
+  );
+
+  // 保存完了 → 共有カード
+  if(saved)return(
+    <div style={{padding:"16px 18px 0"}}>
+      <div className="card lg" style={{borderColor:"rgba(55,214,122,.35)",background:"rgba(55,214,122,.04)"}}>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:28,marginBottom:4}}>🎉</div>
+          <div style={{color:"#37d67a",fontWeight:900,fontSize:17}}>予想完了！</div>
+          <div style={{color:"var(--muted)",fontSize:12.5,marginTop:6}}>
+            🥇 優勝: <strong style={{color:"var(--txt)"}}>{pred.winner||"—"}</strong>
+            {pred.japanResult&&<> ／ 🇯🇵 日本: <strong style={{color:"var(--txt)"}}>{pred.japanResult}</strong></>}
+          </div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:9}}>
+          <a href={`https://line.me/R/msg/text/?${lineShareText}`} target="_blank" rel="noopener noreferrer"
+             className="btn btn-line lg" style={{textDecoration:"none"}}
+             onClick={()=>trackEvent("share_pred_line",{tournamentId:t.id})}>
+            <span className="lk">L</span> LINEで友達に送る
+          </a>
+          <button className="btn btn-dark md" onClick={copyUrl}>
+            <DsIcon name={copied?"check":"link"} size={17}/>{copied?"コピーしました":"招待リンクをコピー"}
+          </button>
+          <button className="btn btn-dark md" onClick={()=>nav("ranking")}>
+            <DsIcon name="chart" size={17}/> ランキングを見る
+          </button>
+        </div>
+      </div>
+      <button className="btn btn-dark sm" style={{width:"100%",marginTop:10,color:"var(--muted)"}} onClick={()=>setSaved(false)}>
+        ✎ 予想を編集する
+      </button>
+    </div>
+  );
+
+  // 予想フォーム
+  return(
+    <div style={{padding:"16px 18px 0"}}>
+      {me?.predictions?.winner&&(
+        <div className="banner gold" style={{marginBottom:12}}>
+          ✓ 予想を保存済み（変更する場合は再度保存してください）
+        </div>
+      )}
+      {t.deadline&&(
+        <div className="banner gold" style={{marginBottom:14}}>
+          <DsIcon name="clock" size={15}/> ⏰ 締め切り: {fmtDeadline(t.deadline)}
+        </div>
+      )}
+      <div className="card lg">
+        <div style={{marginBottom:18}}><label className="field-lbl">🥇 優勝国</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
+        <div style={{marginBottom:18}}><label className="field-lbl">🥈 準優勝国</label><FlagChips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
+        <div style={{marginBottom:18}}><label className="field-lbl">🇯🇵 日本代表の成績</label><Chips opts={JAPAN_RES} value={pred.japanResult} onChange={set("japanResult")}/></div>
+        <div style={{marginBottom:18}}><label className="field-lbl">❤️ 応援国</label><FlagChips opts={COUNTRIES} value={pred.favoriteCountry} onChange={set("favoriteCountry")}/></div>
+        <div><label className="field-lbl">💬 一言コメント</label><textarea className="tinput" style={{height:72,resize:"none",paddingTop:14,paddingBottom:14}} placeholder="予想の根拠や意気込みを！" value={pred.comment} onChange={e=>set("comment")(e.target.value)}/></div>
+      </div>
+      {awActiveCats.length>0&&(
+        <div className="card" style={{marginTop:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:awardsOpen||awFilled.length>0?12:0}}>
+            <span style={{fontSize:16}}>🏆</span>
+            <span style={{color:"var(--txt)",fontWeight:800,fontSize:14,flex:1}}>個人賞・スタッツ予想</span>
+            <span style={{color:"var(--gold)",fontSize:11,fontWeight:700,background:"rgba(245,180,49,0.1)",border:"1px solid rgba(245,180,49,0.25)",borderRadius:20,padding:"2px 8px"}}>任意</span>
+          </div>
+          {!awardsOpen&&awFilled.length===0&&(
+            <div>
+              <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>得点王・MVP などを当てると追加ポイント！</div>
+              <button onClick={()=>setAwardsOpen(true)} className="btn btn-dark sm" style={{width:"100%"}}>＋ 個人賞も予想する</button>
+              <div style={{color:"var(--muted)",fontSize:11,marginTop:8,textAlign:"center"}}>✓ 未入力でも送信できます</div>
+            </div>
+          )}
+          {!awardsOpen&&awFilled.length>0&&(
+            <div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+                {awFilled.map(c=>(
+                  <span key={c.key} style={{background:"rgba(245,180,49,0.11)",border:"1px solid rgba(245,180,49,0.3)",borderRadius:999,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)",display:"inline-flex",alignItems:"center",gap:4}}>
+                    {c.icon} {(pred[c.key]||"").trim()}
+                  </span>
+                ))}
+              </div>
+              <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>● {awFilled.length} / {awActiveCats.length} 予想済み</div>
+              <button onClick={()=>setAwardsOpen(true)} className="btn btn-dark sm" style={{width:"100%"}}>✎ 個人賞を編集</button>
+            </div>
+          )}
+          {awardsOpen&&(
+            <div>
+              {awActiveCats.map(c=>(
+                <div key={c.key} style={{marginBottom:16}}>
+                  <label className="field-lbl">{c.icon} {c.label}</label>
+                  {c.key==="topScorer"
+                    ?<ScorerChips opts={TOP_SCORER_CANDIDATES} value={pred.topScorer} onChange={set("topScorer")}/>
+                    :<input className="tinput" placeholder="選手名を入力（例：エムバペ）" value={pred[c.key]||""} onChange={e=>set(c.key)(e.target.value)} maxLength={30}/>
+                  }
+                </div>
+              ))}
+              <button onClick={()=>setAwardsOpen(false)} className="btn btn-dark sm" style={{width:"100%"}}>入力を閉じる ▲</button>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="card" style={{marginTop:0}}>
+        <div style={{color:"var(--txt)",fontWeight:800,fontSize:14,marginBottom:8}}>📅 試合スコア予想</div>
+        <div style={{color:"var(--muted)",fontSize:12,marginBottom:10}}>全104試合の勝敗スコアを予想してポイントを稼ごう。</div>
+        <button className="btn btn-dark md" style={{width:"100%"}} onClick={()=>nav("matches")}>
+          ⚽ もっと詳しく予想する →
+        </button>
+      </div>
+      <div style={{marginTop:0,paddingBottom:8}}>
+        {err&&<div className="banner blue" style={{marginBottom:12,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080"}}>⚠️ {err}</div>}
+        <button className="btn btn-red lg" onClick={save} disabled={loading}>
+          <DsIcon name="check" size={18}/>{loading?"保存中...":"予想を保存する"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Tournament Room (F1+F2: 骨格＋ホームタブ＋予想タブインライン) ── */
 function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard}){
   const [tab,setTab]=useState("home");
   const [copied,setCopied]=useState(false);
@@ -3541,9 +3719,9 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
     {id:"other",   icon:"grid",    label:"その他"},
   ];
   const goTab=(id)=>{
-    if(id==="predict"){trackEvent("open_prediction_tab",{tournamentId:t.id});nav("matches");return;}
     if(id==="ranking"){trackEvent("open_ranking_tab",{tournamentId:t.id});nav("ranking");return;}
     if(id==="home")trackEvent("open_tournament_home",{tournamentId:t.id});
+    if(id==="predict")trackEvent("open_prediction_tab",{tournamentId:t.id});
     if(id==="chat")trackEvent("open_chat_tab",{tournamentId:t.id});
     if(id==="other")trackEvent("open_more_tab",{tournamentId:t.id});
     setTab(id);
@@ -3597,6 +3775,9 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
           </div>
         </div>
       )}
+
+      {/* ── 予想タブ（F2: インライン大会予想） ── */}
+      {tab==="predict"&&<RoomPredictTab t={t} nav={nav} update={update} myId={myId}/>}
 
       {/* ── チャットタブ ── */}
       {tab==="chat"&&(
