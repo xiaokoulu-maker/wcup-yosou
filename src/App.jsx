@@ -2896,6 +2896,69 @@ function SbLeaguesSection({myTournaments,onSelect,onCreate,onJoin}){
   );
 }
 
+/* ── Samurai Blue: Next Match Votes ── */
+function SbMatchVotesSection({data,onMore}){
+  const now=new Date();
+  const byMatch=data?.byMatch||{};
+  const DAYS=["日","月","火","水","木","金","土"];
+  const fmtDate=kickoff=>{const d=new Date(kickoff);return`${d.getMonth()+1}/${d.getDate()}(${DAYS[d.getDay()]})`;};
+  const next=MATCHES
+    .filter(m=>byMatch[m.id]&&byMatch[m.id].total>0&&new Date(m.kickoff)>now)
+    .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
+    .slice(0,3);
+  if(next.length===0)return null;
+  return(
+    <div className="sb-section">
+      <div className="sb-section-head">
+        <div className="sb-t"><span className="sb-tick"/>注目の試合予想率</div>
+        <button onClick={onMore} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.5)",fontSize:11,padding:0}}>すべて見る</button>
+      </div>
+      <div className="sb-card">
+        {next.map((m,i)=>{
+          const v=byMatch[m.id];
+          const tot=v.total||1;
+          const hp=Math.round(v.home/tot*100);
+          const dp=Math.round(v.draw/tot*100);
+          const ap=100-hp-dp;
+          const maxP=Math.max(hp,dp,ap);
+          return(
+            <div key={m.id} style={{padding:"10px 0",borderBottom:i<next.length-1?"1px solid rgba(255,255,255,.07)":"none"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                <span style={{color:"rgba(255,255,255,.4)",fontSize:10,fontWeight:700}}>{fmtDate(m.kickoff)} ・日程概算</span>
+                <span style={{color:"rgba(255,255,255,.3)",fontSize:10}}>{v.total}票</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                <FlagImg country={m.home} size={22}/>
+                <span style={{color:"#fff",fontWeight:700,fontSize:12,flex:1}}>{m.home}</span>
+                <span style={{color:"rgba(255,255,255,.4)",fontSize:10,fontWeight:700}}>vs</span>
+                <span style={{color:"#fff",fontWeight:700,fontSize:12,flex:1,textAlign:"right"}}>{m.away}</span>
+                <FlagImg country={m.away} size={22}/>
+              </div>
+              <div style={{display:"flex",gap:2,borderRadius:5,overflow:"hidden",height:20}}>
+                <div style={{flex:hp,background:hp===maxP?"rgba(0,104,183,.85)":"rgba(0,104,183,.4)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:9,fontWeight:700,minWidth:0}}>
+                  {hp>=15?`${hp}%`:""}
+                </div>
+                {dp>0&&<div style={{flex:dp,background:"rgba(255,255,255,.2)",display:"flex",alignItems:"center",justifyContent:"center",color:"rgba(255,255,255,.7)",fontSize:9,fontWeight:600,minWidth:0}}>
+                  {dp>=15?`${dp}%`:""}
+                </div>}
+                <div style={{flex:ap,background:ap===maxP?"rgba(230,0,51,.75)":"rgba(230,0,51,.4)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:9,fontWeight:700,minWidth:0}}>
+                  {ap>=15?`${ap}%`:""}
+                </div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:3,fontSize:10,color:"rgba(255,255,255,.45)"}}>
+                <span>{m.home} {hp}%</span>
+                {dp>0&&<span style={{textAlign:"center",flex:1}}>引分 {dp}%</span>}
+                <span>{m.away} {ap}%</span>
+              </div>
+            </div>
+          );
+        })}
+        <button className="sb-morelink" onClick={onMore}>全試合の予想率を見る →</button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Home (侍ブルー D2) ── */
 function PgHome({nav,goT,tourn,myId,scope,setScope}){
   const [extraOpen,setExtraOpen]=useState(true);
@@ -2903,6 +2966,8 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
   const [championVotes,setChampionVotes]=useState(null);
+  const [myTournaments,setMyTournaments]=useState(null);
+  const [matchVotes,setMatchVotes]=useState(null);
   const me=tourn?.participants?.find(p=>p.id===myId);
   const isLoggedIn=!!(me&&tourn);
   // 日本戦結果演出チェック
@@ -2941,6 +3006,26 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
     loadGlobalChampionVotes().then(d=>{if(d)setChampionVotes(d);}).catch(()=>{});
   },[]);
 
+  // P2: 参加中の大会リストを読み込む
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      const joined=getMyJoined();
+      const fromKeys=Object.keys(localStorage).filter(k=>k.startsWith("wcup_myid_")).map(k=>k.replace("wcup_myid_",""));
+      const allIds=[...new Set([...joined,...fromKeys])].filter(Boolean);
+      if(allIds.length===0){if(!cancelled)setMyTournaments([]);return;}
+      const results=await Promise.all(allIds.map(id=>loadT(id)));
+      const valid=results.filter(t=>{if(!t)return false;const mid=localStorage.getItem("wcup_myid_"+t.id);return!!(mid&&t.participants?.find(p=>p.id===mid));});
+      if(!cancelled)setMyTournaments(valid);
+    })();
+    return()=>{cancelled=true;};
+  },[]);
+
+  // P2: 試合予想率を読み込む
+  useEffect(()=>{
+    fetchGlobalMatchVotes().then(d=>{if(d)setMatchVotes(d);}).catch(()=>{});
+  },[]);
+
   const now=new Date();
   const pad=n=>String(n).padStart(2,"0");
   const todayStr=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
@@ -2962,8 +3047,8 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
   const myCoins=getCoins(me).balance;
   const myBadgesCount=me?.badges?.length||0;
 
-  // ── HomeB (handoff home.jsx / HomeB デザイン適用) ──
-  if(isLoggedIn&&scope==="tournament"){
+  // ── HomeB (P2以降はHomeAに統合。コードはロールバック用に温存) ──
+  if(false){// eslint-disable-line no-constant-condition
     // 日本戦カウントダウンバナー（ロジック温存・スタイルのみ更新）
     const JapanBanner=()=>{
       const [jpNow,setJpNow]=useState(Date.now());
@@ -3084,25 +3169,22 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
     );
   }
 
-  // ── HomeA Samurai Blue ──
+  // ── HomeA Samurai Blue (P2) ──
+  // 参加中大会の整形（SbLeaguesSectionが期待するshape）
+  const myTournamentsForSection=useMemo(()=>{
+    if(!myTournaments)return null;
+    return myTournaments.map((t,i)=>{
+      const mid=localStorage.getItem("wcup_myid_"+t.id)||"";
+      const mePart=t.participants?.find(p=>p.id===mid);
+      const sorted=[...(t.participants||[])].sort((a,b)=>(b.totalMatchPoints||0)-(a.totalMatchPoints||0));
+      const rank=sorted.findIndex(p=>p.id===mid)+1;
+      return{id:t.id,name:t.name,myRank:rank>0?rank:null,participantCount:t.participants?.length||0,myPoints:mePart?.totalMatchPoints||0,_raw:t};
+    });
+  },[myTournaments]);
+
   return(
     <>
     <div className="sb-app">
-      {/* 参加中の大会への入口（目立つボタンカード） */}
-      {scope!=="tournament"&&isLoggedIn&&(
-        <div style={{padding:"8px 14px 4px"}}>
-          <button onClick={()=>setScope("tournament")}
-            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
-              background:"rgba(245,180,49,0.13)",border:"1.5px solid rgba(245,180,49,0.45)",
-              borderRadius:12,padding:"10px 14px",cursor:"pointer",
-              fontFamily:"var(--sb-jp)",fontSize:14,fontWeight:700,color:"#f5b431",
-              boxShadow:"0 2px 12px rgba(245,180,49,0.10)"}}>
-            <span>🏆 {tourn.name} を開く</span>
-            <span style={{fontSize:18,opacity:0.8}}>→</span>
-          </button>
-        </div>
-      )}
-
       {/* hero */}
       <div className="sb-hero sb-stripe-field">
         <div className="sb-hinomaru"/>
@@ -3122,6 +3204,21 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
         <p className="sb-btn-hint">30秒で完成・LINEでそのまま招待</p>
         <button className="sb-btn sb-btn-ghost" onClick={()=>nav("solopredict")}>ひとりで予想を始める</button>
       </div>
+
+      {/* 参加中の大会 */}
+      {myTournamentsForSection&&myTournamentsForSection.length>0&&(
+        <SbLeaguesSection
+          myTournaments={myTournamentsForSection}
+          onSelect={t=>goT(t._raw)}
+          onCreate={()=>nav("create")}
+          onJoin={()=>nav("home")}
+        />
+      )}
+
+      {/* 注目の試合の予想率 */}
+      {matchVotes&&(
+        <SbMatchVotesSection data={matchVotes} onMore={()=>nav("matches")}/>
+      )}
 
       {/* みんなの優勝予想 */}
       {championVotes&&championVotes.rankings.length>0&&(
