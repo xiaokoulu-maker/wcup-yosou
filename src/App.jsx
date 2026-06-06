@@ -1055,6 +1055,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
   const bottomRef=useRef(null);
   const msgListRef=useRef(null);
   const reactionDebounce=useRef({});
+  const pendingRef=useRef(new Map()); // tempId → sentAt
 
   useEffect(()=>{
     if(!currentUser){
@@ -1070,7 +1071,12 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
     fetchMessages(tournamentId).then(msgs=>{setMessages(msgs);setLoading(false);});
     const unsub=subscribeToChat(
       tournamentId,
-      (msg)=>setMessages(prev=>[...prev.slice(-99),msg]),
+      (msg)=>setMessages(prev=>{
+        // 楽観更新の仮メッセージと一致するものを差し替え
+        const pidx=prev.findIndex(m=>m._pending&&m.nickname===msg.nickname&&m.body===msg.body&&Date.now()-new Date(m.created_at).getTime()<15000);
+        if(pidx>=0){const next=[...prev];next[pidx]=msg;return next;}
+        return[...prev.slice(-99),msg];
+      }),
       (msg)=>setMessages(prev=>prev.map(m=>m.id===msg.id?msg:m))
     );
     return unsub;
@@ -1082,13 +1088,32 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
 
   const handleSend=async()=>{
     const body=input.trim();
-    if(!body||!nick.trim()) return;
-    setSending(true);
+    if(!body||!nick.trim()||sending) return;
+    const tempId=`tmp_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
     const opts={};
     if(replyTo) opts.reply_to=replyTo;
+    // 楽観更新: 即座に自画面に表示
+    const optimistic={_tempId:tempId,_pending:true,id:null,nickname:nick,icon,body,created_at:new Date().toISOString(),reactions:{},reply_to:replyTo||null};
+    setMessages(prev=>[...prev,optimistic]);
+    pendingRef.current.set(tempId,Date.now());
+    setInput("");
+    setReplyTo(null);
+    setSending(true);
     const ok=await sendMessage(tournamentId,nick,icon,body,opts);
-    if(ok){setInput("");setReplyTo(null);}
     setSending(false);
+    pendingRef.current.delete(tempId);
+    if(!ok){
+      // 送信失敗: 仮メッセージを失敗状態に更新
+      setMessages(prev=>prev.map(m=>m._tempId===tempId?{...m,_pending:false,_failed:true}:m));
+    }
+  };
+
+  const handleRetry=async(failed)=>{
+    setMessages(prev=>prev.map(m=>m._tempId===failed._tempId?{...m,_pending:true,_failed:false}:m));
+    const ok=await sendMessage(tournamentId,failed.nickname,failed.icon,failed.body,{});
+    if(!ok){
+      setMessages(prev=>prev.map(m=>m._tempId===failed._tempId?{...m,_pending:false,_failed:true}:m));
+    }
   };
 
   const handleReaction=async(msgId,emoji)=>{
@@ -1132,17 +1157,6 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
       .slice().reverse()
       .filter(m=>{if(seen.has(m.nickname))return false;seen.add(m.nickname);return true;})
       .slice(0,3);
-  },[messages]);
-
-  // オンライン人数（直近30分以内の発言者数）
-  const onlineCount=useMemo(()=>{
-    const cutoff=Date.now()-30*60*1000;
-    const seen=new Set();
-    messages.forEach(m=>{
-      if(m.nickname&&m.nickname!=="system"&&m.type!=="system"&&new Date(m.created_at).getTime()>cutoff)
-        seen.add(m.nickname);
-    });
-    return Math.max(seen.size,1);
   },[messages]);
 
   // 日本戦クイック応援バー
@@ -1238,6 +1252,8 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
     const isMe=m.nickname===nick;
     const isSystem=m.nickname==="system"||m.type==="system";
     const isPredCard=m.type==="prediction_card";
+    const isPending=!!m._pending;
+    const isFailed=!!m._failed;
     const reactions=m.reactions||{};
     const reply=m.reply_to;
     const lpHandlers=m.id?makeLongPress(()=>setOpenMenuFor(m.id)):{};
@@ -1274,7 +1290,8 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
     }
     // 通常メッセージ
     return(
-      <div key={m.id||i} className={`my-1 px-4 flex items-start gap-2${isMe?" flex-row-reverse":""}`}>
+      <div key={m._tempId||m.id||i} className={`my-1 px-4 flex items-start gap-2${isMe?" flex-row-reverse":""}`}
+        style={{opacity:isPending?0.65:1}}>
         {/* アバター */}
         <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm flex-shrink-0 mt-1">
           {m.icon||"💬"}
@@ -1292,19 +1309,21 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
           <div className="relative">
             <ReactionMenu msgId={m.id} isMe={isMe}/>
             <div {...lpHandlers}
-              className={`relative px-4 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap${isMe?" bg-hinomaru text-white shadow-cta-red rounded-2xl rounded-tr-sm":" bg-white text-text-on-white rounded-2xl rounded-tl-sm"}${reply?" rounded-tl-none rounded-tr-none":""}`}
+              className={`relative px-4 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap${isMe?" bg-hinomaru text-white shadow-cta-red rounded-2xl rounded-tr-sm":" bg-white text-text-on-white rounded-2xl rounded-tl-sm"}${reply?" rounded-tl-none rounded-tr-none":""}${isFailed?" outline outline-2 outline-red-400":""}`}
               style={{userSelect:"none",cursor:"default"}}>
               {m.body}
             </div>
           </div>
-          {/* 時刻 + 返信ボタン */}
+          {/* 時刻 / 送信中 / 失敗 */}
           <div className={`flex items-center gap-2 mt-0.5 px-1${isMe?" flex-row-reverse":""}`}>
-            <span className="text-text-on-navy-weakest text-[10px]">{fmtTime(m.created_at)}</span>
-            {!isMe&&<button onClick={()=>setReplyTo({messageId:m.id,senderName:m.nickname,preview:m.body?.slice(0,30)||""})}
+            {isPending&&<span className="text-text-on-navy-weakest text-[10px]">送信中…</span>}
+            {isFailed&&<button onClick={()=>handleRetry(m)} className="text-red-400 text-[10px] bg-transparent border-0 cursor-pointer font-bold">送信失敗 再送信</button>}
+            {!isPending&&!isFailed&&<span className="text-text-on-navy-weakest text-[10px]">{fmtTime(m.created_at)}</span>}
+            {!isMe&&!isPending&&!isFailed&&<button onClick={()=>setReplyTo({messageId:m.id,senderName:m.nickname,preview:m.body?.slice(0,30)||""})}
               className="text-text-on-navy-weak text-[10px] bg-transparent border-0 cursor-pointer">↩返信</button>}
           </div>
           {/* リアクションチップ */}
-          {reactionChips(reactions,m.id,isMe)}
+          {!isPending&&!isFailed&&reactionChips(reactions,m.id,isMe)}
         </div>
       </div>
     );
@@ -1318,10 +1337,6 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
       <div className="bg-navy-700 px-5 py-3 flex items-center gap-3 flex-shrink-0 border-b border-white/10">
         <div className="flex-1 min-w-0">
           <div className="text-white font-bold text-sm truncate">💬 {title}</div>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-pulse"/>
-            <span className="text-text-on-navy-dim text-[11px]">{onlineCount}人オンライン</span>
-          </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <div className="flex -space-x-2">
@@ -1341,7 +1356,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
           <div className="flex flex-col items-center justify-center py-10 text-center px-4">
             <div className="text-4xl mb-3 opacity-40">💬</div>
             <div className="text-text-on-navy-dim text-xs font-bold">まだメッセージはありません</div>
-            <div className="text-text-on-navy-weak text-xs mt-1">最初のメッセージを送ってみんなと盛り上がろう！</div>
+            <div className="text-text-on-navy-weak text-xs mt-1">予想したら、ひとこと送ってみよう</div>
           </div>
         )}
         {messages.map(renderMsg)}
@@ -1376,13 +1391,13 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
         {/* テキスト入力 + 送信 */}
         <div className="flex items-end gap-2 px-3 py-2">
           <textarea className="bg-white/10 text-white placeholder-text-on-navy-weak rounded-2xl px-4 py-2 flex-1 text-sm outline-none border border-transparent focus:border-hinomaru/50 min-w-0 resize-none"
-            placeholder="メッセージを入力... (Shift+Enter で送信)"
+            placeholder="メッセージを入力..."
             rows={1}
-            enterKeyHint="enter"
+            enterKeyHint="send"
             style={{maxHeight:120,overflowY:"auto",lineHeight:1.4}}
             value={input} onChange={e=>setInput(e.target.value)}
             onKeyDown={e=>{
-              if(e.key==="Enter"&&!e.isComposing&&(e.shiftKey||e.ctrlKey)){
+              if(e.key==="Enter"&&!e.isComposing&&!e.shiftKey){
                 e.preventDefault();
                 handleSend();
               }
