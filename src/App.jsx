@@ -1787,6 +1787,37 @@ function Onboarding({onComplete}){
   );
 }
 
+/* ── 招待リンク経由の初見用ウェルカム（1枚） ── */
+function InviteWelcome({tourn,onJoin}){
+  return(
+    <div className="fixed inset-0 z-[100] flex flex-col text-text-on-navy" style={{background:"linear-gradient(180deg,#061533 0%,#0a1f4c 55%,#0d2a5e 100%)"}}>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div style={{position:"absolute",top:-60,left:-60,width:260,height:260,borderRadius:"50%",background:"radial-gradient(circle,rgba(100,160,255,0.2),transparent 65%)"}}/>
+        <div style={{position:"absolute",bottom:60,right:-60,width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle,rgba(230,0,51,0.18),transparent 65%)"}}/>
+      </div>
+      <div className="flex-1 flex flex-col justify-center items-center px-8 text-center relative z-10">
+        <div className="text-7xl mb-6">🏆</div>
+        {tourn?(
+          <>
+            <div style={{color:"rgba(255,255,255,0.6)",fontSize:13,marginBottom:8}}>大会に招待されました</div>
+            <h1 className="font-black mb-4 text-white" style={{fontSize:22,lineHeight:1.35}}>{tourn.name}</h1>
+            <p style={{color:"rgba(255,255,255,0.55)",fontSize:13,lineHeight:1.7}}>登録なしで今すぐ参加できます<br/>予想して友達とポイントを競おう！</p>
+          </>
+        ):(
+          <h1 className="font-black text-white" style={{fontSize:20}}>読み込み中...</h1>
+        )}
+      </div>
+      <div className="px-5 pb-10 relative z-10">
+        <button onClick={onJoin} disabled={!tourn}
+          className="w-full bg-hinomaru text-white rounded-card-lg shadow-cta-red py-3.5 font-bold active:scale-[.98] transition border-0 cursor-pointer text-base"
+          style={{opacity:tourn?1:0.5}}>
+          ✋ 参加する →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── フィードバックモーダル ── */
 function FeedbackModal({onClose,nickname,tourn,myId}){
   const [msg,setMsg]=useState("");
@@ -2438,6 +2469,8 @@ function App(){
       return Object.keys(localStorage).some(k=>k.startsWith("wcup_myid_")||k==="chat_nick");
     }catch{return true;}
   });
+  // 招待リンク（#t-ID）経由の初見か判定（セッション固定）
+  const [inviteMode]=useState(()=>{try{return window.location.hash.startsWith("#t-");}catch{return false;}});
 
   useEffect(()=>{
     const init=async()=>{
@@ -2567,7 +2600,10 @@ function App(){
   const me=tourn?.participants?.find(p=>p.id===myId);
   return(
     <ErrorBoundary>
-    {!onboardingDone&&<Onboarding onComplete={handleOnboardingComplete}/>}
+    {!onboardingDone&&(inviteMode
+      ? <InviteWelcome tourn={tourn} onJoin={()=>handleOnboardingComplete("skip")}/>
+      : <Onboarding onComplete={handleOnboardingComplete}/>
+    )}
     <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(88px + env(safe-area-inset-bottom,0px))":undefined,paddingTop:showHeader?52:0}}>
       {showHeader&&<AppHeader nav={nav} navDashboard={navDashboard} tourn={tourn} myId={myId} scope={scope} setScope={setScope} onFeedback={()=>setShowFeedback(true)}/>}
       {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} nickname={me?.nickname||""} tourn={tourn} myId={myId}/>}
@@ -3944,9 +3980,11 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
       {/* ── ルームタブ ── */}
       {tab==="home"&&(
         <div style={{padding:"12px 18px 0"}}>
-          <button onClick={()=>{window.location.hash="";nav("home");}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,cursor:"pointer",padding:"0 0 10px",display:"flex",alignItems:"center",gap:4}}>
-            <DsIcon name="chevron" size={13} stroke={2} style={{transform:"rotate(180deg)"}}/> ホームに戻る
-          </button>
+          {isJoined&&(
+            <button onClick={()=>{window.location.hash="";nav("home");}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,cursor:"pointer",padding:"0 0 10px",display:"flex",alignItems:"center",gap:4}}>
+              <DsIcon name="chevron" size={13} stroke={2} style={{transform:"rotate(180deg)"}}/> ホームに戻る
+            </button>
+          )}
           <div className="card lg" style={{textAlign:"center",marginBottom:14}}>
             <img src={LOGO_IMG} alt="" style={{width:44,height:44,borderRadius:9,objectFit:"contain",background:"#061533",marginBottom:8,boxShadow:"0 0 0 2.5px rgba(62,123,255,.2)"}}/>
             <div style={{color:"var(--gold)",fontSize:18,fontWeight:900,marginBottom:6}}>{t.name}</div>
