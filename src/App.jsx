@@ -324,7 +324,8 @@ async function fetchGlobalRanking(force=false){
       .sort((a,b)=>(b.totalMatchPoints||0)-(a.totalMatchPoints||0));
     const total=all.length;
     const list=all.slice(0,200).map((p,i)=>({
-      rank:i+1,id:p.id,nickname:p.nickname||"名無し",icon:p.icon||"⚽",points:p.totalMatchPoints||0
+      rank:i+1,id:p.id,nickname:p.nickname||"名無し",icon:p.icon||"⚽",points:p.totalMatchPoints||0,
+      winner:p.predictions?.winner||null
     }));
     const result={list,total,fetchedAt:Date.now()};
     try{localStorage.setItem(GLOBAL_RANK_CACHE_KEY,JSON.stringify(result));localStorage.setItem(GLOBAL_RANK_CACHE_AT,String(Date.now()));}catch{}
@@ -4952,18 +4953,19 @@ function PgGlobalRanking({nav,navDashboard,myId}){
   const [globalData,setGlobalData]=useState(null);
   const [loading,setLoading]=useState(true);
   const [err,setErr]=useState("");
-  const [sharingGlobal,setSharingGlobal]=useState(false);
+  const [refreshing,setRefreshing]=useState(false);
   const lastFetch=useRef(0);
 
   const load=async(force=false)=>{
     const now=Date.now();
-    if(!force&&now-lastFetch.current<30000){return;}
+    if(!force&&now-lastFetch.current<30000)return;
     lastFetch.current=now;
-    setLoading(true);setErr("");
+    if(force)setRefreshing(true);else setLoading(true);
+    setErr("");
     const res=await fetchGlobalRanking(force);
     if(!res)setErr("現在ランキングを取得できません。通信を確認して再試行してください。");
     else setGlobalData(res);
-    setLoading(false);
+    setLoading(false);setRefreshing(false);
   };
   useEffect(()=>{load();},[]);
 
@@ -4976,9 +4978,58 @@ function PgGlobalRanking({nav,navDashboard,myId}){
   const nearby=myEntry&&myEntry.rank>100?list.filter(r=>Math.abs(r.rank-myEntry.rank)<=5):[];
   const top100=list.slice(0,100);
 
+  const rankRowStyle=(isMe)=>({
+    display:"flex",alignItems:"center",gap:9,padding:"9px 12px",
+    borderRadius:11,marginBottom:4,
+    background:isMe?"rgba(230,0,51,.1)":"rgba(255,255,255,.04)",
+    border:`1px solid ${isMe?"rgba(230,0,51,.35)":"rgba(255,255,255,.06)"}`,
+  });
+  const medalIcon=(rank)=>rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":null;
+  const rankNumColor=(rank,isMe)=>rank<=3?"var(--gold)":isMe?"var(--red)":"var(--muted)";
+
+  const renderRow=(r,keySuffix)=>{
+    const isMe=r.id===myId;
+    const med=medalIcon(r.rank);
+    return(
+      <div key={r.id+keySuffix} style={rankRowStyle(isMe)}>
+        {/* 順位 */}
+        <div style={{width:26,textAlign:"center",flexShrink:0}}>
+          {med?<span style={{fontSize:16}}>{med}</span>
+              :<span style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:11,color:rankNumColor(r.rank,isMe)}}>{r.rank}</span>}
+        </div>
+        {/* アバター */}
+        <div style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>
+          {r.icon}
+        </div>
+        {/* 名前 + 優勝予想 */}
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+            {isMe&&<span style={{color:"var(--red)",fontSize:9,fontWeight:900,background:"rgba(230,0,51,.15)",padding:"1px 4px",borderRadius:4}}>YOU</span>}
+            <span style={{color:isMe?"#ff8080":"var(--txt)",fontWeight:isMe?700:500,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.nickname}</span>
+          </div>
+          {r.winner?(
+            <div style={{display:"flex",alignItems:"center",gap:3}}>
+              <FlagImg country={r.winner} size={13}/>
+              <span style={{color:"var(--muted)",fontSize:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.winner}</span>
+            </div>
+          ):(
+            <span style={{color:"rgba(255,255,255,.18)",fontSize:10}}>優勝未入力</span>
+          )}
+        </div>
+        {/* ポイント */}
+        <div style={{flexShrink:0,textAlign:"right"}}>
+          <span style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:isMe?"#ff8080":"var(--txt)"}}>{r.points}</span>
+          <span style={{color:"var(--muted)",fontSize:10,marginLeft:2}}>pt</span>
+        </div>
+      </div>
+    );
+  };
+
   return(
     <div className="screen">
       <DsPageHead onBack={()=>nav("home")} title="全国ランキング" icon="chart"/>
+
+      {/* info */}
       <div className="wrap section tight">
         <div className="banner blue" style={{alignItems:"flex-start",gap:8}}>
           <DsIcon name="globe" size={14} style={{flexShrink:0,marginTop:1}}/>
@@ -4986,7 +5037,7 @@ function PgGlobalRanking({nav,navDashboard,myId}){
         </div>
       </div>
 
-      {/* YOUR GLOBAL RANK カード */}
+      {/* 自分の順位カード */}
       {myId&&(
         <div className="wrap section tight">
           <div className="card lg" style={{textAlign:"center"}}>
@@ -5011,8 +5062,10 @@ function PgGlobalRanking({nav,navDashboard,myId}){
         </div>
       )}
 
-      {/* リスト */}
+      {/* ローディング */}
       {loading&&<div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>🌐 読み込み中...</div>}
+
+      {/* エラー */}
       {err&&!loading&&(
         <div className="wrap section tight">
           <div className="banner blue" style={{flexDirection:"column",gap:8}}>
@@ -5021,50 +5074,41 @@ function PgGlobalRanking({nav,navDashboard,myId}){
           </div>
         </div>
       )}
+
+      {/* 空状態 */}
       {!loading&&!err&&list.length===0&&(
-        <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0",fontSize:13}}>W杯開幕後にランキング開始！</div>
+        <div style={{padding:"48px 20px",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:12}}>🏆</div>
+          <div style={{color:"var(--txt)",fontWeight:700,fontSize:15,marginBottom:8}}>ランキングはまだありません</div>
+          <div style={{color:"var(--muted)",fontSize:13,lineHeight:1.7}}>ランキングは予想が集まり次第表示されます</div>
+        </div>
       )}
-      {!loading&&list.length>0&&(
+
+      {/* TOP100 リスト */}
+      {!loading&&!err&&list.length>0&&(
         <div className="wrap section tight">
-          <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,marginBottom:8}}>🏆 TOP {Math.min(100,list.length)}</div>
-          {top100.map(r=>{
-            const isMe=r.id===myId;
-            const medal=r.rank===1?"👑":r.rank===2?"🥈":r.rank===3?"🥉":null;
-            return(
-              <div key={r.id+"_"+r.rank} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
-                <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:r.rank<=3?"var(--gold)":isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{medal||r.rank}</div>
-                <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
-                <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}{isMe&&<span style={{marginLeft:8,fontFamily:"'Roboto Mono',monospace",fontSize:9,color:"#ff6066",fontWeight:900}}>YOU</span>}</div></div>
-                <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
-              </div>
-            );
-          })}
+          {/* 列ヘッダー */}
+          <div style={{display:"flex",alignItems:"center",gap:9,padding:"0 12px",marginBottom:6}}>
+            <div style={{width:26,color:"var(--muted)",fontSize:10,textAlign:"center"}}>順位</div>
+            <div style={{width:30,flexShrink:0}}/>
+            <div style={{flex:1,color:"var(--muted)",fontSize:10}}>ユーザー / 優勝予想</div>
+            <div style={{flexShrink:0,color:"var(--muted)",fontSize:10}}>ポイント</div>
+          </div>
+          {top100.map(r=>renderRow(r,"_r"))}
+
+          {/* 自分の周辺（TOP100外） */}
           {!inTop100&&nearby.length>0&&(
             <>
               <div style={{color:"var(--gold)",fontWeight:700,fontSize:12,margin:"16px 0 8px"}}>📍 あなたの周辺</div>
-              {nearby.map(r=>{
-                const isMe=r.id===myId;
-                return(
-                  <div key={r.id+"_nb"} className="rowcard" style={{marginBottom:8,borderColor:isMe?"rgba(255,66,72,.4)":"",background:isMe?"rgba(255,66,72,.08)":""}}>
-                    <div style={{width:32,textAlign:"center",fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:12,color:isMe?"var(--red)":"var(--muted)",flexShrink:0}}>{r.rank}</div>
-                    <div style={{width:38,height:38,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:18,background:"rgba(255,255,255,.08)",flexShrink:0}}>{r.icon}</div>
-                    <div className="tx"><div className="t">{isMe&&"★ "}{r.nickname}</div></div>
-                    <div style={{fontFamily:"'Roboto Mono',monospace",fontWeight:700,fontSize:13,color:"var(--txt)",flexShrink:0}}>{r.points}<span style={{fontSize:10,color:"var(--muted)",marginLeft:2}}>pt</span></div>
-                  </div>
-                );
-              })}
+              {nearby.map(r=>renderRow(r,"_nb"))}
             </>
           )}
-          <div style={{display:"flex",gap:9,marginTop:16}}>
-            <button onClick={()=>load(true)} disabled={loading} className="btn btn-dark sm" style={{flex:1}}>
-              <DsIcon name="refresh" size={16}/> 更新
+
+          {/* 更新ボタン */}
+          <div style={{marginTop:16}}>
+            <button onClick={()=>load(true)} disabled={refreshing} className="btn btn-dark sm" style={{width:"100%"}}>
+              <DsIcon name="refresh" size={16}/>{refreshing?"更新中...":"ランキングを更新"}
             </button>
-            {myRank&&myPts>0&&myEntry&&(
-              <button onClick={async()=>{if(sharingGlobal)return;setSharingGlobal(true);await doShareImage(<ShareCardGlobalRank rank={myRank} total={total} pts={myPts} nickname={myEntry.nickname||""} icon={myEntry.icon||"⚽"}/>,"wcup-global.png","全国ランキング入りしました！ #W杯予想メーカー");setSharingGlobal(false);}}
-                disabled={sharingGlobal} className="btn btn-red sm" style={{flex:1,opacity:sharingGlobal?0.7:1}}>
-                <DsIcon name="camera" size={16}/>{sharingGlobal?"生成中":"順位をシェア"}
-              </button>
-            )}
           </div>
         </div>
       )}
