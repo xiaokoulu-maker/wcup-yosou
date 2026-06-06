@@ -5,6 +5,7 @@ import { LayoutGrid, Trophy, Users, MessageCircle, Calendar, Globe, ChevronRight
 import { HoIcon, HoAvatar, HoScreenHeader } from './ds-components'
 import { Icon as DsIcon } from './ds-icons'
 import { Flag, TEAMS, Tabs as DsTabs, Stat as DsStat, Banner as DsBanner, PageHead as DsPageHead, SectionHead as DsSectionHead, MatchCard as DsMatchCard, useToast as useDsToast, BackRow as DsBackRow } from './ds-ui'
+import { checkNickname } from './badwords'
 
 // true にすれば「ベスト11」ボタンが復活し、「ベスト16予想」ボタンが非表示になる
 const SHOW_BEST11 = false;
@@ -540,9 +541,9 @@ const BADGES=[
   {id:"predict_5",icon:"📝",name:"予想5試合",desc:"5試合分の予想を入れた"},
   {id:"predict_20",icon:"📚",name:"予想20試合",desc:"20試合分の予想を入れた"},
   {id:"predict_all_group",icon:"🌍",name:"グループ完全予想",desc:"全グループステージ72試合を予想"},
-  {id:"streak_3",icon:"🔥",name:"3連的中",desc:"連続で3試合当てた"},
-  {id:"streak_5",icon:"🔥🔥",name:"5連的中",desc:"連続で5試合当てた"},
-  {id:"streak_10",icon:"🔥🔥🔥",name:"10連的中",desc:"連続で10試合当てた"},
+  {id:"streak_3",icon:"🔥",num:"3",name:"3連的中",desc:"連続で3試合当てた"},
+  {id:"streak_5",icon:"🔥",num:"5",name:"5連的中",desc:"連続で5試合当てた"},
+  {id:"streak_10",icon:"🔥",num:"10",name:"10連的中",desc:"連続で10試合当てた"},
   {id:"pts_10",icon:"⭐",name:"10pt達成",desc:"累計10ポイント獲得"},
   {id:"pts_50",icon:"🌟",name:"50pt達成",desc:"累計50ポイント獲得"},
   {id:"pts_100",icon:"💫",name:"100pt達成",desc:"累計100ポイント獲得"},
@@ -552,6 +553,18 @@ const BADGES=[
   {id:"shared_card",icon:"📷",name:"予想シェア",desc:"予想カードをシェアした"},
   {id:"reaction_giver",icon:"👍",name:"反応職人",desc:"10回リアクションを送った"},
 ];
+
+function BIcon({icon,num,size=20}){
+  if(!num) return <span style={{fontSize:size,lineHeight:1}}>{icon}</span>;
+  const numSz=Math.round(size*0.45);
+  const gap=Math.max(1,Math.round(size*0.06));
+  return(
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap,lineHeight:1}}>
+      <span style={{fontSize:numSz,fontWeight:900,color:"var(--gold)",letterSpacing:.5,lineHeight:1}}>{num}</span>
+      <span style={{fontSize:size-3,lineHeight:1}}>{icon}</span>
+    </div>
+  );
+}
 
 function updateStreak(participant,matchId,isHit){
   const s=participant.streak||{current:0,best:0};
@@ -811,6 +824,8 @@ async function applyMatchResults(tourn,updates,updateFn){
 const ESPN_TO_JP={"Japan":"日本","Brazil":"ブラジル","Argentina":"アルゼンチン","France":"フランス","England":"イングランド","Spain":"スペイン","Germany":"ドイツ","Portugal":"ポルトガル","Netherlands":"オランダ","Italy":"イタリア","Croatia":"クロアチア","Belgium":"ベルギー","United States":"アメリカ","Mexico":"メキシコ","Canada":"カナダ","Korea Republic":"韓国","Australia":"オーストラリア","Morocco":"モロッコ","Uruguay":"ウルグアイ","Colombia":"コロンビア","Senegal":"セネガル","Norway":"ノルウェー","Sweden":"スウェーデン","Ecuador":"エクアドル","Switzerland":"スイス","Denmark":"デンマーク","Ghana":"ガーナ","Panama":"パナマ","Paraguay":"パラグアイ","Austria":"オーストリア","Algeria":"アルジェリア","Jordan":"ヨルダン","Tunisia":"チュニジア","Egypt":"エジプト","Iran":"イラン","Saudi Arabia":"サウジアラビア","Scotland":"スコットランド","Turkey":"トルコ","Ivory Coast":"コートジボワール","Cote D'Ivoire":"コートジボワール","New Zealand":"ニュージーランド","Serbia":"セルビア","Qatar":"カタール","South Africa":"南アフリカ","Czechia":"チェコ","Bosnia and Herzegovina":"ボスニア","Haiti":"ハイチ","Curacao":"キュラソー","Congo DR":"コンゴ","Uzbekistan":"ウズベキスタン","Iraq":"イラク","Cape Verde":"カボベルデ","Cabo Verde":"カボベルデ"};
 
 const LOGO_IMG="/wc-logo.webp";
+// ↓ サイト名を変えたいときはここだけ編集
+const APP_NAME="W杯予想メーカー";
 const genId=()=>Math.random().toString(36).slice(2,10).toUpperCase();
 function saveMyCreated(id){try{const l=JSON.parse(localStorage.getItem("wcup_created")||"[]");if(!l.includes(id)){l.unshift(id);localStorage.setItem("wcup_created",JSON.stringify(l.slice(0,10)));}}catch{}}
 function saveMyJoined(id){try{const l=JSON.parse(localStorage.getItem("wcup_joined")||"[]");if(!l.includes(id)){l.unshift(id);localStorage.setItem("wcup_joined",JSON.stringify(l.slice(0,10)));}}catch{}}
@@ -974,7 +989,7 @@ function BadgeModal({badges,onClose}){
       <div style={{background:"#fff",borderRadius:24,padding:"32px 24px",textAlign:"center",maxWidth:300,width:"88%",animation:"trophyIn 0.4s ease-out",boxShadow:"0 8px 40px rgba(0,0,0,0.25)"}}>
         <div style={{fontSize:36,marginBottom:4}}>🎉</div>
         <div style={{color:G.gold,fontWeight:900,fontSize:17,marginBottom:16}}>バッジ獲得！</div>
-        <div style={{fontSize:52,marginBottom:8,lineHeight:1}}>{b.icon}</div>
+        <div style={{fontSize:52,marginBottom:8,lineHeight:1,display:"flex",justifyContent:"center"}}><BIcon icon={b.icon} num={b.num} size={50}/></div>
         <div style={{color:"#102A43",fontWeight:700,fontSize:16,marginBottom:4}}>{b.name}</div>
         <div style={{color:G.muted,fontSize:12,marginBottom:20,lineHeight:1.5}}>{b.desc}</div>
         {badges.length>1&&<div style={{color:G.muted,fontSize:11,marginBottom:10}}>{idx+1} / {badges.length}</div>}
@@ -1008,6 +1023,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
   const [loading,setLoading]=useState(true);
   const [sending,setSending]=useState(false);
   const [showSetup,setShowSetup]=useState(!currentUser&&!localStorage.getItem("chat_nick"));
+  const [chatNickErr,setChatNickErr]=useState("");
   const [replyTo,setReplyTo]=useState(null);
   const [openMenuFor,setOpenMenuFor]=useState(null);
   const bottomRef=useRef(null);
@@ -1068,6 +1084,8 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
 
   const saveNick=()=>{
     if(!nick.trim()) return;
+    if(checkNickname(nick.trim())){setChatNickErr("この名前は使用できません。別の名前を入力してください");return;}
+    setChatNickErr("");
     localStorage.setItem("chat_nick",nick);
     localStorage.setItem("chat_icon",icon);
     setShowSetup(false);
@@ -1147,6 +1165,7 @@ function ChatBox({tournamentId=null,currentUser=null,title="チャット",maxHei
           ))}
         </div>
       </div>
+      {chatNickErr&&<div className="text-red-400 text-xs font-bold mb-2">{chatNickErr}</div>}
       <button onClick={saveNick} disabled={!nick.trim()}
         className="w-full bg-hinomaru text-white font-bold rounded-card-lg py-3 border-0 cursor-pointer shadow-cta-red disabled:opacity-50">
         参加する →
@@ -1786,6 +1805,112 @@ function FeedbackModal({onClose,nickname,tourn,myId}){
 }
 
 /* ── 下タブバー（全ページ固定表示） ── */
+function AppHeader({nav,navDashboard,tourn,myId,scope,setScope,onFeedback}){
+  const [open,setOpen]=useState(false);
+  const [notifEnabled,setNotifEnabled]=useState(isNotificationEnabled());
+  const me=tourn?.participants?.find(p=>p.id===myId);
+  const hasTourn=!!(tourn&&myId);
+  const isTournScope=scope==="tournament"&&hasTourn;
+  const go=(dest)=>{
+    if(dest==="home") isTournScope?navDashboard():nav("home");
+    else nav(dest);
+    setOpen(false);
+  };
+  const items=[
+    {ic:"ball",    label:"ホーム",      dest:"home"},
+    {ic:"whistle", label:"試合を予想",  dest:"matches"},
+    {ic:"trophy",  label:"優勝予想",    dest:"predict"},
+    {ic:"chart",   label:"ランキング",  dest:"ranking"},
+    {ic:"chatBig", label:"チャット",    dest:"globalchat"},
+    {ic:"grid",    label:"グループ表",  dest:"groups"},
+    {ic:"flag",    label:"日本代表",    dest:"japan"},
+    {ic:"medal",   label:"バッジ",      dest:"badges"},
+    {ic:"person",  label:"マイページ",  dest:"mypage"},
+    {ic:"gear",    label:"設定",        dest:"admin"},
+  ];
+  return(
+    <>
+      {/* ── ヘッダーバー ── */}
+      <div style={{
+        position:"fixed",top:0,left:0,right:0,maxWidth:480,margin:"0 auto",
+        height:52,display:"flex",alignItems:"center",justifyContent:"space-between",
+        padding:"0 14px",boxSizing:"border-box",
+        background:"rgba(5,16,45,0.97)",backdropFilter:"blur(14px) saturate(1.5)",
+        WebkitBackdropFilter:"blur(14px) saturate(1.5)",
+        borderBottom:"1px solid rgba(255,255,255,0.09)",zIndex:50,
+      }}>
+        {/* 左: scope 分岐 */}
+        {isTournScope?(
+          <div onClick={()=>{navDashboard();setOpen(false);}} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",userSelect:"none",minWidth:0,flex:1,overflow:"hidden"}}>
+            <div style={{width:32,height:32,borderRadius:9,flexShrink:0,display:"grid",placeItems:"center",color:"#fff",fontSize:16,fontWeight:900,background:"linear-gradient(135deg,rgba(62,123,255,.45),rgba(0,91,172,.6))",border:"1px solid rgba(62,123,255,.35)"}}>
+              {tourn?.name?.[0]||"?"}
+            </div>
+            <div style={{minWidth:0}}>
+              <div style={{color:"var(--dim)",fontSize:9,fontWeight:700,letterSpacing:"0.16em",fontFamily:"'Roboto Mono',monospace",textTransform:"uppercase",lineHeight:1}}>大会</div>
+              <div style={{color:"var(--txt)",fontSize:16,fontWeight:900,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tourn?.name}</div>
+            </div>
+          </div>
+        ):(
+          <div onClick={()=>go("home")} style={{display:"flex",alignItems:"center",gap:9,cursor:"pointer",userSelect:"none"}}>
+            <img src={LOGO_IMG} alt="ロゴ" style={{width:30,height:30,borderRadius:7,objectFit:"contain",background:"#061533",boxShadow:"0 0 0 1.5px rgba(62,123,255,.3)",flexShrink:0}}/>
+            <span style={{color:"#fff",fontWeight:800,fontSize:14,letterSpacing:0.2,lineHeight:1}}>{APP_NAME}</span>
+          </div>
+        )}
+        {/* 右: アクション群 */}
+        <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          {isTournScope&&isNotificationSupported()&&!notifEnabled&&(
+            <div onClick={async()=>{const ok=await requestNotificationPermission();setNotifEnabled(ok);}} title="通知をオン" style={{position:"relative",width:36,height:36,borderRadius:11,display:"grid",placeItems:"center",cursor:"pointer",color:"rgba(255,255,255,.6)"}}>
+              <DsIcon name="bell" size={19}/>
+              <span style={{position:"absolute",top:8,right:9,width:6,height:6,borderRadius:"50%",background:"var(--red)",border:"1.5px solid rgba(5,16,45,.97)"}}/>
+            </div>
+          )}
+          {isTournScope&&me&&(
+            <div onClick={()=>nav("mypage")} title="マイページ" style={{width:36,height:36,borderRadius:11,background:"linear-gradient(160deg,#ff4147,#c41420)",color:"#fff",display:"grid",placeItems:"center",cursor:"pointer",fontSize:16,fontWeight:900,boxShadow:"0 5px 14px rgba(200,0,30,.3)"}}>
+              {me.nickname?.[0]||me.icon||"?"}
+            </div>
+          )}
+          <button onClick={()=>setOpen(v=>!v)} aria-label="メニュー" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.72)",padding:"6px 4px",display:"flex",alignItems:"center",borderRadius:8,lineHeight:1}}>
+            <DsIcon name={open?"xLogo":"menu"} size={21}/>
+          </button>
+        </div>
+      </div>
+
+      {/* ── スライドメニュー ── */}
+      {open&&(
+        <>
+          <div onClick={()=>setOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:80}}/>
+          <div style={{position:"fixed",top:0,right:0,bottom:0,width:248,background:"var(--panel)",zIndex:90,display:"flex",flexDirection:"column",boxShadow:"-4px 0 30px rgba(0,0,0,.6)",borderLeft:"1px solid var(--line)"}}>
+            <div style={{padding:"20px 18px 12px",borderBottom:"1px solid var(--line)",display:"flex",alignItems:"center",gap:9}}>
+              <img src={LOGO_IMG} alt="ロゴ" style={{width:26,height:26,borderRadius:6,objectFit:"contain",background:"#061533"}}/>
+              <span style={{color:"var(--txt)",fontWeight:800,fontSize:13}}>{APP_NAME}</span>
+            </div>
+            <div style={{flex:1,overflowY:"auto"}}>
+              {items.map(item=>(
+                <button key={item.dest} onClick={()=>go(item.dest)} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderBottom:"1px solid var(--line-soft)",cursor:"pointer",color:"var(--txt)",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
+                  <span style={{width:24,display:"inline-flex",alignItems:"center",justifyContent:"center",color:"var(--muted)"}}><DsIcon name={item.ic} size={18}/></span>
+                  {item.label}
+                </button>
+              ))}
+              {isTournScope&&(
+                <button onClick={()=>{onFeedback&&onFeedback();setOpen(false);}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderBottom:"1px solid var(--line-soft)",cursor:"pointer",color:"var(--gold)",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
+                  <span style={{width:24,display:"inline-flex",alignItems:"center",justifyContent:"center"}}><DsIcon name="send" size={18}/></span>
+                  ご意見・要望
+                </button>
+              )}
+            </div>
+            {isTournScope&&(
+              <button onClick={()=>{setScope("global");setOpen(false);}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderTop:"1px solid var(--line)",cursor:"pointer",color:"var(--faint)",fontSize:13,textAlign:"left",width:"100%"}}>
+                <DsIcon name="arrowRight" size={18} style={{color:"var(--faint)",transform:"scaleX(-1)"}}/>
+                ホーム画面
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 function TabBar({page,nav,navDashboard,scope,setScope,tourn,myId}){
   const hasTourn=!!(tourn&&myId);
   const tabs=[
@@ -1857,6 +1982,7 @@ function App(){
   const [adminOk,setAdminOk]=useState(false);
   const [selCountry,setSelCountry]=useState(null);
   const [scope,setScope]=useState("global"); // "global" | "tournament"
+  const [showFeedback,setShowFeedback]=useState(false);
   const [onboardingDone,setOnboardingDone]=useState(()=>{
     try{
       if(localStorage.getItem("wcup_onboardingDone")) return true;
@@ -1975,10 +2101,14 @@ function App(){
   };
 
   const showTabBar=!(page==="create"||page==="join");
+  const showHeader=!(page==="create"||page==="join");
+  const me=tourn?.participants?.find(p=>p.id===myId);
   return(
     <ErrorBoundary>
     {!onboardingDone&&<Onboarding onComplete={handleOnboardingComplete}/>}
-    <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(88px + env(safe-area-inset-bottom,0px))":undefined}}>
+    <div style={{background:G.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:showTabBar?"calc(88px + env(safe-area-inset-bottom,0px))":undefined,paddingTop:showHeader?52:0}}>
+      {showHeader&&<AppHeader nav={nav} navDashboard={navDashboard} tourn={tourn} myId={myId} scope={scope} setScope={setScope} onFeedback={()=>setShowFeedback(true)}/>}
+      {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} nickname={me?.nickname||""} tourn={tourn} myId={myId}/>}
       {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} scope={scope} setScope={setScope}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
@@ -2332,8 +2462,6 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
   const [notifEnabled,setNotifEnabled]=useState(isNotificationEnabled());
   const [chatUnread,setChatUnread]=useState(0);
   const [japanCelebration,setJapanCelebration]=useState(null);
-  const [showHamMenu,setShowHamMenu]=useState(false);
-  const [showFeedback,setShowFeedback]=useState(false);
   const [championVotes,setChampionVotes]=useState(null);
   const me=tourn?.participants?.find(p=>p.id===myId);
   const isLoggedIn=!!(me&&tourn);
@@ -2428,30 +2556,6 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
     return(
       <>
       <div className="screen">
-        {/* ── TopBar ── */}
-        <div className="topbar">
-          <div className="ttl">
-            <div className="badge">{tourn.name?.[0]||"?"}</div>
-            <div className="meta">
-              <div className="k">大会</div>
-              <div className="v">{tourn.name}</div>
-            </div>
-          </div>
-          <div className="acts">
-            {isNotificationSupported()&&!notifEnabled&&(
-              <div className="icobtn dot" onClick={async()=>{const ok=await requestNotificationPermission();setNotifEnabled(ok);}} title="通知をオン">
-                <DsIcon name="bell" size={19}/>
-              </div>
-            )}
-            <div className="icobtn me" onClick={()=>nav("mypage")} title="マイページ" style={{fontSize:17,fontWeight:900}}>
-              {me.nickname?.[0]||me.icon||"?"}
-            </div>
-            <div className="icobtn" onClick={()=>setShowHamMenu(v=>!v)} title="メニュー">
-              <DsIcon name={showHamMenu?"xLogo":"menu"} size={19}/>
-            </div>
-          </div>
-        </div>
-
         {/* ── 日本戦カウントダウン ── */}
         <div className="wrap section tight">
           <JapanBanner/>
@@ -2536,50 +2640,6 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
       {/* JapanCelebrationModal（温存） */}
       {japanCelebration&&<JapanCelebrationModal data={japanCelebration} onClose={()=>{localStorage.setItem(japanCelebration.key,"1");setJapanCelebration(null);}}/>}
 
-      {/* フィードバックモーダル */}
-      {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} nickname={me?.nickname||""} tourn={tourn} myId={myId}/>}
-
-      {/* ── ハンバーガーナビメニュー（スライドイン・温存） ── */}
-      {showHamMenu&&(
-        <>
-          <div onClick={()=>setShowHamMenu(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:80}}/>
-          <div style={{position:"fixed",top:0,right:0,bottom:0,width:248,background:"var(--panel)",zIndex:90,display:"flex",flexDirection:"column",boxShadow:"-4px 0 30px rgba(0,0,0,0.6)",borderLeft:"1px solid var(--line)"}}>
-            <div style={{padding:"56px 18px 12px",borderBottom:"1px solid var(--line)"}}>
-              <div style={{color:"var(--dim)",fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",fontFamily:"'Roboto Mono',monospace"}}>メニュー</div>
-            </div>
-            <div style={{flex:1,overflowY:"auto"}}>
-              {[
-                {ic:"whistle",  label:"試合を予想", dest:"matches"},
-                {ic:"trophy",   label:"優勝予想",   dest:"predict"},
-                {ic:"chart",    label:"ランキング", dest:"ranking"},
-                {ic:"grid",     label:"グループ表", dest:"groups"},
-                {ic:"flag",     label:"日本代表",   dest:"japan"},
-                {ic:"bracket",  label:"決勝T",      dest:"bracket"},
-                {ic:"chatBig",  label:"チャット",   dest:"tournament"},
-                {ic:"medal",    label:"バッジ",     dest:"badges"},
-                {ic:"coin",     label:"コイン",     dest:"coinshop"},
-                {ic:"gear",     label:"設定",       dest:"admin"},
-              ].map(item=>(
-                <button key={item.dest} onClick={()=>{nav(item.dest);setShowHamMenu(false);}}
-                  style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderBottom:"1px solid var(--line-soft)",cursor:"pointer",color:"var(--txt)",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
-                  <span style={{width:24,display:"inline-flex",alignItems:"center",justifyContent:"center",color:"var(--muted)"}}><DsIcon name={item.ic} size={18}/></span>
-                  {item.label}
-                </button>
-              ))}
-              <button onClick={()=>{setShowFeedback(true);setShowHamMenu(false);}}
-                style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderBottom:"1px solid var(--line-soft)",cursor:"pointer",color:"var(--gold)",fontSize:14,fontWeight:600,textAlign:"left",width:"100%"}}>
-                <span style={{width:24,display:"inline-flex",alignItems:"center",justifyContent:"center"}}><DsIcon name="send" size={18}/></span>
-                ご意見・要望
-              </button>
-            </div>
-            <button onClick={()=>{setScope("global");setShowHamMenu(false);}}
-              style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"transparent",border:"none",borderTop:"1px solid var(--line)",cursor:"pointer",color:"var(--faint)",fontSize:13,textAlign:"left",width:"100%"}}>
-              <DsIcon name="arrowRight" size={18} style={{color:"var(--faint)",transform:"scaleX(-1)"}}/>
-              ホーム画面
-            </button>
-          </div>
-        </>
-      )}
       </>
     );
   }
@@ -2588,15 +2648,6 @@ function PgHome({nav,goT,tourn,myId,scope,setScope}){
   return(
     <>
     <div className="sb-app">
-      {/* top bar */}
-      <div className="sb-topbar">
-        <div className="sb-wc-mark" onClick={()=>nav("home")} style={{cursor:"pointer"}}>
-          <span className="sb-fifa">FIFA WORLD CUP</span>
-          <span className="sb-yr">2026</span>
-        </div>
-        <div className="sb-app-name">W杯予想メーカー</div>
-      </div>
-
       {/* 参加中の大会への入口（目立つボタンカード） */}
       {scope!=="tournament"&&isLoggedIn&&(
         <div style={{padding:"8px 14px 4px"}}>
@@ -3007,6 +3058,7 @@ function PgCreate({nav,goT}){
   const setF=k=>v=>setForm(f=>({...f,[k]:v}));
   const submit=async(overrideMax=null)=>{
     if(!form.name.trim()||!form.creatorName.trim()||!form.adminPasscode.trim()){setErr("すべての項目を入力してください");return;}
+    if(checkNickname(form.creatorName.trim())){setErr("作成者名に使用できない言葉が含まれています。別の名前を入力してください");return;}
     if(form.adminPasscode.length<3){setErr("パスコードは3文字以上にしてください");return;}
 setLoading(true);
     const maxP=overrideMax!==null?overrideMax:Number(form.maxParticipants);
@@ -3214,6 +3266,7 @@ function PgJoin({tourn:t,nav,update,setMyId,navDashboard}){
   const join=async()=>{
     if(deadlinePassed&&!t.allowLateJoin){setErr("予想の締め切りが終了しています");return;}
     if(!nick.trim()){setErr("ニックネームを入力してください");return;}
+    if(checkNickname(nick.trim())){setErr("この名前は使用できません。別の名前を入力してください");return;}
 const fresh=await loadT(t.id);const cur=fresh||t;
     if(isDeadlinePassed(cur.deadline)){setErr("予想の締め切りが終了しています");return;}
 if(cur.participants.length>=getPlanLimit(cur.plan)){
@@ -7217,7 +7270,7 @@ function PgBadges({nav,tourn,myId,navDashboard}){
           <div className="badge-grid">
             {BADGES.filter(b=>earnedIds.has(b.id)).map(b=>(
               <div key={b.id} className="bcell got">
-                <div className="bi"><span style={{fontSize:20}}>{b.icon}</span></div>
+                <div className="bi"><BIcon icon={b.icon} num={b.num}/></div>
                 <div className="bn">{b.name}</div>
               </div>
             ))}
@@ -7233,7 +7286,7 @@ function PgBadges({nav,tourn,myId,navDashboard}){
               const pg=progress(b.id);
               return(
                 <div key={b.id} className="bcell near">
-                  <div className="bi"><span style={{fontSize:20}}>{b.icon}</span></div>
+                  <div className="bi"><BIcon icon={b.icon} num={b.num}/></div>
                   <div className="bn">{b.name}</div>
                   {pg&&<div className="bp">{pg.cur}/{pg.max}</div>}
                 </div>
@@ -7267,7 +7320,7 @@ function PgBadges({nav,tourn,myId,navDashboard}){
               const earnedAt=myBadges.find(x=>x.id===b.id)?.earnedAt;
               return(
                 <div key={b.id} className={"blist-row"+(got?" got":"")} style={{opacity:got?1:0.6}}>
-                  <div className="bi"><span style={{fontSize:18}}>{b.icon}</span></div>
+                  <div className="bi"><BIcon icon={b.icon} num={b.num} size={18}/></div>
                   <div className="mid">
                     <div className="bn">{b.name}</div>
                     <div className="bd">{b.desc}</div>
@@ -7301,6 +7354,7 @@ function PgMyPage({nav,goT,tourn,myId,update}){
   const [editNickVal,setEditNickVal]=useState(nickname);
   const [editIcon,setEditIcon]=useState(icon);
   const [saving,setSaving]=useState(false);
+  const [nickErr,setNickErr]=useState("");
   const [showFeedback,setShowFeedback]=useState(false);
   // 大会ハブ用
   const [myTournaments,setMyTournaments]=useState([]);
@@ -7416,6 +7470,8 @@ function PgMyPage({nav,goT,tourn,myId,update}){
 
   const saveNick=async()=>{
     if(!editNickVal.trim()||!myId||!tourn||saving) return;
+    if(checkNickname(editNickVal.trim())){setNickErr("この名前は使用できません。別の名前を入力してください");return;}
+    setNickErr("");
     setSaving(true);
     try{
       const fresh=await loadT(tourn.id);const cur=fresh||tourn;
@@ -7518,7 +7574,8 @@ function PgMyPage({nav,goT,tourn,myId,update}){
           <div className="card lg" style={{width:"100%",maxWidth:360}}>
             <div style={{color:"var(--txt)",fontWeight:900,fontSize:18,marginBottom:16}}>✏️ プロフィール編集</div>
             <label className="field-lbl">ニックネーム</label>
-            <input className="tinput" value={editNickVal} onChange={e=>setEditNickVal(e.target.value)} maxLength={20} style={{marginBottom:16}}/>
+            <input className="tinput" value={editNickVal} onChange={e=>{setEditNickVal(e.target.value);setNickErr("");}} maxLength={20} style={{marginBottom:nickErr?6:16}}/>
+            {nickErr&&<div style={{color:"#ff6066",fontSize:12,marginBottom:12,fontWeight:600}}>{nickErr}</div>}
             <label className="field-lbl" style={{marginTop:4}}>アイコン</label>
             <div className="icon-grid">
               {ICONS.map(ic=>(
