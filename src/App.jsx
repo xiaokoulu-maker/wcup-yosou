@@ -2370,8 +2370,9 @@ function App(){
               const mid=localStorage.getItem("wcup_myid_"+t.id);
               if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);
             }catch{}
-            // 招待リンク(#t-ID)でアクセスした場合は大会内スコープ・HomeB 直行
+            // 招待リンク(#t-ID)でアクセスした場合は大会ルームへ直行
             setScope("tournament");
+            setPage("room");
           }
         }
       }catch(e){
@@ -2454,10 +2455,10 @@ function App(){
     if(pageEvents[p]) trackEvent(pageEvents[p],{page:p});
   },[]);
   const update=useCallback(async(t)=>{setTourn(t);await saveT(t);},[]);
-  const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}setScope("tournament");setPage("tournament");},[]);
+  const goT=useCallback(async(t)=>{setTourn(t);await saveT(t);window.location.hash="#t-"+t.id;try{const mid=localStorage.getItem("wcup_myid_"+t.id);if(mid&&t.participants.find(p=>p.id===mid))setMyId(mid);}catch{}setScope("tournament");setPage("room");},[]);
   const goCountry=useCallback((c)=>{setSelCountry(c);window.scrollTo(0,0);setPage("country");},[]);
   const goWcTeam=useCallback((code)=>{setWcTeamCode(code);window.scrollTo(0,0);setPage("wc_team");},[]);
-  const navDashboard=useCallback(()=>{setScope("tournament");nav("home");},[nav]);
+  const navDashboard=useCallback(()=>{setScope("tournament");nav("room");},[nav]);
   const sp={tourn,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard};
 
   const handleOnboardingComplete=(action)=>{
@@ -2467,7 +2468,7 @@ function App(){
     else if(action==="solo") setPage("matches");
   };
 
-  const showTabBar=!(page==="create"||page==="join");
+  const showTabBar=!(page==="create"||page==="join"||page==="room");
   const showHeader=!(page==="create"||page==="join");
   const me=tourn?.participants?.find(p=>p.id===myId);
   return(
@@ -2480,6 +2481,7 @@ function App(){
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update}/>}
       {page==="tournament"&&<PgTournament {...sp}/>}
+      {page==="room"&&<PgTournamentRoom {...sp}/>}
       {page==="join"&&<PgJoin {...sp}/>}
       {page==="predict"&&<PgPredict {...sp}/>}
       {page==="predictions"&&<PgPredictions {...sp}/>}
@@ -3514,6 +3516,170 @@ setLoading(true);
       {reqPlan.key!=="free"&&<a href={reqPlan.url} target="_blank" rel="noopener noreferrer" style={{...btnG,display:"block",textDecoration:"none",textAlign:"center",marginBottom:6}}>この人数でかんたん決済へ進む</a>}
       {reqPlan.key!=="free"&&<div style={{color:G.muted,fontSize:10,textAlign:"center",marginBottom:8}}>※現在はテスト決済です。本番公開時に正式リンクへ切り替えます</div>}
       {reqPlan.key!=="free"&&<button style={{...btnGr,fontSize:12,padding:"10px"}} onClick={()=>submit(FREE_LIMIT)} disabled={loading}>{loading?"作成中...":"まず5人で作成する（後でアップグレード可）"}</button>}
+    </div>
+  );
+}
+
+/* ── Tournament Room (F1: 骨格 + ホームタブ最小構成) ── */
+function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard}){
+  const [tab,setTab]=useState("home");
+  const [copied,setCopied]=useState(false);
+  useEffect(()=>{if(!t?.id)return;loadT(t.id).then(f=>{if(f)setTourn(f);});const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
+  if(!t)return null;
+  const me=t.participants.find(p=>p.id===myId);
+  const isJoined=!!me;
+  const full=t.participants.length>=t.maxParticipants;
+  const deadlinePassed=isDeadlinePassed(t.deadline);
+  const url=`${window.location.origin}${window.location.pathname}#t-${t.id}`;
+  const lineMsg=encodeURIComponent(`W杯予想大会を作った！\n優勝国・得点王・日本代表の成績を予想して参加して！\n参加はこちら👇\n${url}`);
+  const copy=async()=>{try{await navigator.clipboard.writeText(url);}catch{}setCopied(true);setTimeout(()=>setCopied(false),2000);};
+  const ROOM_TABS=[
+    {id:"home",    icon:"ball",    label:"ホーム"},
+    {id:"predict", icon:"whistle", label:"予想"},
+    {id:"ranking", icon:"chart",   label:"ランキング"},
+    {id:"chat",    icon:"chatBig", label:"チャット"},
+    {id:"other",   icon:"grid",    label:"その他"},
+  ];
+  const goTab=(id)=>{
+    if(id==="predict"){trackEvent("open_prediction_tab",{tournamentId:t.id});nav("matches");return;}
+    if(id==="ranking"){trackEvent("open_ranking_tab",{tournamentId:t.id});nav("ranking");return;}
+    if(id==="home")trackEvent("open_tournament_home",{tournamentId:t.id});
+    if(id==="chat")trackEvent("open_chat_tab",{tournamentId:t.id});
+    if(id==="other")trackEvent("open_more_tab",{tournamentId:t.id});
+    setTab(id);
+  };
+  return(
+    <div className="screen" style={{paddingBottom:"calc(64px + env(safe-area-inset-bottom,0px))"}}>
+
+      {/* ── ホームタブ ── */}
+      {tab==="home"&&(
+        <div style={{padding:"16px 18px 0"}}>
+          <div className="card lg" style={{textAlign:"center",marginBottom:14}}>
+            <img src={LOGO_IMG} alt="" style={{width:44,height:44,borderRadius:9,objectFit:"contain",background:"#061533",marginBottom:8,boxShadow:"0 0 0 2.5px rgba(62,123,255,.2)"}}/>
+            <div style={{color:"var(--gold)",fontSize:18,fontWeight:900,marginBottom:6}}>{t.name}</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
+              <span className={"chip"+(full?" red":" dim")}>{t.participants.length}/{t.maxParticipants}人</span>
+              {t.deadline&&<span className={"chip"+(deadlinePassed?" red":" dim")}>{deadlinePassed?"⛔ 締切済":"⏰ "+fmtDeadline(t.deadline)}</span>}
+              {!deadlinePassed&&<span className="chip" style={{color:"#37d67a",borderColor:"rgba(55,214,122,.3)"}}><span style={{marginRight:4,fontSize:8}}>●</span>予想受付中</span>}
+            </div>
+            <div className="live" style={{justifyContent:"center",marginTop:8}}>
+              <span className="blip"/> リアルタイム更新中
+            </div>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            {deadlinePassed
+              ?<div className="banner blue" style={{borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>⛔ 予想の受付は終了しました</div>
+              :full&&!isJoined
+                ?<div className="banner blue" style={{borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>参加上限に達しました</div>
+                :isJoined
+                  ?<button className="btn btn-red lg" onClick={()=>{trackEvent("start_prediction",{tournamentId:t.id});nav("matches");}}>
+                    <DsIcon name="whistle" size={20}/> 今すぐ予想する
+                   </button>
+                  :<button className="btn btn-red lg" onClick={()=>nav("join")}>✋ 参加して予想する</button>
+            }
+          </div>
+
+          <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)"}}>
+            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:10,fontSize:13}}>📣 友達を招待しよう</div>
+            <div style={{display:"flex",gap:8,marginBottom:10}}>
+              <input readOnly className="tinput" style={{flex:1,fontSize:11}} value={url}/>
+              <button onClick={()=>{copy();trackEvent("click_copy_url",{tournamentId:t.id});}} className="btn btn-gold sm" style={{width:68,flexShrink:0}}>{copied?"✓ 済":"コピー"}</button>
+            </div>
+            <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer"
+               className="btn btn-line lg" style={{textDecoration:"none"}}
+               onClick={()=>trackEvent("click_line_share",{tournamentId:t.id})}>
+              <span className="lk">L</span> LINEで友達に送る
+            </a>
+            <div style={{marginTop:10,textAlign:"center"}}>
+              <span className="chip dim"><span style={{letterSpacing:1,fontSize:10}}>大会ID</span> <strong style={{color:"var(--gold)",letterSpacing:3}}>{t.id}</strong></span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── チャットタブ ── */}
+      {tab==="chat"&&(
+        <div style={{padding:"16px 18px 0"}}>
+          <ChatBox tournamentId={t.id} currentUser={null} title={`${t.name} チャット`} maxHeight={460}/>
+        </div>
+      )}
+
+      {/* ── その他タブ ── */}
+      {tab==="other"&&(()=>{
+        const items=[
+          {icon:"trophy", label:"大会予想（優勝国など）",    sub:"優勝・得点王・日本代表成績", action:()=>nav("predict")},
+          {icon:"users",  label:"みんなの予想を見る",         sub:"参加者の予想一覧",           action:()=>nav("predictions")},
+          {icon:"chart",  label:"詳細統計",                   sub:"ポイント・的中状況",          action:()=>nav("stats")},
+          {icon:"bracket",label:"トーナメント表・予想マップ", sub:"",                            action:()=>nav("bracket")},
+          {icon:"flame",  label:"予想生存チェック",           sub:"",                            action:()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}, accent:true},
+          {icon:"grid",   label:"グループ表",                 sub:"グループ・FIFAランキング",    action:()=>nav("groups")},
+          {icon:"flag",   label:"日本代表モード",              sub:"",                            action:()=>nav("japan"), hl:true},
+          {icon:"medal",  label:"バッジ",                     sub:"",                            action:()=>nav("badges")},
+          {icon:"coin",   label:"コインショップ",              sub:"",                            action:()=>nav("coinshop")},
+        ];
+        return(
+          <div style={{padding:"16px 0 8px"}}>
+            <div style={{padding:"0 18px 8px"}}>
+              <DsSectionHead title="この大会のメニュー"/>
+            </div>
+            <div className="card flush" style={{margin:"0 18px"}}>
+              {items.map((item,i)=>(
+                <button key={item.label} onClick={item.action} style={{
+                  display:"flex",alignItems:"center",gap:14,padding:"13px 16px",
+                  background:"transparent",border:"none",
+                  borderBottom:i<items.length-1?"1px solid var(--line-soft)":"none",
+                  cursor:"pointer",width:"100%",textAlign:"left",
+                  color:item.hl?"var(--gold)":item.accent?"#FB923C":"var(--txt)",
+                }}>
+                  <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <DsIcon name={item.icon} size={19} stroke={1.8}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13.5,fontWeight:700}}>{item.label}</div>
+                    {item.sub&&<div style={{fontSize:11.5,color:"var(--muted)",marginTop:2}}>{item.sub}</div>}
+                  </div>
+                  <DsIcon name="chevron" size={16} stroke={2}/>
+                </button>
+              ))}
+            </div>
+            <div style={{padding:"14px 18px 0",display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("admin")}>
+                🔐 管理者用：結果入力・参加者管理
+              </button>
+              {(!t.plan||t.plan==="free")&&(
+                <button className="btn btn-dark sm" style={{color:"var(--muted)"}} onClick={()=>nav("upgrade")}>
+                  5人まで無料。友達が増えたらアップグレードできます →
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── ルーム下部タブバー ── */}
+      <div style={{
+        position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",
+        background:"rgba(5,16,45,0.97)",backdropFilter:"blur(14px) saturate(1.5)",
+        borderTop:"1px solid rgba(255,255,255,0.09)",zIndex:60,
+      }}>
+        <div style={{display:"flex",alignItems:"stretch",paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
+          {ROOM_TABS.map(tb=>{
+            const active=tb.id===tab&&tb.id!=="predict"&&tb.id!=="ranking";
+            return(
+              <button key={tb.id} onClick={()=>goTab(tb.id)} style={{
+                flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                padding:"9px 0 7px",background:"none",border:"none",cursor:"pointer",position:"relative",
+                color:active?"var(--gold)":"rgba(255,255,255,0.42)",transition:"color .12s",
+              }}>
+                {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,borderRadius:2,background:"var(--gold)"}}/>}
+                <DsIcon name={tb.icon} size={20} stroke={active?2.3:1.7}/>
+                <span style={{fontSize:9.5,fontWeight:active?700:500,marginTop:3,letterSpacing:0.2}}>{tb.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
