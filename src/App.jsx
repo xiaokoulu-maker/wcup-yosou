@@ -2543,6 +2543,7 @@ function App(){
   const navDashboard=useCallback(()=>{setScope("tournament");nav("room");},[nav]);
   const [roomInitTab,setRoomInitTab]=useState("home");
   const navToPredict=useCallback(()=>{setRoomInitTab("predict");setScope("tournament");nav("room");},[nav]);
+  const navToRanking=useCallback(()=>{setScope("tournament");nav("ranking");},[nav]);
   const goUpgrade=useCallback(async(tournId)=>{
     const t=await loadT(tournId);
     if(!t)return;
@@ -2574,7 +2575,7 @@ function App(){
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update} navDashboard={navDashboard}/>}
       {page==="tournament"&&<PgTournament {...sp}/>}
-      {page==="room"&&<PgTournamentRoom {...sp} initialTab={roomInitTab} clearInitTab={()=>setRoomInitTab("home")}/>}
+      {page==="room"&&<PgTournamentRoom {...sp} initialTab={roomInitTab} clearInitTab={()=>setRoomInitTab("home")} navToRanking={navToRanking}/>}
       {page==="join"&&<PgJoin {...sp} navToPredict={navToPredict}/>}
       {page==="predict"&&<PgPredict {...sp}/>}
       {page==="predictions"&&<PgPredictions {...sp}/>}
@@ -3892,7 +3893,7 @@ function RoomPredictTab({t,nav,update,myId}){
 }
 
 /* ── Tournament Room (F1+F2: 骨格＋ホームタブ＋予想タブインライン) ── */
-function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard,initialTab,clearInitTab}){
+function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setAdminOk,goCountry,navDashboard,initialTab,clearInitTab,navToRanking}){
   const [tab,setTab]=useState(initialTab||"home");
   useEffect(()=>{if(clearInitTab)clearInitTab();},[]);
   const [copied,setCopied]=useState(false);
@@ -3912,7 +3913,7 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
     {id:"mypage",  icon:"person",  label:"マイページ"},
   ];
   const goTab=(id)=>{
-    if(id==="ranking"){trackEvent("open_ranking_tab",{tournamentId:t.id});nav("ranking");return;}
+    if(id==="ranking"){trackEvent("open_ranking_tab",{tournamentId:t.id});(navToRanking||navDashboard)();return;}
     if(id==="mypage"){trackEvent("open_mypage_tab",{tournamentId:t.id});nav("mypage");return;}
     if(id==="home")trackEvent("open_tournament_home",{tournamentId:t.id});
     if(id==="predict")trackEvent("open_prediction_tab",{tournamentId:t.id});
