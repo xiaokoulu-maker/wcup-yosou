@@ -3933,6 +3933,9 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
   const isJoined=!!me;
   const full=t.participants.length>=t.maxParticipants;
   const deadlinePassed=isDeadlinePassed(t.deadline);
+  const isCreator=getMyCreated().includes(t.id);
+  const showAdmin=isCreator||adminOk;
+  const remainingSlots=t.maxParticipants-t.participants.length;
   const url=`${window.location.origin}${window.location.pathname}#t-${t.id}`;
   const lineMsg=encodeURIComponent(`W杯予想大会を作った！\n優勝国・得点王・日本代表の成績を予想して参加して！\n参加はこちら👇\n${url}`);
   const copy=async()=>{try{await navigator.clipboard.writeText(url);}catch{}setCopied(true);setTimeout(()=>setCopied(false),2000);};
@@ -3979,11 +3982,16 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
               <DsIcon name="chevron" size={13} stroke={2} style={{transform:"rotate(180deg)"}}/> ホームに戻る
             </button>
           )}
+
+          {/* ── 大会情報カード（A-2: 残り枠chip追加） ── */}
           <div className="card lg" style={{textAlign:"center",marginBottom:14}}>
             <img src={LOGO_IMG} alt="" style={{width:44,height:44,borderRadius:9,objectFit:"contain",background:"#061533",marginBottom:8,boxShadow:"0 0 0 2.5px rgba(62,123,255,.2)"}}/>
             <div style={{color:"var(--gold)",fontSize:18,fontWeight:900,marginBottom:6}}>{t.name}</div>
             <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
               <span className={"chip"+(full?" red":" dim")}>{t.participants.length}/{t.maxParticipants}人</span>
+              {!full&&!isJoined&&!deadlinePassed&&(
+                <span className="chip" style={{color:"#37d67a",borderColor:"rgba(55,214,122,.3)"}}>残り{remainingSlots}枠</span>
+              )}
               {t.deadline&&<span className={"chip"+(deadlinePassed?" red":" dim")}>{deadlinePassed?"⛔ 締切済":"⏰ "+fmtDeadline(t.deadline)}</span>}
               {!deadlinePassed&&<span className="chip" style={{color:"#37d67a",borderColor:"rgba(55,214,122,.3)"}}><span style={{marginRight:4,fontSize:8}}>●</span>予想受付中</span>}
             </div>
@@ -3992,6 +4000,7 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
             </div>
           </div>
 
+          {/* ── CTA（A-2: 文言・安心材料） ── */}
           <div style={{marginBottom:14}}>
             {deadlinePassed
               ?<div className="banner blue" style={{borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>⛔ 予想の受付は終了しました</div>
@@ -4001,53 +4010,86 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
                   ?<button className="btn btn-red lg" onClick={()=>{trackEvent("start_prediction",{tournamentId:t.id});nav("matches");}}>
                     <DsIcon name="whistle" size={20}/> 今すぐ予想する
                    </button>
-                  :<button className="btn btn-red lg" onClick={()=>nav("join")}>✋ 参加して予想する</button>
+                  :<>
+                    <button className="btn btn-red lg" onClick={()=>nav("join")}>登録なしで参加する →</button>
+                    <div style={{textAlign:"center",marginTop:8,color:"var(--muted)",fontSize:11,letterSpacing:0.2}}>
+                      登録不要・ニックネームだけ・無料
+                    </div>
+                  </>
             }
           </div>
 
-          <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)",marginBottom:14}}>
-            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:10,fontSize:13}}>📣 友達を招待しよう</div>
-            <div style={{display:"flex",gap:8,marginBottom:10}}>
-              <input readOnly className="tinput" style={{flex:1,fontSize:11}} value={url}/>
-              <button onClick={()=>{copy();trackEvent("click_copy_url",{tournamentId:t.id});}} className="btn btn-gold sm" style={{width:68,flexShrink:0}}>{copied?"✓ 済":"コピー"}</button>
+          {/* ── 友達招待カード（A-3: 参加後のみ） ── */}
+          {isJoined&&(
+            <div className="card lg" style={{borderColor:"rgba(245,180,49,.25)",marginBottom:14}}>
+              <div style={{color:"var(--gold)",fontWeight:700,marginBottom:10,fontSize:13}}>📣 友達を招待しよう</div>
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <input readOnly className="tinput" style={{flex:1,fontSize:11}} value={url}/>
+                <button onClick={()=>{copy();trackEvent("click_copy_url",{tournamentId:t.id});}} className="btn btn-gold sm" style={{width:68,flexShrink:0}}>{copied?"✓ 済":"コピー"}</button>
+              </div>
+              <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer"
+                 className="btn btn-line lg" style={{textDecoration:"none"}}
+                 onClick={()=>trackEvent("click_line_share",{tournamentId:t.id})}>
+                <span className="lk">L</span> LINEで友達に送る
+              </a>
+              <div style={{marginTop:10,textAlign:"center"}}>
+                <span className="chip dim"><span style={{letterSpacing:1,fontSize:10}}>大会ID</span> <strong style={{color:"var(--gold)",letterSpacing:3}}>{t.id}</strong></span>
+              </div>
             </div>
-            <a href={`https://line.me/R/msg/text/?${lineMsg}`} target="_blank" rel="noopener noreferrer"
-               className="btn btn-line lg" style={{textDecoration:"none"}}
-               onClick={()=>trackEvent("click_line_share",{tournamentId:t.id})}>
-              <span className="lk">L</span> LINEで友達に送る
-            </a>
-            <div style={{marginTop:10,textAlign:"center"}}>
-              <span className="chip dim"><span style={{letterSpacing:1,fontSize:10}}>大会ID</span> <strong style={{color:"var(--gold)",letterSpacing:3}}>{t.id}</strong></span>
-            </div>
-          </div>
+          )}
 
-          {/* 大会メニュー（旧「その他」タブから移設） */}
-          <div style={{marginBottom:8}}><DsSectionHead title="大会メニュー"/></div>
-          <div className="card flush" style={{marginBottom:10}}>
-            {menuItems.map((item,i)=>(
-              <button key={item.label} onClick={item.action} style={{
-                display:"flex",alignItems:"center",gap:12,padding:"11px 14px",
-                background:"transparent",border:"none",
-                borderBottom:i<menuItems.length-1?"1px solid var(--line-soft)":"none",
-                cursor:"pointer",width:"100%",textAlign:"left",
-                color:item.hl?"var(--gold)":item.accent?"#FB923C":"var(--txt)",
+          {/* ── 大会メニュー（A-3: 参加後=全項目／未参加=みんなの予想のみ） ── */}
+          {isJoined?(
+            <>
+              <div style={{marginBottom:8}}><DsSectionHead title="大会メニュー"/></div>
+              <div className="card flush" style={{marginBottom:10}}>
+                {menuItems.map((item,i)=>(
+                  <button key={item.label} onClick={item.action} style={{
+                    display:"flex",alignItems:"center",gap:12,padding:"11px 14px",
+                    background:"transparent",border:"none",
+                    borderBottom:i<menuItems.length-1?"1px solid var(--line-soft)":"none",
+                    cursor:"pointer",width:"100%",textAlign:"left",
+                    color:item.hl?"var(--gold)":item.accent?"#FB923C":"var(--txt)",
+                  }}>
+                    <div style={{width:30,height:30,borderRadius:8,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <DsIcon name={item.icon} size={16} stroke={1.8}/>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:600}}>{item.label}</div>
+                      {item.sub&&<div style={{fontSize:11,color:"var(--muted)",marginTop:1}}>{item.sub}</div>}
+                    </div>
+                    <DsIcon name="chevron" size={15} stroke={2} style={{color:"var(--faint)"}}/>
+                  </button>
+                ))}
+              </div>
+            </>
+          ):(
+            <div className="card flush" style={{marginBottom:14}}>
+              <button onClick={()=>nav("predictions")} style={{
+                display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
+                background:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",
+                color:"var(--txt)",
               }}>
                 <div style={{width:30,height:30,borderRadius:8,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <DsIcon name={item.icon} size={16} stroke={1.8}/>
+                  <DsIcon name="users" size={16} stroke={1.8}/>
                 </div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:600}}>{item.label}</div>
-                  {item.sub&&<div style={{fontSize:11,color:"var(--muted)",marginTop:1}}>{item.sub}</div>}
+                  <div style={{fontSize:13,fontWeight:600}}>みんなの予想</div>
+                  <div style={{fontSize:11,color:"var(--muted)",marginTop:1}}>{t.participants.length}人が参加中</div>
                 </div>
                 <DsIcon name="chevron" size={15} stroke={2} style={{color:"var(--faint)"}}/>
               </button>
-            ))}
-          </div>
-          <div style={{marginBottom:8}}>
-            <button className="btn btn-dark sm" style={{color:"var(--muted)",width:"100%"}} onClick={()=>nav("admin")}>
-              🔐 管理者用：結果入力・参加者管理
-            </button>
-          </div>
+            </div>
+          )}
+
+          {/* ── 管理者ボタン（A-3: 作成者 or adminOk のみ） ── */}
+          {showAdmin&&(
+            <div style={{marginBottom:8}}>
+              <button className="btn btn-dark sm" style={{color:"var(--muted)",width:"100%"}} onClick={()=>nav("admin")}>
+                🔐 管理者用：結果入力・参加者管理
+              </button>
+            </div>
+          )}
         </div>
       )}
 
