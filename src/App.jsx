@@ -1580,13 +1580,14 @@ function FlagChips({opts,value,onChange}){
         <button key={c} onClick={()=>onChange(c)} style={{
           background:value===c?"rgba(245,180,49,.12)":"rgba(255,255,255,.04)",
           border:`1.5px solid ${value===c?"rgba(245,180,49,.55)":"var(--line-soft)"}`,
-          borderRadius:10,padding:"10px 8px",fontSize:12,cursor:"pointer",
+          borderRadius:10,padding:"10px 10px",fontSize:12,cursor:"pointer",
           fontWeight:value===c?700:400,lineHeight:1.3,minHeight:44,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:7,
+          display:"flex",alignItems:"center",justifyContent:"flex-start",gap:7,
           color:value===c?"var(--gold)":"var(--txt)",
           boxShadow:value===c?"0 0 0 1px rgba(245,180,49,.18)":"none",
+          textAlign:"left",
         }}>
-          <Flag name={c}/><span>{c}</span>
+          <FlagImg country={c} size={20}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c}</span>
         </button>
       ))}
     </div>
@@ -2610,7 +2611,7 @@ function App(){
       {page==="home"&&<PgHome nav={nav} goT={goT} tourn={tourn} myId={myId} scope={scope} setScope={setScope}/>}
       {page==="create"&&<PgCreate nav={nav} goT={goT}/>}
       {page==="upgrade"&&<PgUpgrade nav={nav} tourn={tourn} update={update} navDashboard={navDashboard}/>}
-      {page==="tournament"&&<PgTournament {...sp}/>}
+      {page==="tournament"&&<PgTournament {...sp} navToRanking={navToRanking}/>}
       {page==="room"&&<PgTournamentRoom {...sp} initialTab={roomInitTab} clearInitTab={()=>setRoomInitTab("home")} navToRanking={navToRanking}/>}
       {page==="join"&&<PgJoin {...sp} navToPredict={navToPredict}/>}
       {page==="predict"&&<PgPredict {...sp}/>}
@@ -3751,7 +3752,7 @@ setLoading(true);
 }
 
 /* ── Room: 予想タブ（F2 インライン大会予想） ── */
-function RoomPredictTab({t,nav,update,myId}){
+function RoomPredictTab({t,nav,update,myId,navToRanking}){
   const me=t?.participants?.find(p=>p.id===myId);
   const isJoined=!!me;
   const deadlinePassed=isDeadlinePassed(t.deadline);
@@ -3810,7 +3811,7 @@ function RoomPredictTab({t,nav,update,myId}){
           </div>
         </div>
       )}
-      <button className="btn btn-dark md" style={{width:"100%",marginTop:8}} onClick={()=>nav("ranking")}>
+      <button className="btn btn-dark md" style={{width:"100%",marginTop:8}} onClick={()=>navToRanking?navToRanking():nav("ranking")}>
         <DsIcon name="chart" size={17}/> ランキングを見る
       </button>
     </div>
@@ -3837,7 +3838,7 @@ function RoomPredictTab({t,nav,update,myId}){
           <button className="btn btn-dark md" onClick={copyUrl}>
             <DsIcon name={copied?"check":"link"} size={17}/>{copied?"コピーしました":"招待リンクをコピー"}
           </button>
-          <button className="btn btn-dark md" onClick={()=>nav("ranking")}>
+          <button className="btn btn-dark md" onClick={()=>navToRanking?navToRanking():nav("ranking")}>
             <DsIcon name="chart" size={17}/> ランキングを見る
           </button>
         </div>
@@ -4058,7 +4059,7 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
       )}
 
       {/* ── 予想タブ（F2: インライン大会予想） ── */}
-      {tab==="predict"&&<RoomPredictTab t={t} nav={nav} update={update} myId={myId}/>}
+      {tab==="predict"&&<RoomPredictTab t={t} nav={nav} update={update} myId={myId} navToRanking={navToRanking}/>}
 
       {/* ── ルーム下部タブバー（ゴールドアクセント） ── */}
       <div style={{
@@ -4088,7 +4089,7 @@ function PgTournamentRoom({tourn:t,setTourn,nav,update,myId,setMyId,adminOk,setA
 }
 
 /* ── Tournament ── */
-function PgTournament({tourn:t,setTourn,nav,goCountry}){
+function PgTournament({tourn:t,setTourn,nav,goCountry,navToRanking}){
   const [copied,setCopied]=useState(false);
   useEffect(()=>{if(!t?.id)return;loadT(t.id).then(f=>{if(f)setTourn(f);});const unsub=subscribeToTournament(t.id,setTourn);return unsub;},[t?.id]);
   if(!t)return null;
@@ -4161,7 +4162,7 @@ ${url}`);
             :<button className="btn btn-dark md" onClick={()=>nav("join")}>✋ 参加する</button>}
         <button className="btn btn-red lg" onClick={()=>nav("matches")}><DsIcon name="whistle" size={20}/> 試合予想・ライブランキング</button>
         <button className="btn btn-dark md" onClick={()=>nav("predictions")}><DsIcon name="users" size={17}/> みんなの予想を見る</button>
-        <button className="btn btn-dark md" onClick={()=>nav("ranking")}><DsIcon name="trophy" size={17}/> ランキングを見る</button>
+        <button className="btn btn-dark md" onClick={()=>navToRanking?navToRanking():nav("ranking")}><DsIcon name="trophy" size={17}/> ランキングを見る</button>
         <button className="btn btn-dark md" onClick={()=>nav("stats")}><DsIcon name="chart" size={17}/> 詳細統計を見る</button>
         <button className="btn btn-dark md" onClick={()=>nav("bracket")}><DsIcon name="bracket" size={17}/> トーナメント表・予想マップ</button>
         <button className="btn btn-dark md" style={{color:"#FB923C",borderColor:"rgba(249,115,22,.4)"}} onClick={()=>{nav("survival");trackEvent("open_survival_check",{tournamentId:t.id});}}>🔥 予想生存チェック</button>
