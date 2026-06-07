@@ -3795,27 +3795,6 @@ function RoomPredictTab({t,nav,update,myId,navToRanking}){
     </div>
   );
 
-  // 締め切り済み
-  if(deadlinePassed)return(
-    <div style={{padding:"16px 18px 0"}}>
-      <div className="banner blue" style={{marginBottom:14,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>
-        ⛔ 予想の受付は終了しました
-      </div>
-      {me?.predictions?.winner&&(
-        <div className="card lg">
-          <div style={{color:"var(--dim)",fontWeight:700,fontSize:12,marginBottom:12}}>あなたの予想</div>
-          <div className="kv">
-            <div><div className="k">🥇 優勝</div><div className="v">{me.predictions.winner}</div></div>
-            <div><div className="k">🇯🇵 日本</div><div className="v">{me.predictions.japanResult||"—"}</div></div>
-            {me.predictions.topScorer&&<div><div className="k">⚽ 得点王</div><div className="v">{me.predictions.topScorer}</div></div>}
-          </div>
-        </div>
-      )}
-      <button className="btn btn-dark md" style={{width:"100%",marginTop:8}} onClick={()=>navToRanking?navToRanking():nav("ranking")}>
-        <DsIcon name="chart" size={17}/> ランキングを見る
-      </button>
-    </div>
-  );
 
   // 保存完了 → 共有カード
   if(saved)return(
@@ -3852,16 +3831,23 @@ function RoomPredictTab({t,nav,update,myId,navToRanking}){
   // 予想フォーム
   return(
     <div style={{padding:"16px 18px 0"}}>
-      {me?.predictions?.winner&&(
-        <div className="banner gold" style={{marginBottom:12}}>
-          ✓ 予想を保存済み（変更する場合は再度保存してください）
+      {deadlinePassed
+        ?<div className="banner blue" style={{marginBottom:14,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080",justifyContent:"center"}}>
+          ⛔ 予想の受付は終了しました（内容を確認できます）
         </div>
-      )}
-      {t.deadline&&(
-        <div className="banner gold" style={{marginBottom:14}}>
-          <DsIcon name="clock" size={15}/> ⏰ 締め切り: {fmtDeadline(t.deadline)}
-        </div>
-      )}
+        :<>
+          {me?.predictions?.winner&&(
+            <div className="banner gold" style={{marginBottom:12}}>
+              ✓ 予想を保存済み（変更する場合は再度保存してください）
+            </div>
+          )}
+          {t.deadline&&(
+            <div className="banner gold" style={{marginBottom:14}}>
+              <DsIcon name="clock" size={15}/> ⏰ 締め切り: {fmtDeadline(t.deadline)}
+            </div>
+          )}
+        </>
+      }
       <div className="card lg">
         <div style={{marginBottom:18}}><label className="field-lbl">🥇 優勝国</label><FlagChips opts={COUNTRIES} value={pred.winner} onChange={set("winner")}/></div>
         <div style={{marginBottom:18}}><label className="field-lbl">🥈 準優勝国</label><FlagChips opts={COUNTRIES} value={pred.runnerUp} onChange={set("runnerUp")}/></div>
@@ -3920,10 +3906,17 @@ function RoomPredictTab({t,nav,update,myId,navToRanking}){
         </button>
       </div>
       <div style={{marginTop:0,paddingBottom:8}}>
-        {err&&<div className="banner blue" style={{marginBottom:12,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080"}}>⚠️ {err}</div>}
-        <button className="btn btn-red lg" onClick={save} disabled={loading}>
-          <DsIcon name="check" size={18}/>{loading?"保存中...":"予想を保存する"}
-        </button>
+        {deadlinePassed
+          ?<button className="btn btn-dark lg" style={{width:"100%"}} onClick={()=>navToRanking?navToRanking():nav("ranking")}>
+            <DsIcon name="chart" size={17}/> ランキングを見る
+          </button>
+          :<>
+            {err&&<div className="banner blue" style={{marginBottom:12,borderColor:"rgba(255,80,80,.4)",background:"rgba(255,60,60,.1)",color:"#ff8080"}}>⚠️ {err}</div>}
+            <button className="btn btn-red lg" onClick={save} disabled={loading}>
+              <DsIcon name="check" size={18}/>{loading?"保存中...":"予想を保存する"}
+            </button>
+          </>
+        }
       </div>
     </div>
   );
